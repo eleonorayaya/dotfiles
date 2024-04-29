@@ -3385,7 +3385,7 @@
 				<real>0.94117647409439087</real>
 			</dict>
 			<key>Background Image Location</key>
-			<string>/Users/burkelivingston/Downloads/12157944_Cherry_Blossom_45_B.jpg</string>
+			<string>/Users/burkelivingston/.dotfiles/wallpapers/peach.png</string>
 			<key>Background Image Mode</key>
 			<integer>2</integer>
 			<key>Badge Color</key>
@@ -3402,7 +3402,7 @@
 				<real>1</real>
 			</dict>
 			<key>Blend</key>
-			<real>0.317600486865942</real>
+			<real>0.16128396739130435</real>
 			<key>Blinking Cursor</key>
 			<false/>
 			<key>Blur</key>
