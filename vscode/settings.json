@@ -5,8 +5,7 @@
       "source.fixAll": "always"
   },
   "files.trimTrailingWhitespace": true,
-  "yaml.format.enable": true,
-  "workbench.colorTheme": "Quiet Light for VSC",
+"yaml.format.enable": true,
   "eslint.run": "onSave",
   "eslint.format.enable": true,
   "eslint.codeActionsOnSave.mode": "all",
@@ -29,4 +28,5 @@
   },
   "go.toolsManagement.autoUpdate": true,
   "window.zoomLevel": 3,
+  "workbench.colorTheme": "Default Light Modern",
 }
