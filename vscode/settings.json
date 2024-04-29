@@ -1,0 +1,32 @@
+{
+  "editor.tabSize": 2,
+  "editor.fontFamily": "SF Mono",
+  "editor.codeActionsOnSave": {
+      "source.fixAll": "always"
+  },
+  "files.trimTrailingWhitespace": true,
+  "yaml.format.enable": true,
+  "workbench.colorTheme": "Quiet Light for VSC",
+  "eslint.run": "onSave",
+  "eslint.format.enable": true,
+  "eslint.codeActionsOnSave.mode": "all",
+  "eslint.rules.customizations": [
+      { "rule": "*", "severity": "warn" }
+  ],
+  "explorer.confirmDragAndDrop": false,
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "editor.minimap.enabled": false,
+  "[python]": {
+      "editor.formatOnType": true
+  },
+  "editor.inlineSuggest.enabled": true,
+  "github.copilot.enable": {
+      "*": true,
+      "plaintext": true,
+      "markdown": false,
+      "scminput": false
+  },
+  "go.toolsManagement.autoUpdate": true,
+  "window.zoomLevel": 3,
+}
