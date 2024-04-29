@@ -3376,13 +3376,13 @@
 				<key>Alpha Component</key>
 				<real>1</real>
 				<key>Blue Component</key>
-				<real>1</real>
+				<real>0.93725490196078431</real>
 				<key>Color Space</key>
 				<string>sRGB</string>
 				<key>Green Component</key>
-				<real>1</real>
+				<real>0.98431372549019602</real>
 				<key>Red Component</key>
-				<real>0.94117647409439087</real>
+				<real>1</real>
 			</dict>
 			<key>Background Image Location</key>
 			<string>/Users/burkelivingston/.dotfiles/wallpapers/peach.png</string>
@@ -3402,7 +3402,7 @@
 				<real>1</real>
 			</dict>
 			<key>Blend</key>
-			<real>0.16128396739130435</real>
+			<real>0.28697180706521741</real>
 			<key>Blinking Cursor</key>
 			<false/>
 			<key>Blur</key>
@@ -4010,8 +4010,8 @@
 	<key>findMode_iTerm</key>
 	<integer>0</integer>
 	<key>kCPKSelectionViewPreferredModeKey</key>
-	<integer>0</integer>
+	<integer>2</integer>
 	<key>kCPKSelectionViewShowHSBTextFieldsKey</key>
-	<false/>
+	<true/>
 </dict>
 </plist>
