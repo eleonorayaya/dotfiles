@@ -2659,7 +2659,7 @@
 				<real>0.99607843160629272</real>
 			</dict>
 			<key>Background Image Location</key>
-			<string>/Users/burkelivingston/.dotfiles/wallpapers/waves.png</string>
+			<string></string>
 			<key>Badge Color</key>
 			<dict>
 				<key>Alpha Component</key>
@@ -2673,8 +2673,6 @@
 				<key>Red Component</key>
 				<real>1</real>
 			</dict>
-			<key>Blend</key>
-			<real>0.74701086956521745</real>
 			<key>Blinking Cursor</key>
 			<false/>
 			<key>Blur</key>
@@ -3404,7 +3402,7 @@
 				<real>1</real>
 			</dict>
 			<key>Blend</key>
-			<real>0.75</real>
+			<real>0.26454483695652181</real>
 			<key>Blinking Cursor</key>
 			<false/>
 			<key>Blur</key>
@@ -3853,7 +3851,7 @@
 			<key>Non-ASCII Anti Aliased</key>
 			<true/>
 			<key>Normal Font</key>
-			<string>HackNerdFontCompleteM-Regular 22</string>
+			<string>HackNFM-Regular 18</string>
 			<key>Only The Default BG Color Uses Transparency</key>
 			<false/>
 			<key>Option Key Sends</key>
