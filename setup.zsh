@@ -1,5 +1,5 @@
 # Fonts
-brew tap homebrew/cask-fonts
+brew tap homebrew/font-meslo-lg-nerd-font
 brew install font-meslo-lg-nerd-font
 
 # Neovim
