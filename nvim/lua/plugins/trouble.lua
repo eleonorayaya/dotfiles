@@ -4,12 +4,13 @@ return {
 		modes = {
 			diagnostics = {},
 		},
-		auto_close = true,
+		auto_close = false,
 		focus = true,
 		win = {
 			position = "right",
 		},
 		warn_no_results = false,
+		open_no_results = true,
 	}, -- for default options, refer to the configuration section for custom setup.
 	cmd = "Trouble",
 	keys = {
@@ -39,8 +40,8 @@ return {
 			desc = "Location List (Trouble)",
 		},
 		{
-			"<leader>xQ",
-			"<cmd>Trouble qflist toggle<cr>",
+			"<leader>qq",
+			"<cmd>Trouble todo toggle<cr>",
 			desc = "Quickfix List (Trouble)",
 		},
 	},

@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 
+// TODO: add a comment
 func main() {
 }
 
