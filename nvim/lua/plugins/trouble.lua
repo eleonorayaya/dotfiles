@@ -1,6 +1,18 @@
 return {
 	"folke/trouble.nvim",
-	opts = {}, -- for default options, refer to the configuration section for custom setup.
+	opts = {
+		modes = {
+			diagnostics = {
+				auto_open = true,
+			},
+		},
+		auto_close = true,
+		focus = true,
+		win = {
+			position = "right",
+		},
+		warn_no_results = false,
+	}, -- for default options, refer to the configuration section for custom setup.
 	cmd = "Trouble",
 	keys = {
 		{
@@ -10,8 +22,8 @@ return {
 		},
 		{
 			"<leader>xX",
-			"<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
-			desc = "Buffer Diagnostics (Trouble)",
+			"<cmd>Trouble diagnostics open<cr>",
+			desc = "Diagnostics (Trouble)",
 		},
 		{
 			"<leader>cs",
