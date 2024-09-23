@@ -7,3 +7,5 @@ alias ls='ls -GFh'
 alias vim='nvim'
 alias python='python3'
 alias hab='ssh burke@192.168.0.137'
+alias c='clear'
+
