@@ -1,12 +1,17 @@
 package main
 
-func main() {
-	var it int = 3
+import "fmt"
 
+func main() {
 }
 
 func other() {
 	main()
+	if true {
+		main()
+	}
+	fmt.Println("hi")
+
 }
 
 func test() (string, string) {
