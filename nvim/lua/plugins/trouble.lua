@@ -1,5 +1,6 @@
 return {
 	"folke/trouble.nvim",
+	version = "3.*.*",
 	opts = {
 		modes = {
 			diagnostics = {},
@@ -7,7 +8,10 @@ return {
 		auto_close = false,
 		focus = true,
 		win = {
-			position = "right",
+			position = "bottom",
+			wo = {
+				wrap = true,
+			},
 		},
 		warn_no_results = false,
 		open_no_results = true,
