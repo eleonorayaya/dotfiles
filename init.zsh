@@ -6,6 +6,6 @@
 . ~/.dotfiles/functions.zsh
 . ~/.dotfiles/git-autocomplete.zsh
 . ~/.dotfiles/shim.zsh
-. ~/.dotfiles/vscode.zsh
+# . ~/.dotfiles/vscode.zsh
 
 neofetch
