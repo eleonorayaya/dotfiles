@@ -34,6 +34,8 @@ return {
 				"lua_ls",
 				"emmet_ls",
 				"pyright",
+				"sorbet",
+				"rubocop",
 			},
 		})
 
