@@ -14,12 +14,16 @@ return {
 			format = "{kind_icon}{symbol.name:Normal}",
 			-- The following line is needed to fix the background color
 			-- Set it to the lualine section you want to use
-			hl_group = "lualine_c_normal",
+			hl_group = "lualine_c",
 		})
 
 		-- configure lualine with modified theme
 		lualine.setup({
 			sections = {
+				lualine_b = {
+					"branch",
+					"filename",
+				},
 				lualine_c = {
 					{
 						symbols.get,
@@ -32,7 +36,6 @@ return {
 						cond = lazy_status.has_updates,
 					},
 					{ "encoding" },
-					{ "fileformat" },
 					{ "filetype" },
 				},
 			},

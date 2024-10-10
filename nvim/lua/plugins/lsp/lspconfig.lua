@@ -1,6 +1,6 @@
 return {
 	"neovim/nvim-lspconfig",
-	tag = "v0.1.9",
+	tag = "v1.0.0",
 	event = { "BufReadPre", "BufNewFile" },
 	dependencies = {
 		"hrsh7th/cmp-nvim-lsp",
@@ -118,6 +118,18 @@ return {
 						},
 					},
 				})
+			end,
+			-- ["ruby_lsp"] = function()
+			-- 	lspconfig["ruby_lsp"].setup({})
+			-- end,
+			["sorbet"] = function()
+				lspconfig["sorbet"].setup({})
+			end,
+			["rubocop"] = function()
+				lspconfig["rubocop"].setup({})
+			end,
+			["ts_ls"] = function()
+				lspconfig["ts_ls"].setup({})
 			end,
 		})
 	end,
