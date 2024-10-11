@@ -23,6 +23,8 @@ return {
 			-- ensure these language parsers are installed
 			ensure_installed = {
 				"json",
+				"markdown",
+				"markdown_inline",
 				"javascript",
 				"typescript",
 				"tsx",
