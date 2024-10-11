@@ -1,6 +1,9 @@
 # Fonts
 brew install --cask font-meslo-lg-nerd-font
 
+# Tools
+brew install fzf
+
 # Neovim
 brew install neovim
 brew install ripgrep
