@@ -24,30 +24,59 @@ return {
 			},
 		})
 
-		mason_lspconfig.setup({
-			-- list of servers for mason to install
-			ensure_installed = {
-				"ts_ls",
-				"gopls",
-				"html",
-				"cssls",
-				"lua_ls",
-				"emmet_ls",
-				"pyright",
+		local enabled_lsps = {
+			"lua_ls",
+		}
+
+		local enabled_tools = {
+			"stylua",
+		}
+
+		if vim.g.btl_config.ruby_enabled then
+			enabled_lsps = table.merge(enabled_lsps, {
 				"sorbet",
 				"rubocop",
-			},
+			})
+		end
+
+		if vim.g.btl_config.go_enabled then
+			enabled_lsps = table.merge(enabled_lsps, {
+				"gopls",
+			})
+		end
+
+		if vim.g.btl_config.web_enabled then
+			enabled_lsps = table.merge(enabled_lsps, {
+				"ts_ls",
+				"html",
+				"cssls",
+				"emmet_ls",
+			})
+
+			enabled_tools = table.merge(enabled_tools, {
+				"prettier",
+				"eslint_d",
+			})
+		end
+
+		if vim.g.btl_config.python_enabled then
+			enabled_lsps = table.merge(enabled_lsps, {
+				"pyright",
+			})
+
+			enabled_tools = table.merge(enabled_tools, {
+				"isort",
+				"black",
+				"pylint",
+			})
+		end
+
+		mason_lspconfig.setup({
+			ensure_installed = enabled_lsps,
 		})
 
 		mason_tool_installer.setup({
-			ensure_installed = {
-				"prettier", -- prettier formatter
-				"stylua", -- lua formatter
-				"isort", -- python formatter
-				"black", -- python formatter
-				"pylint",
-				"eslint_d",
-			},
+			ensure_installed = enabled_tools,
 		})
 	end,
 }
