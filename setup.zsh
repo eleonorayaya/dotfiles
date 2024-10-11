@@ -11,9 +11,12 @@ brew install rust
 brew install neovim
 brew install ripgrep
 
+# Link Config Files
 mkdir -p ~/.config
+
 ln -s ~/.dotfiles/nvim ~/.config/nvim
 ln -s ~/.dotfiles/.tmux.conf ~/.tmux.conf
+ln -s ~/.dotfiles/starship.toml ~/.config/starship.toml
 
 # Install tmux sessionizer
 # Ensure that ~/.cargo/bin is in your PATH (add to .env file)
