@@ -21,8 +21,11 @@ return {
 		lualine.setup({
 			sections = {
 				lualine_b = {
-					"branch",
-					"filename",
+					-- "branch",
+					{
+						"filename",
+						path = 1,
+					},
 				},
 				lualine_c = {
 					{
