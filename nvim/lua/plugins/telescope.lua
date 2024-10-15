@@ -1,3 +1,21 @@
+function vim.find_files_from_project_git_root()
+	local function is_git_repo()
+		vim.fn.system("git rev-parse --is-inside-work-tree")
+		return vim.v.shell_error == 0
+	end
+	local function get_git_root()
+		local dot_git_path = vim.fn.finddir(".git", ".;")
+		return vim.fn.fnamemodify(dot_git_path, ":h")
+	end
+	local opts = {}
+	if is_git_repo() then
+		opts = {
+			cwd = get_git_root(),
+		}
+	end
+	require("telescope.builtin").find_files(opts)
+end
+
 return {
 	"nvim-telescope/telescope.nvim",
 	branch = "0.1.x",
@@ -21,7 +39,7 @@ return {
 
 		telescope.setup({
 			defaults = {
-				path_display = { "smart" },
+				path_display = { "truncate" },
 				mappings = {
 					i = {
 						["<C-k>"] = actions.move_selection_previous, -- move to prev result
@@ -52,7 +70,10 @@ return {
 
 		-- Find in all files
 		keymap.set("n", "<leader>fa", "<cmd>Telescope find_files<cr>", { desc = "Fuzzy find files in cwd" })
-		keymap.set("n", "<M-p>", "<cmd>Telescope git_files<cr>", { desc = "Fuzzy find git files" })
+		keymap.set("n", "<M-p>", function()
+			vim.find_files_from_project_git_root()
+		end, { desc = "Fuzzy find git files" })
+
 		keymap.set("n", "<leader>ff", function()
 			telescope.extensions.live_grep_args.live_grep_args()
 		end, { desc = "Find string in cwd" })
