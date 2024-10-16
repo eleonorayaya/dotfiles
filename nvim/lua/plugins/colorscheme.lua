@@ -52,21 +52,27 @@ return {
 			},
 
 			highlight_groups = {
+				TelescopeBorder = { fg = "highlight_high", bg = "none" },
+				TelescopeNormal = { bg = "none" },
+				TelescopePromptNormal = { bg = "base" },
+				TelescopeResultsNormal = { fg = "subtle", bg = "none" },
+				TelescopeSelection = { fg = "text", bg = "base" },
+				TelescopeSelectionCaret = { fg = "rose", bg = "rose" },
 				-- Comment = { fg = "foam" },
 				-- VertSplit = { fg = "muted", bg = "muted" },
 			},
 
-			before_highlight = function(group, highlight, palette)
-				-- Disable all undercurls
-				-- if highlight.undercurl then
-				--     highlight.undercurl = false
-				-- end
-				--
-				-- Change palette colour
-				-- if highlight.fg == palette.pine then
-				--     highlight.fg = palette.foam
-				-- end
-			end,
+			-- before_highlight = function(group, highlight, palette)
+			-- 	-- Disable all undercurls
+			-- 	-- if highlight.undercurl then
+			-- 	--     highlight.undercurl = false
+			-- 	-- end
+			-- 	--
+			-- 	-- Change palette colour
+			-- 	-- if highlight.fg == palette.pine then
+			-- 	--     highlight.fg = palette.foam
+			-- 	-- end
+			-- end,
 		})
 
 		vim.cmd("colorscheme rose-pine-moon")

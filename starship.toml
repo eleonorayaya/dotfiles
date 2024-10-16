@@ -1,15 +1,70 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
-# Inserts a blank line between shell prompts
+format = """
+$directory \
+$git_branch \
+$fill \
+$time\n  \
+[󱞪](fg:iris)
+"""
+
 add_newline = true
+
+palette = "rose-pine-moon"
+
+[palettes.rose-pine-moon]
+overlay = '#393552'
+love = '#eb6f92'
+gold = '#f6c177'
+rose = '#ea9a97'
+pine = '#3e8fb0'
+foam = '#9ccfd8'
+iris = '#c4a7e7'
+
+[directory]
+format = "[](fg:overlay)[ $path ]($style)[](fg:overlay)"
+style = "bg:overlay fg:foam"
+truncation_length = 3
+truncation_symbol = "…/"
+
+[directory.substitutions]
+Documents = "󰈙"
+Downloads = " "
+Music = " "
+Pictures = " "
+
+[fill]
+style = "fg:overlay"
+symbol = " "
+
+[git_branch]
+format = "[](fg:overlay)[ $symbol $branch ]($style)[](fg:overlay)"
+style = "bg:overlay fg:iris"
+symbol = "󰧱" 
+
+[git_status]
+style = "bg:overlay fg:love"
+format = '[](fg:overlay)[$all_status$ahead_behind]($style)[](fg:overlay)'
+disabled = true
+
+[time]
+disabled = false
+format = "[](fg:overlay)[ $time 󰴈 ]($style)[](fg:overlay)"
+style = "bg:overlay fg:rose"
+time_format = "%I:%M%P"
+use_12hr = true
+
+[username]
+disabled = false
+format = "[](fg:overlay)[ 󰧱 $user ]($style)[](fg:overlay)"
+show_always = true
+style_root = "bg:overlay fg:iris"
+style_user = "bg:overlay fg:iris"
 
 [nodejs]
 disabled = true
 
 [ruby]
-disabled = true
-
-[git_status]
 disabled = true
 
 [package]
