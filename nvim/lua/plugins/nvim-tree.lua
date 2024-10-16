@@ -9,6 +9,10 @@ return {
 		vim.g.loaded_netrwPlugin = 1
 
 		nvimtree.setup({
+			hijack_directories = {
+				enable = false,
+				auto_open = true,
+			},
 			view = {
 				width = 35,
 				relativenumber = false,
@@ -27,9 +31,6 @@ return {
 					},
 				},
 			},
-			-- disable window_picker for
-			-- explorer to work well with
-			-- window splits
 			actions = {
 				open_file = {
 					window_picker = {
