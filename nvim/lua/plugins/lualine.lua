@@ -3,44 +3,47 @@ return {
 	dependencies = { "nvim-tree/nvim-web-devicons" },
 	config = function()
 		local lualine = require("lualine")
-		local lazy_status = require("lazy.status") -- to configure lazy pending updates count
-		local trouble = require("trouble")
 
-		local symbols = trouble.statusline({
-			mode = "lsp_document_symbols",
-			groups = {},
-			title = false,
-			filter = { range = true },
-			format = "{kind_icon}{symbol.name:Normal}",
-			-- The following line is needed to fix the background color
-			-- Set it to the lualine section you want to use
-			hl_group = "lualine_c",
-		})
-
-		-- configure lualine with modified theme
 		lualine.setup({
+			options = {
+				-- theme = theme,
+				theme = "rose-pine",
+			},
 			sections = {
 				lualine_b = {
-					-- "branch",
+
+					{
+						"filetype",
+						icon_only = true,
+						separator = "",
+						icon = { align = "right" },
+						padding = {
+							left = 1,
+							right = 0,
+						},
+					},
+					{
+						"filename",
+						path = 1,
+						padding = {
+							left = 0,
+						},
+					},
+				},
+				lualine_c = {},
+				lualine_x = {},
+				lualine_y = {},
+				lualine_z = {},
+			},
+			inactive_sections = {
+				lualine_b = {
 					{
 						"filename",
 						path = 1,
 					},
 				},
-				lualine_c = {
-					{
-						symbols.get,
-						cond = symbols.has,
-					},
-				},
-				lualine_x = {
-					{
-						lazy_status.updates,
-						cond = lazy_status.has_updates,
-					},
-					{ "encoding" },
-					{ "filetype" },
-				},
+				lualine_c = {},
+				lualine_x = {},
 			},
 		})
 	end,
