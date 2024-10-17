@@ -3,6 +3,9 @@ brew install --cask font-meslo-lg-nerd-font
 
 # Tools
 brew install fzf
+brew install lsd
+brew install bat
+npm install --global fkill-cli
 
 # Languages / Runtimes
 brew install rust
