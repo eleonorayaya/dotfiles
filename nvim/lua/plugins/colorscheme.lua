@@ -10,14 +10,12 @@ return {
 
 			enable = {
 				terminal = true,
-				legacy_highlights = true, -- Improve compatibility for previous versions of Neovim
-				migrations = true, -- Handle deprecated options automatically
 			},
 
 			styles = {
 				bold = true,
 				italic = true,
-				transparency = false,
+				transparency = true,
 			},
 
 			groups = {
@@ -54,12 +52,12 @@ return {
 			highlight_groups = {
 				TelescopeBorder = { fg = "highlight_high", bg = "none" },
 				TelescopeNormal = { bg = "none" },
-				TelescopePromptNormal = { bg = "base" },
+				TelescopePromptNormal = { bg = "none" },
 				TelescopeResultsNormal = { fg = "subtle", bg = "none" },
-				TelescopeSelection = { fg = "text", bg = "base" },
+				TelescopeSelection = { fg = "text", bg = "none" },
 				TelescopeSelectionCaret = { fg = "rose", bg = "rose" },
-				-- Comment = { fg = "foam" },
-				-- VertSplit = { fg = "muted", bg = "muted" },
+				Comment = { fg = "foam" },
+				VertSplit = { fg = "muted", bg = "muted" },
 			},
 
 			-- before_highlight = function(group, highlight, palette)
