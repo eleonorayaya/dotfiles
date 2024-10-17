@@ -60,17 +60,17 @@ return {
 				VertSplit = { fg = "muted", bg = "muted" },
 			},
 
-			-- before_highlight = function(group, highlight, palette)
-			-- 	-- Disable all undercurls
-			-- 	-- if highlight.undercurl then
-			-- 	--     highlight.undercurl = false
-			-- 	-- end
-			-- 	--
-			-- 	-- Change palette colour
-			-- 	-- if highlight.fg == palette.pine then
-			-- 	--     highlight.fg = palette.foam
-			-- 	-- end
-			-- end,
+			before_highlight = function(group, highlight, palette)
+				-- Disable all undercurls
+				if highlight.undercurl then
+					highlight.undercurl = false
+				end
+				--
+				-- Change palette colour
+				if highlight.fg == palette.pine then
+					highlight.fg = palette.foam
+				end
+			end,
 		})
 
 		vim.cmd("colorscheme rose-pine-moon")
