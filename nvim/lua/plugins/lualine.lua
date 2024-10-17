@@ -4,12 +4,32 @@ return {
 	config = function()
 		local lualine = require("lualine")
 
+		local custom_rosepine = require("lualine.themes.rose-pine")
+
+		custom_rosepine.normal.b.bg = "none"
+		custom_rosepine.normal.c.bg = "none"
+
+		custom_rosepine.insert.b.bg = "none"
+		custom_rosepine.insert.c.bg = "none"
+
+		custom_rosepine.visual.b.bg = "none"
+		custom_rosepine.visual.c.bg = "none"
+
+		custom_rosepine.replace.b.bg = "none"
+		custom_rosepine.replace.c.bg = "none"
+
+		custom_rosepine.command.b.bg = "none"
+		custom_rosepine.command.c.bg = "none"
+
+		custom_rosepine.inactive.b.bg = "none"
+		custom_rosepine.inactive.c.bg = "none"
+
 		lualine.setup({
 			options = {
-				-- theme = theme,
-				theme = "rose-pine",
+				theme = custom_rosepine,
 			},
 			sections = {
+				lualine_a = {},
 				lualine_b = {
 
 					{
