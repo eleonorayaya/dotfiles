@@ -14,7 +14,7 @@ return {
 				auto_open = true,
 			},
 			view = {
-				width = 35,
+				width = 50,
 				relativenumber = false,
 			},
 			-- change folder arrow icons
