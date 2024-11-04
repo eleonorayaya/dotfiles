@@ -34,6 +34,7 @@ return {
 
 		if vim.g.btl_config.ruby_enabled then
 			enabled_lsps = table.merge(enabled_lsps, {
+				"ruby_lsp",
 				"sorbet",
 				"rubocop",
 			})
