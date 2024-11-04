@@ -45,7 +45,7 @@ return {
 		},
 		{
 			"<leader>qq",
-			"<cmd>Trouble todo toggle<cr>",
+			"<cmd>Trouble qflist toggle<cr>",
 			desc = "Quickfix List (Trouble)",
 		},
 	},

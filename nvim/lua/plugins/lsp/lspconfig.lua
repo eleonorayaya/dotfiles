@@ -17,6 +17,7 @@ return {
 		-- import cmp-nvim-lsp plugin
 		local cmp_nvim_lsp = require("cmp_nvim_lsp")
 
+		local telescope_builtin = require("telescope.builtin")
 		local keymap = vim.keymap -- for conciseness
 
 		local function organize_imports()
@@ -43,7 +44,11 @@ return {
 
 				-- set keybinds
 				opts.desc = "Show LSP references"
-				keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", opts) -- show definition, references
+				keymap.set("n", "gR", function()
+					telescope_builtin.lsp_references({
+						show_line = false,
+					})
+				end, opts) -- show definition, references
 
 				opts.desc = "Go to declaration"
 				keymap.set("n", "gD", vim.lsp.buf.declaration, opts) -- go to declaration
@@ -141,9 +146,9 @@ return {
 					},
 				})
 			end,
-			-- ["ruby_lsp"] = function()
-			-- 	lspconfig["ruby_lsp"].setup({})
-			-- end,
+			["ruby_lsp"] = function()
+				lspconfig["ruby_lsp"].setup({})
+			end,
 			["sorbet"] = function()
 				lspconfig["sorbet"].setup({})
 			end,
