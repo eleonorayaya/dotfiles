@@ -147,16 +147,33 @@ return {
 				})
 			end,
 			["ruby_lsp"] = function()
-				lspconfig["ruby_lsp"].setup({})
+				lspconfig["ruby_lsp"].setup({
+					capabilities = capabilities,
+				})
 			end,
 			["sorbet"] = function()
-				lspconfig["sorbet"].setup({})
+				lspconfig["sorbet"].setup({
+					capabilities = capabilities,
+					cmd = {
+						"srb",
+						"tc",
+						"--lsp",
+					},
+					filetypes = {
+						"ruby",
+						"rake",
+					},
+				})
 			end,
 			["rubocop"] = function()
-				lspconfig["rubocop"].setup({})
+				lspconfig["rubocop"].setup({
+					capabilities = capabilities,
+				})
 			end,
 			["ts_ls"] = function()
-				lspconfig["ts_ls"].setup({})
+				lspconfig["ts_ls"].setup({
+					capabilities = capabilities,
+				})
 			end,
 		})
 	end,
