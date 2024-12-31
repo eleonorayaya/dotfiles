@@ -44,7 +44,7 @@ return {
 
 				-- set keybinds
 				opts.desc = "Show LSP references"
-				keymap.set("n", "gR", function()
+				keymap.set("n", "gr", function()
 					telescope_builtin.lsp_references({
 						show_line = false,
 					})
