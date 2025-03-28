@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>AllowClipboardAccess</key>
+	<true/>
 	<key>BadgeRightMargin</key>
 	<integer>25</integer>
 	<key>BadgeTopMargin</key>
@@ -4052,7 +4054,7 @@
 			<key>Window Type</key>
 			<integer>15</integer>
 			<key>Working Directory</key>
-			<string>/Users/burkelivingston/workspace</string>
+			<string>/Users/eleonora/workspace</string>
 		</dict>
 		<dict>
 			<key>ASCII Anti Aliased</key>
@@ -4902,7 +4904,7 @@
 			<key>Window Type</key>
 			<integer>15</integer>
 			<key>Working Directory</key>
-			<string>/Users/burkelivingston/workspace</string>
+			<string>/Users/eleonora/workspace</string>
 		</dict>
 	</array>
 	<key>OnlyWhenMoreTabs</key>
