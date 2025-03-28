@@ -87,31 +87,3 @@ func ktlsh() {
   POD="$(kubectl get pods --no-headers -n $NS | fzf | awk '{print $1}')"
   kubectl exec -it -n $NS $POD -- sh
 }
-
-func localtoken() {
-  export TOKEN="$(cat .local.authrc.json | jq .localServiceAuthorizationHeader | tr -d '\"')"
-}
-
-func bumpcommon() {
-  REPO=$1
-  BRANCH=TK-259-bump-common
-
-  echo "Bumping $REPO"
-  cd /Users/burkelivingston/dev/$REPO
-
-  git checkout main
-  git pull
-  git checkout -b $BRANCH
-  yarn add @timebyping/common@latest --ignore-engines
-  git add .
-  git commit -m "chore: TK-259 bump common"
-  git push
-
-  BODY=$(cat <<-END
-## Summary
-- Bump common
-END
-)
-
-  gh pr create -b "$BODY" -t "chore: TK-259 bump common" | grep github.com | pbcopy
-}

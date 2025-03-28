@@ -3,7 +3,7 @@ return {
 	config = function()
 		local notify = require("notify")
 		notify.setup({
-			render = "compact",
+			background_colour = "#1e222a",
 		})
 		vim.notify = notify
 	end,
