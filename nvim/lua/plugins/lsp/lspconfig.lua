@@ -1,6 +1,5 @@
 return {
 	"neovim/nvim-lspconfig",
-	tag = "v1.0.0",
 	event = { "BufReadPre", "BufNewFile" },
 	dependencies = {
 		"hrsh7th/cmp-nvim-lsp",
