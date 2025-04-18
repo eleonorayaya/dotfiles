@@ -45,7 +45,6 @@ return {
 		end
 
 		local function harpoon_make_finder(paths)
-			put(paths)
 			return telescope_finders.new_table({ results = paths })
 		end
 
