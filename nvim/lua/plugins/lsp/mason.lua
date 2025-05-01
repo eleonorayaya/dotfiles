@@ -62,13 +62,13 @@ return {
 
 		if vim.g.btl_config.python_enabled then
 			enabled_lsps = table.merge(enabled_lsps, {
-				"pyright",
+				"ruff",
 			})
 
 			enabled_tools = table.merge(enabled_tools, {
-				"isort",
-				"black",
-				"pylint",
+				-- "isort",
+				-- "black",
+				-- "pylint",
 			})
 		end
 
