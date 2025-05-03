@@ -60,6 +60,12 @@ return {
 			})
 		end
 
+		if vim.g.btl_config.rust_enabled then
+			enabled_lsps = table.merge(enabled_lsps, {
+				"rust_analyzer",
+			})
+		end
+
 		if vim.g.btl_config.python_enabled then
 			enabled_lsps = table.merge(enabled_lsps, {
 				"ruff",

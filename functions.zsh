@@ -87,3 +87,21 @@ func ktlsh() {
   POD="$(kubectl get pods --no-headers -n $NS | fzf | awk '{print $1}')"
   kubectl exec -it -n $NS $POD -- sh
 }
+
+func killgrep() {
+  local PID
+  local GREP_PID
+
+  if [ -z "$1" ]; then
+    echo "Usage: killgrep <pattern>"
+    return 1
+  fi
+
+  PID=$(pgrep -f "$1")
+  if [ -z "$PID" ]; then
+    echo "No process found matching pattern: $1"
+    return 1
+  fi
+
+  echo "$PID" | xargs kill -9 
+}
