@@ -126,6 +126,12 @@ if.app-id = 'company.thebrowser.Browser'
 if.during-aerospace-startup = true
 run = [ 'move-node-to-workspace 2 --focus-follows-window' ]
 
+# Chrome
+[[on-window-detected]]
+if.app-id = 'com.google.Chrome'
+if.during-aerospace-startup = true
+run = [ 'move-node-to-workspace 2 --focus-follows-window' ]
+
 # Zoom
 [[on-window-detected]]
 if.app-id = 'us.zoom.xos'
@@ -134,7 +140,7 @@ run = [ 'layout floating', 'move-node-to-workspace 1' ]
 # TickTick
 [[on-window-detected]]
 if.app-id = 'com.TickTick.task.mac'
-run = [ 'move-node-to-workspace 7 --focus-follows-window' ]
+run = [ 'move-node-to-workspace 6 --focus-follows-window' ]
 
 # Finder
 [[on-window-detected]]
@@ -146,6 +152,16 @@ run = [ 'layout floating', 'move-node-to-workspace 1' ]
 if.app-id = 'ch.protonmail.desktop'
 run = [ 'move-node-to-workspace 8' ]
 
+# Notion Calendar
+[[on-window-detected]]
+if.app-id = 'com.cron.electron'
+run = [ 'move-node-to-workspace 7' ]
+
+# Mail
+[[on-window-detected]]
+if.app-id = 'com.apple.mail'
+run = [ 'move-node-to-workspace 8' ]
+
 # Discord
 [[on-window-detected]]
 if.app-id = 'com.hnc.Discord'
@@ -154,7 +170,7 @@ run = [ 'move-node-to-workspace 3' ]
 # Slack
 [[on-window-detected]]
 if.app-id = 'com.tinyspeck.slackmacgap'
-run = [ 'move-node-to-workspace 6' ]
+run = [ 'move-node-to-workspace 3' ]
 
 # Obsidian
 [[on-window-detected]]

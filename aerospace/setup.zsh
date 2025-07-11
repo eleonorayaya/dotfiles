@@ -1,10 +1,14 @@
+Aerospace requires disabling native spaces - run this and log out and back in
+# defaults write com.apple.spaces spans-displays -bool true && killall SystemUIServer
+
 AEROSPACE_CONFIG_DIR="$CONFIG_PATH/aerospace"
 AEROSPACE_CONFIG=aerospace.toml
 
 echo "[aerospace] checking installation"
 if ! command -v aerospace >/dev/null 2>&1
 then
-  brew install --cask nikitabobko/tap/aerospace
+  echo "[aerospace] was not properly installed via homebrew, exiting"
+  exit 1
 else
   echo "[aerospace] already installed"
 fi
