@@ -35,6 +35,7 @@
 DOTFILE_PATH=~/.dotfiles
 CONFIG_PATH=~/.config
 
+# TODO: kitty isn't being added to the PATH, so this check passes even if kitty isn't installed
 echo "checking if kitty is installed"
 if ! command -v kitty >/dev/null 2>&1
 then
@@ -43,6 +44,7 @@ else
   echo "kitty is already installed"
 fi
 
+# TODO: ensure kitty config directory exists
 echo "linking kitty config"
 if [ -f "$CONFIG_PATH/kitty/kitty.conf" ]; then
   echo "Kitty config already linked"
