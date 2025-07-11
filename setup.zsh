@@ -32,29 +32,10 @@
 # # Run C-b I to install plugins
 #
 
-DOTFILE_PATH=~/.dotfiles
-CONFIG_PATH=~/.config
+export DOTFILE_PATH=~/.dotfiles
+export CONFIG_PATH=~/.config
 
-# TODO: kitty isn't being added to the PATH, so this check passes even if kitty isn't installed
-echo "checking if kitty is installed"
-if ! command -v kitty >/dev/null 2>&1
-then
-  curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
-else
-  echo "kitty is already installed"
-fi
+./homebrew/setup.zsh
 
-# TODO: ensure kitty config directory exists
-echo "linking kitty config"
-if [ -f "$CONFIG_PATH/kitty/kitty.conf" ]; then
-  echo "Kitty config already linked"
-else
-  ln -s $DOTFILE_PATH/kitty/kitty.conf $CONFIG_PATH/kitty/kitty.conf
-fi
-
-if [ -f "$CONFIG_PATH/kitty/rose-pine-moon.conf" ]; then
-  echo "Kitty theme already linked"
-else
-  ln -s $DOTFILE_PATH/kitty/rose-pine-moon.conf $CONFIG_PATH/kitty/rose-pine-moon.conf
-fi
-
+./aerospace/setup.zsh
+./kitty/setup.zsh

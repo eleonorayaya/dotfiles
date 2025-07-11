@@ -1,0 +1,4 @@
+tap "nikitabobko/tap"
+cask "aerospace"
+cask "desktoppr"
+cask "sf-symbols"
