@@ -150,11 +150,6 @@ return {
 					capabilities = capabilities,
 				})
 			end,
-			["ruff"] = function()
-				lspconfig["ruff"].setup({
-					capabilities = capabilities,
-				})
-			end,
 			["sorbet"] = function()
 				lspconfig["sorbet"].setup({
 					capabilities = capabilities,
