@@ -1,33 +1,58 @@
-# Fonts
-brew install --cask font-meslo-lg-nerd-font
+# # Fonts
+# brew install --cask font-meslo-lg-nerd-font
+#
+# # Tools
+# brew install fzf
+# brew install lsd
+# brew install bat
+# npm install --global fkill-cli
+#
+# # Languages / Runtimes
+# brew install rust
+#
+# # Neovim
+# brew install neovim
+# brew install ripgrep
+#
+# # Link Config Files
+# mkdir -p ~/.config
+#
+# ln -s ~/.dotfiles/nvim ~/.config/nvim
+# ln -s ~/.dotfiles/.tmux.conf ~/.tmux.conf
+#
+# # NVM setup
+# mkdir -p ~/.nvm
+# ln -s ~/.dotfiles/nvm-default-packages ~/.nvm/default-packages
+#
+# # Install tmux sessionizer
+# # Ensure that ~/.cargo/bin is in your PATH (add to .env file)
+# cargo install tmux-sessionizer
+#
+# git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+# # Run C-b I to install plugins
+#
 
-# Tools
-brew install fzf
-brew install lsd
-brew install bat
-npm install --global fkill-cli
+DOTFILE_PATH=~/.dotfiles
+CONFIG_PATH=~/.config
 
-# Languages / Runtimes
-brew install rust
+echo "checking if kitty is installed"
+if ! command -v kitty >/dev/null 2>&1
+then
+  curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
+else
+  echo "kitty is already installed"
+fi
 
-# Neovim
-brew install neovim
-brew install ripgrep
+echo "linking kitty config"
+if [ -f "$CONFIG_PATH/kitty/kitty.conf" ]; then
+  echo "Kitty config already linked"
+else
+  ln -s $DOTFILE_PATH/kitty/kitty.conf $CONFIG_PATH/kitty/kitty.conf
+fi
 
-# Link Config Files
-mkdir -p ~/.config
+if [ -f "$CONFIG_PATH/kitty/rose-pine-moon.conf" ]; then
+  echo "Kitty theme already linked"
+else
+  ln -s $DOTFILE_PATH/kitty/rose-pine-moon.conf $CONFIG_PATH/kitty/rose-pine-moon.conf
+fi
 
-ln -s ~/.dotfiles/nvim ~/.config/nvim
-ln -s ~/.dotfiles/.tmux.conf ~/.tmux.conf
-ln -s ~/.dotfiles/starship.toml ~/.config/starship.toml
-
-# NVM setup
-mkdir -p ~/.nvm
-ln -s ~/.dotfiles/nvm-default-packages ~/.nvm/default-packages
-
-# Install tmux sessionizer
-# Ensure that ~/.cargo/bin is in your PATH (add to .env file)
-cargo install tmux-sessionizer
-
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-# Run C-b I to install plugins

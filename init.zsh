@@ -1,6 +1,5 @@
 . ~/.dotfiles/omzsh.zsh
 
-. ~/.dotfiles/starship.zsh
 . ~/.dotfiles/alias.zsh
 . ~/.dotfiles/env.zsh
 . ~/.dotfiles/shared_env.zsh
