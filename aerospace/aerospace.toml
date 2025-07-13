@@ -122,7 +122,7 @@ run = [ 'move-node-to-workspace T --focus-follows-window' ]
 
 # Arc
 [[on-window-detected]]
-if.app-id = 'company.thebrowser.Browser'
+if.app-id = 'app.zen-browser.zen'
 if.during-aerospace-startup = true
 run = [ 'move-node-to-workspace 2 --focus-follows-window' ]
 
