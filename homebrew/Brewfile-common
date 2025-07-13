@@ -1,4 +1,7 @@
 tap "nikitabobko/tap"
+tap "felixkratz/formulae"
+brew "felixkratz/formulae/borders"
+brew "felixkratz/formulae/sketchybar"
 cask "aerospace"
 cask "desktoppr"
 cask "sf-symbols"

@@ -1,4 +1,4 @@
-Aerospace requires disabling native spaces - run this and log out and back in
+# Aerospace requires disabling native spaces - run this and log out and back in
 # defaults write com.apple.spaces spans-displays -bool true && killall SystemUIServer
 
 AEROSPACE_CONFIG_DIR="$CONFIG_PATH/aerospace"

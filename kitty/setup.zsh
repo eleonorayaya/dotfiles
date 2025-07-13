@@ -4,11 +4,11 @@ THEME_CONFIG=rose-pine-moon.conf
 
 # TODO: kitty isn't being added to the PATH, so this check passes even if kitty isn't installed
 echo "[kitty] checking installation"
-if ! command -v kitty >/dev/null 2>&1
+if [ -d "/Applications/kitty.app/" ];
 then
-  curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
-else
   echo "[kitty] already installed"
+else
+  curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
 fi
 
 echo "[kitty] checking config"

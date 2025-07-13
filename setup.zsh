@@ -38,4 +38,6 @@ export CONFIG_PATH=~/.config
 ./homebrew/setup.zsh
 
 ./aerospace/setup.zsh
+./jankyborders/setup.zsh
 ./kitty/setup.zsh
+./sketchybar/setup.zsh
