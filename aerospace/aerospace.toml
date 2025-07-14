@@ -87,7 +87,7 @@ T = 'main'
 # Home
 1 = 'main'
 
-# Unused
+# Zoom
 4 = 'main'
 
 # Notes
@@ -120,7 +120,12 @@ T = 'main'
 if.app-id = 'net.kovidgoyal.kitty'
 run = [ 'move-node-to-workspace T --focus-follows-window' ]
 
-# Arc
+# Finder
+[[on-window-detected]]
+if.app-id = 'com.apple.finder'
+run = [ 'layout floating', 'move-node-to-workspace 1' ]
+
+# Zen
 [[on-window-detected]]
 if.app-id = 'app.zen-browser.zen'
 if.during-aerospace-startup = true
@@ -132,25 +137,31 @@ if.app-id = 'com.google.Chrome'
 if.during-aerospace-startup = true
 run = [ 'move-node-to-workspace 2 --focus-follows-window' ]
 
+# Discord
+[[on-window-detected]]
+if.app-id = 'com.hnc.Discord'
+run = [ 'move-node-to-workspace 3' ]
+
+# Slack
+[[on-window-detected]]
+if.app-id = 'com.tinyspeck.slackmacgap'
+run = [ 'move-node-to-workspace 3' ]
+
 # Zoom
 [[on-window-detected]]
 if.app-id = 'us.zoom.xos'
-run = [ 'layout floating', 'move-node-to-workspace 1' ]
+if.during-aerospace-startup = true
+run = [ 'move-node-to-workspace 4 --focus-follows-window' ]
+
+# Obsidian
+[[on-window-detected]]
+if.app-id = 'md.obsidian'
+run = [ 'move-node-to-workspace 5' ]
 
 # TickTick
 [[on-window-detected]]
 if.app-id = 'com.TickTick.task.mac'
 run = [ 'move-node-to-workspace 6 --focus-follows-window' ]
-
-# Finder
-[[on-window-detected]]
-if.app-id = 'com.apple.finder'
-run = [ 'layout floating', 'move-node-to-workspace 1' ]
-
-# Proton Mail
-[[on-window-detected]]
-if.app-id = 'ch.protonmail.desktop'
-run = [ 'move-node-to-workspace 8' ]
 
 # Notion Calendar
 [[on-window-detected]]
@@ -162,18 +173,8 @@ run = [ 'move-node-to-workspace 7' ]
 if.app-id = 'com.apple.mail'
 run = [ 'move-node-to-workspace 8' ]
 
-# Discord
+# Proton Mail
 [[on-window-detected]]
-if.app-id = 'com.hnc.Discord'
-run = [ 'move-node-to-workspace 3' ]
-
-# Slack
-[[on-window-detected]]
-if.app-id = 'com.tinyspeck.slackmacgap'
-run = [ 'move-node-to-workspace 3' ]
-
-# Obsidian
-[[on-window-detected]]
-if.app-id = 'md.obsidian'
-run = [ 'move-node-to-workspace 5' ]
+if.app-id = 'ch.protonmail.desktop'
+run = [ 'move-node-to-workspace 8' ]
 
