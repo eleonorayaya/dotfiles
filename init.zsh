@@ -5,6 +5,6 @@
 . ~/.dotfiles/shared_env.zsh
 . ~/.dotfiles/functions.zsh
 . ~/.dotfiles/git-autocomplete.zsh
-. ~/.dotfiles/shim.zsh
+# . ~/.dotfiles/shim.zsh
 
-neofetch
+fastfetch

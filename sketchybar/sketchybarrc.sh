@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -x
+. ./theme.sh
 
 PADDINGS=3
 bar=(
@@ -54,3 +55,4 @@ sketchybar \
 sketchybar --update
 
 echo "sketchybar configuation loaded.."
+
