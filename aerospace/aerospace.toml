@@ -128,7 +128,6 @@ run = [ 'layout floating', 'move-node-to-workspace 1' ]
 # Zen
 [[on-window-detected]]
 if.app-id = 'app.zen-browser.zen'
-if.during-aerospace-startup = true
 run = [ 'move-node-to-workspace 2 --focus-follows-window' ]
 
 # Chrome
@@ -150,7 +149,6 @@ run = [ 'move-node-to-workspace 3' ]
 # Zoom
 [[on-window-detected]]
 if.app-id = 'us.zoom.xos'
-if.during-aerospace-startup = true
 run = [ 'move-node-to-workspace 4 --focus-follows-window' ]
 
 # Obsidian
