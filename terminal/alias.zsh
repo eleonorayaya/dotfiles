@@ -1,3 +1,4 @@
+alias cat='bat'
 alias curltime="curl -o /dev/null -s -w 'Total: %{time_total}s\n'"
 alias tfmt='terraform fmt -recursive'
 alias ktl='kubectl'
