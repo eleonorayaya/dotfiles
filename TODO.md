@@ -1,5 +1,2 @@
-- aerospace
-- jankyborders
 - zsh plugins
-- tmux plugins (vim mode?)
 - port nvim config
