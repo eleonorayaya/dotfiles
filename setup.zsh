@@ -1,33 +1,45 @@
-# Fonts
-brew install --cask font-meslo-lg-nerd-font
+# # Fonts
+# brew install --cask font-meslo-lg-nerd-font
+#
+# # Tools
+# brew install fzf
+# brew install lsd
+# brew install bat
+# npm install --global fkill-cli
+#
+# # Languages / Runtimes
+# brew install rust
+#
+# # Neovim
+# brew install neovim
+# brew install ripgrep
+#
+# # Link Config Files
+# mkdir -p ~/.config
+#
+# ln -s ~/.dotfiles/nvim ~/.config/nvim
+# ln -s ~/.dotfiles/.tmux.conf ~/.tmux.conf
+#
+# # NVM setup
+# mkdir -p ~/.nvm
+# ln -s ~/.dotfiles/nvm-default-packages ~/.nvm/default-packages
+#
+# # Install tmux sessionizer
+# # Ensure that ~/.cargo/bin is in your PATH (add to .env file)
+# cargo install tmux-sessionizer
+#
+# git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+# # Run C-b I to install plugins
+#
 
-# Tools
-brew install fzf
-brew install lsd
-brew install bat
-npm install --global fkill-cli
+export DOTFILE_PATH=~/.dotfiles
+export CONFIG_PATH=~/.config
 
-# Languages / Runtimes
-brew install rust
+./homebrew/setup.zsh
 
-# Neovim
-brew install neovim
-brew install ripgrep
-
-# Link Config Files
-mkdir -p ~/.config
-
-ln -s ~/.dotfiles/nvim ~/.config/nvim
-ln -s ~/.dotfiles/.tmux.conf ~/.tmux.conf
-ln -s ~/.dotfiles/starship.toml ~/.config/starship.toml
-
-# NVM setup
-mkdir -p ~/.nvm
-ln -s ~/.dotfiles/nvm-default-packages ~/.nvm/default-packages
-
-# Install tmux sessionizer
-# Ensure that ~/.cargo/bin is in your PATH (add to .env file)
-cargo install tmux-sessionizer
-
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-# Run C-b I to install plugins
+./aerospace/setup.zsh
+./desktoppr/setup.zsh
+./jankyborders/setup.zsh
+./kitty/setup.zsh
+./sketchybar/setup.zsh
+./tmux/setup.zsh
