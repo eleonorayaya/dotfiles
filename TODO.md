@@ -1,0 +1,2 @@
+- zsh plugins
+- port nvim config
