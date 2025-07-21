@@ -41,5 +41,6 @@ export CONFIG_PATH=~/.config
 ./desktoppr/setup.zsh
 ./jankyborders/setup.zsh
 ./kitty/setup.zsh
+./nvim/setup.zsh
 ./sketchybar/setup.zsh
 ./tmux/setup.zsh
