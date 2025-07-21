@@ -13,9 +13,11 @@ M.plugins = {
 				on_autoload_no_session = function()
 					vim.cmd("Alpha")
 				end,
+        use_git_branch = true,
 			})
 		end,
 	},
 }
 
 return M
+
