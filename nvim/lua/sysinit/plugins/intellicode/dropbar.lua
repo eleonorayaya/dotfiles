@@ -9,11 +9,13 @@ M.plugins = {
 			build = "make",
 		},
 		config = function()
+      local sources = require("dropbar.sources")
+
 			require("dropbar").setup({
 				icons = {
 					ui = {
 						bar = {
-							separator = "  ",
+							separator = " ",
 							extends = "…",
 						},
 					},
@@ -28,6 +30,9 @@ M.plugins = {
 					pick = {
 						pivots = "fjdkslaghrueiwoncmv",
 					},
+          sources = {
+            sources.path,
+          },
 				},
 			})
 		end,
@@ -46,3 +51,4 @@ M.plugins = {
 }
 
 return M
+

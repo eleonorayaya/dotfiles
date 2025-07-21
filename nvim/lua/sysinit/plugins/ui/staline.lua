@@ -12,9 +12,6 @@ M.plugins = {
 				sections = {
 					left = {
 						"mode",
-						"branch",
-						" ",
-						"lsp",
 					},
 					mid = {
 						{
@@ -69,6 +66,7 @@ M.plugins = {
 				},
 
 				mode_colors = {
+          -- TODO: use palette colors
 					n = "#d19bc4", -- Muted pink for normal mode
 					i = "#7fb3aa", -- Desaturated teal for insert mode
 					c = "#9da3d4", -- Soft lavender for command mode
@@ -87,3 +85,4 @@ M.plugins = {
 }
 
 return M
+
