@@ -1,4 +1,4 @@
-require("sysinit.pkg.pre.profiler").setup()
+  require("sysinit.pkg.pre.profiler").setup()
 
 vim.env.PATH = vim.fn.getenv("PATH")
 package.path = package.path
