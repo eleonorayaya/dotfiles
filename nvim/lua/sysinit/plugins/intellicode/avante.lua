@@ -22,7 +22,7 @@ M.plugins = {
 				mode = "agentic",
 				providers = nvim_config.avante.providers,
 				behaviour = {
-					auto_suggestions = false,
+					auto_suggestions = true,
 				},
 				prompt_logger = {
 					next_prompt = {
@@ -152,3 +152,4 @@ M.plugins = {
 }
 
 return M
+
