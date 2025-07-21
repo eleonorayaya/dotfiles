@@ -9,5 +9,6 @@ export CONFIG_PATH=~/.config
 ./kitty/setup.zsh
 ./nvim/setup.zsh
 ./sketchybar/setup.zsh
+./skhd/setup.zsh
 ./tmux/setup.zsh
 
