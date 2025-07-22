@@ -21,6 +21,19 @@ M.plugins = {
 				lua_ls = {},
 				nil_ls = {},
 				pyright = {},
+        ruby_lsp = {
+        },
+        sorbet = {
+					cmd = {
+						"srb",
+						"tc",
+						"--lsp",
+					},
+					filetypes = {
+						"ruby",
+						"rake",
+					},
+        },
 				terraformls = {},
 				jsonls = {
 					settings = {
@@ -41,14 +54,14 @@ M.plugins = {
 			}
 
 			local custom_servers = {
-				up = {
-					cmd = { "up", "xpls", "serve", "--verbose" },
-					filetypes = { "yaml" },
-					root_dir = function()
-						local fd = vim.fn.system("fd crossplane.yaml")
-						return fd ~= "" and vim.fn.fnamemodify(fd, ":p:h") or vim.fn.getcwd()
-					end,
-				},
+				-- up = {
+				-- 	cmd = { "up", "xpls", "serve", "--verbose" },
+				-- 	filetypes = { "yaml" },
+				-- 	root_dir = function()
+				-- 		local fd = vim.fn.system("fd crossplane.yaml")
+				-- 		return fd ~= "" and vim.fn.fnamemodify(fd, ":p:h") or vim.fn.getcwd()
+				-- 	end,
+				-- },
 			}
 
 			for server, config in pairs(builtin_servers) do
@@ -90,7 +103,7 @@ M.plugins = {
 				},
 			})
 			vim.lsp.inlay_hint.enable(true)
-			
+
 			vim.api.nvim_create_autocmd("LspAttach", {
 				callback = function(args)
 					local client = vim.lsp.get_client_by_id(args.data.client_id)
@@ -112,6 +125,12 @@ M.plugins = {
 				{ "<leader>cp", vim.diagnostic.goto_prev, desc = "Previous diagnostic" },
 				{ "<leader>cA", vim.lsp.codelens.run, desc = "Code lens actions" },
 				{ "<leader>ch", vim.lsp.buf.hover, desc = "Hover documentation" },
+        { "<leader>cr", function()
+          require("telescope.builtin").lsp_references({
+            show_line = false,
+            include_declaration = false,
+          })
+        end, desc = "Show References" },
 				{ "<leader>cs", vim.lsp.buf.document_symbol, desc = "Document symbols" },
 				{ "<leader>cS", vim.lsp.buf.workspace_symbol, desc = "Workspace symbols" },
 				{ "<leader>ci", "<cmd>LspInfo<cr>", desc = "LSP info" },

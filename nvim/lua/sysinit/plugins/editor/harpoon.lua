@@ -29,6 +29,11 @@ function _G.harpoon_open_telescope_marks()
 	require("telescope").extensions.harpoon.marks()
 end
 
+function _G.harpoon_clear_marks()
+  local harpoon = require("harpoon")
+  harpoon:list():clear()
+end
+
 M.plugins = {
   {
     "ThePrimeagen/harpoon",
@@ -65,6 +70,13 @@ M.plugins = {
 				end,
 				desc = "Harpoon: Add file",
 			},
+      {
+        "<localleader>hc",
+        function()
+          harpoon_clear_marks()
+        end,
+        desc = "Harpoon: Clear"
+      }
     },
   },
 }
