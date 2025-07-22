@@ -1,2 +1,2 @@
-- zsh plugins
-- port nvim config
+- https://zellij.dev/
+
