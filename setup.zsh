@@ -10,4 +10,5 @@ export CONFIG_PATH=~/.config
 ./nvim/setup.zsh
 ./sketchybar/setup.zsh
 ./tmux/setup.zsh
+./zellij/setup.zsh
 

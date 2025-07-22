@@ -17,7 +17,7 @@ echo "[aerospace] checking config"
 
 mkdir -p $AEROSPACE_CONFIG_DIR
 
-if [ -f "$AEROSPACE_CONFIG_DIR/$AEROSPACE_CONFIG" ]; then
+if [ -L "$AEROSPACE_CONFIG_DIR/$AEROSPACE_CONFIG" ]; then
   echo "[aerospace] config already linked"
 else
   ln -s $DOTFILE_PATH/aerospace/$AEROSPACE_CONFIG $AEROSPACE_CONFIG_DIR/$AEROSPACE_CONFIG

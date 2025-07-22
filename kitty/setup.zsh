@@ -15,7 +15,7 @@ echo "[kitty] checking config"
 
 mkdir -p $KITTY_CONFIG_DIR
 
-if [ -f "$KITTY_CONFIG_DIR/$KITTY_CONFIG" ]; then
+if [ -L "$KITTY_CONFIG_DIR/$KITTY_CONFIG" ]; then
   echo "[kitty] config already linked"
 else
   ln -s $DOTFILE_PATH/kitty/$KITTY_CONFIG $KITTY_CONFIG_DIR/$KITTY_CONFIG
@@ -23,9 +23,10 @@ else
 fi
 
 echo "[kitty] checking theme"
-if [ -f "$KITTY_CONFIG_DIR/$THEME_CONFIG" ]; then
+if [ -L "$KITTY_CONFIG_DIR/$THEME_CONFIG" ]; then
   echo "[kitty] theme already linked"
 else
   ln -s $DOTFILE_PATH/kitty/$THEME_CONFIG $KITTY_CONFIG_DIR/$THEME_CONFIG
   echo "[kitty] linked theme"
 fi
+
