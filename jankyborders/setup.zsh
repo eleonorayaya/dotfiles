@@ -15,7 +15,7 @@ echo "[jankyborders] checking config"
 
 mkdir -p $JANKYBORDERS_CONFIG_DIR
 
-if [ -f "$JANKYBORDERS_CONFIG_DIR/$JANKYBORDERS_CONFIG_OUT" ]; then
+if [ -L "$JANKYBORDERS_CONFIG_DIR/$JANKYBORDERS_CONFIG_OUT" ]; then
   echo "[jankyborders] config already linked"
 else
   ln -s $DOTFILE_PATH/jankyborders/$JANKYBORDERS_CONFIG $JANKYBORDERS_CONFIG_DIR/$JANKYBORDERS_CONFIG_OUT
@@ -24,3 +24,4 @@ fi
 
 # Start jankyborders at login
 brew services start borders
+

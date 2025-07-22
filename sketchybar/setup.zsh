@@ -15,7 +15,7 @@ echo "[sketchybar] checking config"
 
 mkdir -p $SKETCHYBAR_CONFIG_DIR
 
-if [ -f "$SKETCHYBAR_CONFIG_DIR/$SKETCHYBAR_CONFIG_OUT" ]; then
+if [ -L "$SKETCHYBAR_CONFIG_DIR/$SKETCHYBAR_CONFIG_OUT" ]; then
   echo "[sketchybar] config already linked"
 else
   ln -s $DOTFILE_PATH/sketchybar/$SKETCHYBAR_CONFIG $SKETCHYBAR_CONFIG_DIR/$SKETCHYBAR_CONFIG_OUT
@@ -24,3 +24,4 @@ fi
 
 # Start sketchybar at login
 brew services start sketchybar
+

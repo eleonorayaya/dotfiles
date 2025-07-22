@@ -24,7 +24,7 @@ echo "[tmux] checking config"
 
 mkdir -p $TMUX_CONFIG_DIR
 
-if [ -f "$TMUX_CONFIG_DIR/$TMUX_CONFIG" ]; then
+if [ -L "$TMUX_CONFIG_DIR/$TMUX_CONFIG" ]; then
   echo "[tmux] config already linked"
 else
   ln -s $DOTFILE_PATH/tmux/$TMUX_CONFIG $TMUX_CONFIG_DIR/$TMUX_CONFIG
@@ -40,3 +40,4 @@ if [ -d "$TMUX_PLUGIN_DIR/tpm/" ]; then
 else
   git clone https://github.com/tmux-plugins/tpm $TMUX_PLUGIN_DIR/tpm
 fi
+
