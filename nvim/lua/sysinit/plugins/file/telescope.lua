@@ -36,6 +36,17 @@ M.plugins = {
 			telescope.setup({
 				defaults = {
 					prompt_prefix = "   ",
+          path_display = {
+            shorten = {
+              len = 2,
+              exclude = {
+                1,
+                2,
+                -1,
+                -2,
+              }
+            }
+          },
 					selection_caret = "",
 					entry_prefix = "",
 					-- Enhanced border styling
@@ -231,7 +242,6 @@ M.plugins = {
             }, {
               show_all_buffers = true,
               sort_mru = true,
-              theme = "dropdown"
             })
           end,
           desc = "Buffers",

@@ -39,7 +39,7 @@ return {
 
 		telescope.setup({
 			defaults = {
-				path_display = { "truncate" },
+				path_display = { len = 2, exclude = {1, 2, -1, -2} },
 				mappings = {
 					i = {
 						["<C-k>"] = actions.move_selection_previous, -- move to prev result
@@ -97,3 +97,4 @@ return {
 		end, { desc = "Find visual selected string in current buffer" })
 	end,
 }
+
