@@ -87,6 +87,8 @@ M.plugins = {
 						"%.o",
 						".cache",
 						"Build",
+            "sorbet",
+            "node_modules"
 					},
 				},
 				extensions = {
@@ -208,8 +210,31 @@ M.plugins = {
 				},
 				{
 					"<leader>bb",
-					"<CMD>Telescope buffers sort_mru=true show_all_buffers=true<CR>",
-					desc = "Buffers",
+          function()
+            local builtin = require("telescope.builtin")
+            local action_state = require("telescope.actions.state")
+
+            builtin.buffers({
+              initial_mode = "normal",
+              attach_mappings = function(prompt_bufnr, map)
+                local delete_buf = function()
+                  local current_picker = action_state.get_current_picker(prompt_bufnr)
+                  current_picker:delete_selection(function(selection)
+                    vim.api.nvim_buf_delete(selection.bufnr, { force = true })
+                  end)
+                end
+
+                map('n', '<c-d>', delete_buf)
+
+                return true
+              end
+            }, {
+              show_all_buffers = true,
+              sort_mru = true,
+              theme = "dropdown"
+            })
+          end,
+          desc = "Buffers",
 				},
 				{
 					"<leader>fc",
