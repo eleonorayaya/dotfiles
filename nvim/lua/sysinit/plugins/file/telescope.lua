@@ -32,12 +32,14 @@ M.plugins = {
 			local telescope = require("telescope")
 			local actions = require("telescope.actions")
 			local themes = require("telescope.themes")
+      local lga_actions = require("telescope-live-grep-args.actions")
+      local lga_shortcuts = require("telescope-live-grep-args.shortcuts")
 
 			telescope.setup({
 				defaults = {
 					prompt_prefix = "   ",
           path_display = {
-            shorten = {
+            truncate = {
               len = 2,
               exclude = {
                 1,
@@ -58,7 +60,7 @@ M.plugins = {
 					layout_config = {
 						horizontal = {
 							prompt_position = "top",
-							preview_width = 0.55,
+							-- preview_width = 0.55,
 						},
 						width = 0.87,
 						height = 0.80,
@@ -194,6 +196,10 @@ M.plugins = {
 			})
 		end,
 		keys = function()
+			local actions = require("telescope.actions")
+      local lga_actions = require("telescope-live-grep-args.actions")
+      local lga_shortcuts = require("telescope-live-grep-args.shortcuts")
+
 			return {
 				{
 					"<M-p>",
@@ -202,9 +208,19 @@ M.plugins = {
 					end,
 					desc = "Git Files",
 				},
-				{
-					"<leader>ff",
-					"<CMD>Telescope live_grep<CR>",
+        {
+          "<leader>ff",
+          function()
+            require("telescope").extensions.live_grep_args.live_grep_args({
+            auto_quoting = true,
+            mappings = {
+              i = {
+                ["<C-i>"] = lga_actions.quote_prompt({ postfix = " --iglob *" }),
+                ["<C-space>"] = actions.to_fuzzy_refine,
+              },
+            },
+          })
+          end,
 					desc = "Live grep",
 				},
 				{

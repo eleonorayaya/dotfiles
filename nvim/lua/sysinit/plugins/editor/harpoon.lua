@@ -11,22 +11,24 @@ function _G.harpoon_add_file()
   harpoon:list():add()
 end
 
-function _G.harpoon_get_paths(files)
-	local paths = {}
-
-	for _, item in ipairs(files.items) do
-		table.insert(paths, item.value)
-	end
-
-	return paths
-end
-
-function _G.harpoon_make_finder(paths)
-	return require("telescope.finders").new_table({ results = paths })
-end
-
 function _G.harpoon_open_telescope_marks()
-	require("telescope").extensions.harpoon.marks()
+  local conf = require("telescope.config").values
+  local harpoon = require("harpoon")
+
+  local harpoon_files = harpoon:list()
+  local file_paths = {}
+  for _, item in ipairs(harpoon_files.items) do
+    table.insert(file_paths, item.value)
+  end
+
+  require("telescope.pickers").new({}, {
+    prompt_title = "Harpoon",
+    finder = require("telescope.finders").new_table({
+      results = file_paths,
+    }),
+    previewer = conf.file_previewer({}),
+    sorter = conf.generic_sorter({}),
+  }):find()
 end
 
 function _G.harpoon_clear_marks()
@@ -48,8 +50,13 @@ M.plugins = {
         config = {
           save_on_toggle = true,
           sync_on_ui_close = true,
-
-        }
+        },
+        -- default = {
+        --   display = function(item)
+        --     put(item)
+        --     return item.value
+        --   end,
+        -- }
       })
 
       local harpoon_extensions = require("harpoon.extensions")
