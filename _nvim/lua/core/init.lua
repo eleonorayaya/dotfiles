@@ -1,5 +1,0 @@
-require("core.env_config")
-require("core.helper")
-require("core.options")
-require("core.remap")
-require("core.window")
