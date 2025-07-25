@@ -9,8 +9,8 @@ M.plugins = {
       require("mini.comment").setup({
         mappings = {
           comment = '',
-          comment_line = '<C-_>',
-          comment_visual = '<C-_>',
+          comment_line = '<C-/>',
+          comment_visual = '<C-/>',
           textobject = '',
         },
       });

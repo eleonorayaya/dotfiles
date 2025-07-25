@@ -8,9 +8,10 @@ end
 local function default_config()
 	return {
 		copilot = {
-			enabled = true,
+			enabled = false,
 		},
 		avante = {
+			enabled = false,
 			provider = "copilot",
 			providers = {
 				copilot = {
@@ -61,3 +62,4 @@ function M.load_config()
 end
 
 return M
+

@@ -16,17 +16,17 @@ outer.top = 112
 outer.right = 72
 
 
-[mode.main.binding] 
+[mode.main.binding]
 alt-space = [ 'mode term', 'workspace T' ]
 
-cmd-alt-q = [ 'mode main', 'workspace 1' ]
-cmd-alt-w = [ 'mode main', 'workspace 2' ]
-cmd-alt-e = [ 'mode main', 'workspace 3' ]
-cmd-alt-r = [ 'mode main', 'workspace 4' ]
-cmd-alt-u = [ 'mode main', 'workspace 5' ]
-cmd-alt-i = [ 'mode main', 'workspace 6' ]
-cmd-alt-o = [ 'mode main', 'workspace 7' ]
-cmd-alt-p = [ 'mode main', 'workspace 8' ]
+alt-q = [ 'mode main', 'workspace 1' ]
+alt-w = [ 'mode main', 'workspace 2' ]
+alt-e = [ 'mode main', 'workspace 3' ]
+alt-r = [ 'mode main', 'workspace 4' ]
+alt-u = [ 'mode main', 'workspace 5' ]
+alt-i = [ 'mode main', 'workspace 6' ]
+alt-o = [ 'mode main', 'workspace 7' ]
+alt-p = [ 'mode main', 'workspace 8' ]
 
 alt-shift-q = 'move-node-to-workspace 1 --focus-follows-window'
 alt-shift-w = 'move-node-to-workspace 2 --focus-follows-window'
@@ -46,17 +46,17 @@ alt-shift-tab = [
 alt-shift-semicolon = 'mode service'
 
 
-[mode.term.binding] 
+[mode.term.binding]
 alt-space = [ 'mode main', 'workspace-back-and-forth' ]
 
-cmd-alt-q = [ 'mode main', 'workspace 1' ]
-cmd-alt-w = [ 'mode main', 'workspace 2' ]
-cmd-alt-e = [ 'mode main', 'workspace 3' ]
-cmd-alt-r = [ 'mode main', 'workspace 4' ]
-cmd-alt-u = [ 'mode main', 'workspace 5' ]
-cmd-alt-i = [ 'mode main', 'workspace 6' ]
-cmd-alt-o = [ 'mode main', 'workspace 7' ]
-cmd-alt-p = [ 'mode main', 'workspace 8' ]
+alt-q = [ 'mode main', 'workspace 1' ]
+alt-w = [ 'mode main', 'workspace 2' ]
+alt-e = [ 'mode main', 'workspace 3' ]
+alt-r = [ 'mode main', 'workspace 4' ]
+alt-u = [ 'mode main', 'workspace 5' ]
+alt-i = [ 'mode main', 'workspace 6' ]
+alt-o = [ 'mode main', 'workspace 7' ]
+alt-p = [ 'mode main', 'workspace 8' ]
 
 alt-shift-q = 'move-node-to-workspace 1 --focus-follows-window'
 alt-shift-w = 'move-node-to-workspace 2 --focus-follows-window'

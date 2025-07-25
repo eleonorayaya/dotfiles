@@ -105,7 +105,7 @@ M.plugins = {
 					desc = "Split horizontal",
 				},
 				{
-					"<M-k>",
+					"<D-k>",
 					"<CMD>vsplit<CR>",
 					mode = { "n", "t" },
 					desc = "Split vertical",
