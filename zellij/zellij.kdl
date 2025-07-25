@@ -56,6 +56,7 @@ keybinds clear-defaults=true {
 
   shared_among "renametab" "renamepane" {
     bind "Ctrl c" { SwitchToMode "normal"; }
+    bind "Enter" { SwitchToMode "normal"; }
   }
 
   shared_except "normal" "locked" "entersearch" "renametab" "renamepane" {
@@ -63,8 +64,6 @@ keybinds clear-defaults=true {
   }
 }
 
-// Plugin aliases - can be used to change the implementation of Zellij
-// changing these requires a restart to take effect
 plugins {
   about location="zellij:about"
   compact-bar location="zellij:compact-bar"
@@ -82,13 +81,12 @@ plugins {
   }
 
   vim location="https://github.com/hiasr/vim-zellij-navigator/releases/download/0.3.0/vim-zellij-navigator.wasm"
+  zjstatus location="https://github.com/dj95/zjstatus/releases/download/v0.21.0/zjstatus.wasm"
 }
 
-// Plugins to load in the background when a new session starts
-// eg. "file:/path/to/my-plugin.wasm"
-// eg. "https://example.com/my-plugin.wasm"
 load_plugins {
   https://github.com/hiasr/vim-zellij-navigator/releases/download/0.3.0/vim-zellij-navigator.wasm
+  https://github.com/dj95/zjstatus/releases/download/v0.21.0/zjstatus.wasm
 }
 
 theme "rose-pine-moon"

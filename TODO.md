@@ -2,6 +2,7 @@
 - https://zellij.dev/documentation/options.html
 - https://zellij.dev/documentation/themes.html
 - https://github.com/dj95/zjstatus
+    - TODO customize styles and add zframes too
 - https://github.com/b0o/zjstatus-hints
 - https://github.com/vdbulcke/ghost
 - https://github.com/Nacho114/harpoon
