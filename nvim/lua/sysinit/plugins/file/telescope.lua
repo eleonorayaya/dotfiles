@@ -202,7 +202,7 @@ M.plugins = {
 
 			return {
 				{
-					"<M-p>",
+					"<D-p>",
 					function()
 						telescope_pick_project_files()
 					end,

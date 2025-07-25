@@ -166,7 +166,7 @@ M.plugins = {
 		end,
 		keys = {
 			{
-				"<M-b>",
+				"<D-b>",
 				function()
 					vim.cmd("Neotree toggle")
 					-- TODO: what is this?
@@ -186,3 +186,4 @@ M.plugins = {
 }
 
 return M
+
