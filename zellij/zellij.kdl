@@ -8,25 +8,25 @@ keybinds clear-defaults=true {
     bind "Ctrl q" { Quit; }
 
     bind "Ctrl h" {
-      MessagePlugin "vim" {
+      MessagePlugin "vim-zellij-navigator" {
         name "move_focus_or_tab"
         payload "left"
       }
     }
     bind "Ctrl l" {
-      MessagePlugin "vim" {
+      MessagePlugin "vim-zellij-navigator" {
         name "move_focus_or_tab"
         payload "right"
       }
     }
     bind "Ctrl j" {
-      MessagePlugin "vim" {
+      MessagePlugin "vim-zellij-navigator" {
         name "move_focus_or_tab"
         payload "down"
       }
     }
     bind "Ctrl k" {
-      MessagePlugin "vim" {
+      MessagePlugin "vim-zellij-navigator" {
         name "move_focus_or_tab"
         payload "up"
       }
@@ -38,6 +38,7 @@ keybinds clear-defaults=true {
   }
 
   pane {
+    bind "a" { ToggleFocusFullscreen; SwitchToMode "normal"; }
     bind "d" { NewPane; SwitchToMode "normal"; }
     bind "x" { CloseFocus; SwitchToMode "normal"; }
   }
@@ -52,6 +53,16 @@ keybinds clear-defaults=true {
     bind "l" { GoToNextTab; SwitchToMode "normal"; }
     bind "r" { SwitchToMode "renametab"; TabNameInput 0; }
     bind "x" { CloseTab; SwitchToMode "normal"; }
+
+    bind "p" {
+      LaunchOrFocusPlugin "zellij-sessionizer" {
+            floating true
+            move_to_focused_tab true
+            cwd "/"
+            root_dirs "/Users/burke.livingston/workspace/"
+        }
+        SwitchToMode "Locked"
+    }
   }
 
   shared_among "renametab" "renamepane" {
@@ -80,13 +91,15 @@ plugins {
     welcome_screen true
   }
 
-  vim location="https://github.com/hiasr/vim-zellij-navigator/releases/download/0.3.0/vim-zellij-navigator.wasm"
-  zjstatus location="https://github.com/dj95/zjstatus/releases/download/v0.21.0/zjstatus.wasm"
+  vim-zellij-navigator location="file:~/.config/zellij/plugins/vim-zellij-navigator.wasm"
+  zellij-sessionizer location="file:~/.config/zellij/plugins/zellij-sessionizer.wasm"
+  zjstatus location="file:~/.config/zellij/plugins/zjstatus.wasm"
 }
 
 load_plugins {
-  https://github.com/hiasr/vim-zellij-navigator/releases/download/0.3.0/vim-zellij-navigator.wasm
-  https://github.com/dj95/zjstatus/releases/download/v0.21.0/zjstatus.wasm
+  vim-zellij-navigator
+  zellij-sessionizer
+  zjstatus
 }
 
 theme "rose-pine-moon"
