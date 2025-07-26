@@ -1,4 +1,17 @@
 layout {
+  tab name="zsh" {
+    pane split_direction="vertical" {
+      pane
+      pane
+    }
+  }
+
+  tab name="vim" {
+    pane {
+      command "nvim"
+    }
+  }
+
   default_tab_template {
     children
     pane size=1 borderless=true {
