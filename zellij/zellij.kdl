@@ -38,6 +38,7 @@ keybinds clear-defaults=true {
   }
 
   pane {
+    bind "a" { ToggleFocusFullscreen; SwitchToMode "normal"; }
     bind "d" { NewPane; SwitchToMode "normal"; }
     bind "x" { CloseFocus; SwitchToMode "normal"; }
   }
