@@ -1,8 +1,16 @@
+#! /usr/bin/env zsh
 ZELLIJ_CONFIG_DIR="$CONFIG_PATH/zellij"
 ZELLIJ_CONFIG="zellij.kdl"
 ZELLIJ_CONFIG_OUT="config.kdl"
 THEME_CONFIG="rose-pine-moon.kdl"
 LAYOUT_CONFIG="layout.kdl"
+PLUGIN_CONFIG_DIR="$ZELLIJ_CONFIG_DIR/plugins"
+
+declare -A plugins=(
+  [vim-zellij-navigator]="https://github.com/hiasr/vim-zellij-navigator/releases/latest/download/vim-zellij-navigator.wasm"
+  [zellij-sessionizer]="https://github.com/laperlej/zellij-sessionizer/releases/latest/download/zellij-sessionizer.wasm"
+  [zjstatus]="https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm"
+)
 
 echo "[zellij] checking installation"
 if ! command -v zellij >/dev/null 2>&1
@@ -36,14 +44,30 @@ else
   echo "[zellij] linked theme"
 fi
 
-echo "[zelli] checking layouts"
+echo "[zellij] checking layouts"
 
 mkdir -p $ZELLIJ_CONFIG_DIR/layouts
 
-if [ -L "$ZELLIJ_CONFIG_DIR/layouts/$LAYOUT_CONFIG" ]; then
+if [ -L "$ZELLIJ_CONFIG_DIR/layouts/default.kdl" ]; then
   echo "[zellij] layout already linked"
 else
   ln -s $DOTFILE_PATH/zellij/$LAYOUT_CONFIG $ZELLIJ_CONFIG_DIR/layouts/default.kdl
   echo "[zellij] linked layout"
 fi
+
+echo "[zellij] checking plugins"
+
+mkdir -p $PLUGIN_CONFIG_DIR
+
+for plugin_name plugin_path in ${(kv)plugins}
+do
+  echo "[zellij] checking plugin: $plugin_name"
+
+  if [ -f "$PLUGIN_CONFIG_DIR/${plugin_name}.wasm" ]; then
+    echo "[zellij] $plugin_name already installed"
+  else
+    curl -L $plugin_path > "$PLUGIN_CONFIG_DIR/${plugin_name}.wasm"
+    echo "[zellij] $plugin_name installed"
+  fi
+done
 
