@@ -9,7 +9,6 @@
 - https://github.com/rvcas/room
 - https://github.com/hiasr/vim-zellij-navigator
 - https://github.com/fresh2dev/zellij.vim
-- https://github.com/ndavd/zellij-cb
 - https://github.com/laperlej/zellij-choose-tree
 - https://github.com/karimould/zellij-forgot
 - https://github.com/laperlej/zellij-sessionizer
