@@ -21,7 +21,6 @@ layout {
         format_space "#[]"
 
         mode_normal          "#[] "
-        mode_tmux            "#[] "
 
         tab_normal               "#[fg=#9ccfd8] {name} {fullscreen_indicator}{sync_indicator}{floating_indicator}"
         tab_active               "#[fg=#c4a7e7,bold,italic] {name} {fullscreen_indicator}{sync_indicator}{floating_indicator}"
