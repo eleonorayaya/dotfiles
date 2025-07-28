@@ -44,6 +44,7 @@ M.plugins = {
 					null_ls.builtins.hover.dictionary,
 					null_ls.builtins.hover.printenv,
 				},
+        temp_dir = "/tmp"
 			})
 
 			local copilot_actions = {
@@ -412,3 +413,4 @@ M.plugins = {
 }
 
 return M
+
