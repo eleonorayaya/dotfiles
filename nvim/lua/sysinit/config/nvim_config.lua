@@ -29,6 +29,11 @@ local function default_config()
 				},
 			},
 		},
+    languages = {
+      rust = {
+        enabled = false,
+      }
+    }
 	}
 end
 

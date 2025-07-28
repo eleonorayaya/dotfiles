@@ -1,3 +1,4 @@
+local nvim_config = require("sysinit.config.nvim_config").load_config()
 local M = {}
 
 M.plugins = {
@@ -21,6 +22,7 @@ M.plugins = {
 				lua_ls = {},
 				nil_ls = {},
 				pyright = {},
+
         ruby_lsp = {
         },
         sorbet = {
@@ -52,6 +54,10 @@ M.plugins = {
 					},
 				},
 			}
+
+			if nvim_config.languages.rust.enabled then
+        builtin_servers["rust_analyzer"] = {}
+      end
 
 			local custom_servers = {
 				-- up = {
