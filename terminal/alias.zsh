@@ -8,6 +8,8 @@ alias vim='nvim'
 alias python='python3'
 alias c='clear'
 
+alias zj="zellij -l welcome"
+
 ## Git
 alias gittouch='git pull --rebase && git commit -m 'touch' --allow-empty && git push'
 alias gsu='git status -uno'

@@ -4,3 +4,4 @@
 . ~/.dotfiles/terminal/init.zsh
 
 fastfetch
+
