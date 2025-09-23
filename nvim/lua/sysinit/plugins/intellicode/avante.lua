@@ -3,7 +3,7 @@ local M = {}
 
 M.plugins = {
 	{
-		enabled = nvim_config.copilot.enabled,
+		enabled = nvim_config.avante.enabled,
 		"yetone/avante.nvim",
 		event = "VeryLazy",
 		version = false,
