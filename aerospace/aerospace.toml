@@ -10,10 +10,10 @@ start-at-login = true
 [gaps]
 inner.horizontal = 16
 inner.vertical = 16
-outer.left = 72
-outer.bottom = 72
-outer.top = 112
-outer.right = 72
+outer.left = 32
+outer.bottom = 32
+outer.top = 32
+outer.right = 32
 
 
 [mode.main.binding]
