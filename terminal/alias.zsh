@@ -8,7 +8,7 @@ alias vim='nvim'
 alias python='python3'
 alias c='clear'
 
-alias zj="zellij -l welcome"
+alias zj="cd / && zellij -l welcome"
 
 ## Git
 alias gittouch='git pull --rebase && git commit -m 'touch' --allow-empty && git push'
