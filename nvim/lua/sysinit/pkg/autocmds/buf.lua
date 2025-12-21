@@ -12,7 +12,7 @@ function M.setup()
 			local win = vim.api.nvim_get_current_win()
 			local config = vim.api.nvim_win_get_config(win)
 			local buf = vim.api.nvim_win_get_buf(win)
-			local ft = vim.api.nvim_buf_get_option(buf, "filetype")
+			local ft = vim.bo[buf].filetype
 
 			-- Check if it's a floating window or specific filetype
 			local special_filetypes = {
