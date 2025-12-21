@@ -9,7 +9,8 @@ M.plugins = {
 			"nvim-tree/nvim-web-devicons",
 		},
 		config = function()
-			require("snacks").setup({
+			local snacks = require("snacks")
+			snacks.setup({
 				animate = {
 					enabled = true,
 					duration = 18,
@@ -116,36 +117,37 @@ M.plugins = {
 				},
 			})
 
-			vim.notify = Snacks.notifier
-			vim.ui.input = Snacks.input
+			vim.notify = snacks.notifier
+			vim.ui.input = snacks.input
 		end,
 		keys = function()
+			local snacks = require("snacks")
 			local default_keys = {
 				{
 					"<leader>bs",
 					function()
-						Snacks.scratch()
+						snacks.scratch()
 					end,
 					desc = "Toggle scratchpad",
 				},
 				{
 					"<localleader>gg",
 					function()
-						Snacks.lazygit()
+						snacks.lazygit()
 					end,
 					desc = "Open LazyGit UI",
 				},
 				{
 					"<leader>ns",
 					function()
-						Snacks.notifier.show_history()
+						snacks.notifier.show_history()
 					end,
 					desc = "Show",
 				},
 				{
 					"<leader>nc",
 					function()
-						Snacks.notifier.hide()
+						snacks.notifier.hide()
 					end,
 					desc = "Dismiss",
 				},
@@ -159,35 +161,35 @@ M.plugins = {
 				{
 					"<localleader>px",
 					function()
-						Snacks.profiler.stop()
+						snacks.profiler.stop()
 					end,
 					desc = "Stop Profiler",
 				},
 				{
 					"<localleader>pf",
 					function()
-						Snacks.profiler.pick()
+						snacks.profiler.pick()
 					end,
 					desc = "Profiler Picker",
 				},
 				{
 					"<localleader>pp",
 					function()
-						Snacks.toggle.profiler()
+						snacks.toggle.profiler()
 					end,
 					desc = "Toggle Profiler",
 				},
 				{
 					"<localleader>ph",
 					function()
-						Snacks.toggle.profiler_highlights()
+						snacks.toggle.profiler_highlights()
 					end,
 					desc = "Toggle Profiler Highlights",
 				},
 				{
 					"<localleader>ps",
 					function()
-						Snacks.profiler.scratch()
+						snacks.profiler.scratch()
 					end,
 					desc = "Profiler Scratch Buffer",
 				},

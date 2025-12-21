@@ -66,7 +66,7 @@ M.plugins = {
 						return
 					end
 					return {
-						lsp_format = fallback,
+						lsp_format = "fallback",
 					}
 				end,
 			})

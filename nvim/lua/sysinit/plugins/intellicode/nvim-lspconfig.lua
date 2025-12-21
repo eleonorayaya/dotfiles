@@ -113,7 +113,7 @@ M.plugins = {
 			vim.api.nvim_create_autocmd("LspAttach", {
 				callback = function(args)
 					local client = vim.lsp.get_client_by_id(args.data.client_id)
-					if client and client.supports_method("textDocument/codeLens") then
+					if client and client.supports_method("textDocument/codeLens", args.buf) then
 						vim.lsp.codelens.refresh()
 						vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
 							buffer = args.buf,
@@ -127,8 +127,8 @@ M.plugins = {
 			return {
 				{ "<leader>cr", vim.lsp.buf.rename, desc = "Rename" },
 				{ "<leader>cD", vim.lsp.buf.definition, desc = "Go to definition" },
-				{ "<leader>cn", vim.diagnostic.goto_next, desc = "Next diagnostic" },
-				{ "<leader>cp", vim.diagnostic.goto_prev, desc = "Previous diagnostic" },
+				{ "<leader>cn", function() vim.diagnostic.goto_next() end, desc = "Next diagnostic" },
+				{ "<leader>cp", function() vim.diagnostic.goto_prev() end, desc = "Previous diagnostic" },
 				{ "<leader>cA", vim.lsp.codelens.run, desc = "Code lens actions" },
 				{ "<leader>ch", vim.lsp.buf.hover, desc = "Hover documentation" },
         { "<leader>cr", function()
