@@ -8,7 +8,7 @@ end
 local function default_config()
 	return {
 		copilot = {
-			enabled = false,
+			enabled = true,
 		},
 		avante = {
 			enabled = false,

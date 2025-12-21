@@ -75,6 +75,10 @@ M.plugins = {
 					group = "Git",
 				},
 				{
+					"<localleader>h",
+					group = "Harpoon",
+				},
+				{
 					"<leader>a",
 					group = "Harpoon",
 				},
