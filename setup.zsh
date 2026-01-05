@@ -7,6 +7,7 @@ export CONFIG_PATH=~/.config
 
 ./aerospace/setup.zsh
 ./desktoppr/setup.zsh
+./fastfetch/setup.zsh
 ./jankyborders/setup.zsh
 ./kitty/setup.zsh
 ./nvim/setup.zsh
