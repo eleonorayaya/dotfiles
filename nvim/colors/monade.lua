@@ -27,8 +27,8 @@ local colors = {
   salmon = "#d16577",       -- Salmon (darker)
   purple = "#9370b9",       -- Soft purple (more saturated)
   lavender = "#a87bb7",     -- Lavender (darker)
-  gold = "#c97f4b",         -- Warm gold (darker)
-  yellow = "#d4a85c",       -- Soft yellow (darker)
+  gold = "#b8733f",         -- Warm gold (darker for better contrast)
+  yellow = "#b8873f",       -- Soft yellow (darker for better contrast)
   mint = "#5fafa5",         -- Soft mint (darker)
   blue = "#6a9bc3",         -- Soft blue (darker)
 

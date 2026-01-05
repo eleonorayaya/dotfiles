@@ -59,6 +59,10 @@ M.plugins = {
         builtin_servers["rust_analyzer"] = {}
       end
 
+      if nvim_config.languages.typescript.enabled then
+        builtin_servers["ts_ls"] = {}
+      end
+
       local custom_servers = {
         -- up = {
         -- 	cmd = { "up", "xpls", "serve", "--verbose" },

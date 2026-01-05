@@ -10,6 +10,9 @@ local function default_config()
     languages = {
       rust = {
         enabled = false,
+      },
+      typescript = {
+        enabled = false,
       }
     }
   }
