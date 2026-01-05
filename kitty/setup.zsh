@@ -1,6 +1,6 @@
 KITTY_CONFIG_DIR="$CONFIG_PATH/kitty"
 KITTY_CONFIG=kitty.conf
-THEME_CONFIG=candyland.conf
+THEME_CONFIG=monade.conf
 
 # TODO: kitty isn't being added to the PATH, so this check passes even if kitty isn't installed
 echo "[kitty] checking installation"
