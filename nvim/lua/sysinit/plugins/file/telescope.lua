@@ -207,6 +207,7 @@ M.plugins = {
 						telescope_pick_project_files()
 					end,
 					desc = "Git Files",
+					mode = { "n", "t" },
 				},
         {
           "<leader>ff",

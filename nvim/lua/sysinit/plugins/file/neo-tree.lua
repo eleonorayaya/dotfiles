@@ -151,6 +151,7 @@ M.plugins = {
           vim.cmd("wincmd p")
         end,
         desc = "Toggle file tree",
+        mode = { "n", "t" },
       },
       {
         "<leader>of",
