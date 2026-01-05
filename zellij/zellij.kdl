@@ -148,7 +148,7 @@ load_plugins {
   zjstatus
 }
 
-theme "rose-pine-moon"
+theme "monade"
 
 default_mode "normal"
 
