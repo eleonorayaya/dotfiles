@@ -2,7 +2,7 @@
 ZELLIJ_CONFIG_DIR="$CONFIG_PATH/zellij"
 ZELLIJ_CONFIG="zellij.kdl"
 ZELLIJ_CONFIG_OUT="config.kdl"
-THEME_CONFIG="rose-pine-moon.kdl"
+THEME_CONFIG="monade.kdl"
 LAYOUT_CONFIG="layout.kdl"
 PLUGIN_CONFIG_DIR="$ZELLIJ_CONFIG_DIR/plugins"
 

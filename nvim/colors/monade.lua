@@ -1,0 +1,190 @@
+-- Monade theme - inspired by pastel terminal aesthetic
+-- Based on soft pinks, corals, and cream tones
+
+vim.cmd("hi clear")
+if vim.fn.exists("syntax_on") then
+  vim.cmd("syntax reset")
+end
+
+vim.o.background = "light"
+vim.g.colors_name = "monade"
+
+-- Color palette
+local colors = {
+  -- Backgrounds
+  bg = "#e8dfd5",           -- Light cream (softened more)
+  bg_dark = "#dfd6cc",      -- Slightly darker cream
+  bg_highlight = "#edd5d0", -- Misty rose
+
+  -- Foregrounds
+  fg = "#4a4a4a",           -- Dark gray for text
+  fg_dark = "#2a2a2a",      -- Darker gray
+  fg_light = "#6a6a6a",     -- Light gray
+
+  -- Accents
+  pink = "#e6537a",         -- Coral pink (more saturated)
+  peach = "#d97c6e",        -- Soft peach (darker)
+  salmon = "#d16577",       -- Salmon (darker)
+  purple = "#9370b9",       -- Soft purple (more saturated)
+  lavender = "#a87bb7",     -- Lavender (darker)
+  gold = "#c97f4b",         -- Warm gold (darker)
+  yellow = "#d4a85c",       -- Soft yellow (darker)
+  mint = "#5fafa5",         -- Soft mint (darker)
+  blue = "#6a9bc3",         -- Soft blue (darker)
+
+  -- UI
+  border = "#e8d0c4",       -- Warm border
+  selection = "#ffd5d5",    -- Light pink selection (slightly more saturated)
+  comment = "#8a7873",      -- Muted brown (darker for better readability)
+}
+
+-- Helper function to set highlights
+local function hi(group, opts)
+  local cmd = "highlight " .. group
+  if opts.fg then cmd = cmd .. " guifg=" .. opts.fg end
+  if opts.bg then cmd = cmd .. " guibg=" .. opts.bg end
+  if opts.gui then cmd = cmd .. " gui=" .. opts.gui end
+  if opts.sp then cmd = cmd .. " guisp=" .. opts.sp end
+  vim.cmd(cmd)
+end
+
+-- Editor highlights
+hi("Normal", { fg = colors.fg, bg = colors.bg })
+hi("NormalFloat", { fg = colors.fg, bg = colors.bg_dark })
+hi("NormalNC", { fg = colors.fg, bg = colors.bg })
+hi("LineNr", { fg = colors.comment })
+hi("CursorLine", { bg = colors.bg_highlight })
+hi("CursorLineNr", { fg = colors.pink, gui = "bold" })
+hi("Visual", { bg = colors.selection })
+hi("VisualNOS", { bg = colors.selection })
+hi("Search", { fg = colors.fg_dark, bg = colors.yellow })
+hi("IncSearch", { fg = colors.fg_dark, bg = colors.gold })
+hi("CursorColumn", { bg = colors.bg_highlight })
+hi("ColorColumn", { bg = colors.bg_dark })
+hi("SignColumn", { bg = colors.bg })
+hi("Folded", { fg = colors.comment, bg = colors.bg_dark })
+hi("FoldColumn", { fg = colors.comment, bg = colors.bg })
+
+-- Window elements
+hi("VertSplit", { fg = colors.border, bg = colors.bg })
+hi("WinSeparator", { fg = colors.border, bg = colors.bg })
+hi("StatusLine", { fg = colors.fg, bg = colors.bg_dark })
+hi("StatusLineNC", { fg = colors.fg_light, bg = colors.bg_dark })
+hi("TabLine", { fg = colors.fg_light, bg = colors.bg_dark })
+hi("TabLineFill", { bg = colors.bg_dark })
+hi("TabLineSel", { fg = colors.fg, bg = colors.bg })
+
+-- Syntax highlighting
+hi("Comment", { fg = colors.comment, gui = "italic" })
+hi("Constant", { fg = colors.salmon })
+hi("String", { fg = colors.peach })
+hi("Character", { fg = colors.peach })
+hi("Number", { fg = colors.purple })
+hi("Boolean", { fg = colors.purple })
+hi("Float", { fg = colors.purple })
+
+hi("Identifier", { fg = colors.pink })
+hi("Function", { fg = colors.salmon })
+
+hi("Statement", { fg = colors.pink })
+hi("Conditional", { fg = colors.pink })
+hi("Repeat", { fg = colors.pink })
+hi("Label", { fg = colors.pink })
+hi("Operator", { fg = colors.fg })
+hi("Keyword", { fg = colors.pink })
+hi("Exception", { fg = colors.pink })
+
+hi("PreProc", { fg = colors.lavender })
+hi("Include", { fg = colors.lavender })
+hi("Define", { fg = colors.lavender })
+hi("Macro", { fg = colors.lavender })
+hi("PreCondit", { fg = colors.lavender })
+
+hi("Type", { fg = colors.blue })
+hi("StorageClass", { fg = colors.blue })
+hi("Structure", { fg = colors.blue })
+hi("Typedef", { fg = colors.blue })
+
+hi("Special", { fg = colors.gold })
+hi("SpecialChar", { fg = colors.gold })
+hi("Tag", { fg = colors.pink })
+hi("Delimiter", { fg = colors.fg })
+hi("SpecialComment", { fg = colors.comment, gui = "italic" })
+hi("Debug", { fg = colors.salmon })
+
+hi("Underlined", { fg = colors.blue, gui = "underline" })
+hi("Error", { fg = colors.salmon, bg = colors.bg_highlight })
+hi("Todo", { fg = colors.gold, bg = colors.bg_highlight, gui = "bold" })
+
+-- Treesitter
+hi("@variable", { fg = colors.fg })
+hi("@variable.builtin", { fg = colors.purple })
+hi("@variable.parameter", { fg = colors.fg })
+hi("@variable.member", { fg = colors.fg })
+
+hi("@constant", { fg = colors.salmon })
+hi("@constant.builtin", { fg = colors.purple })
+hi("@string", { fg = colors.peach })
+hi("@string.escape", { fg = colors.gold })
+hi("@character", { fg = colors.peach })
+hi("@number", { fg = colors.purple })
+hi("@boolean", { fg = colors.purple })
+
+hi("@function", { fg = colors.salmon })
+hi("@function.builtin", { fg = colors.salmon })
+hi("@function.method", { fg = colors.salmon })
+hi("@constructor", { fg = colors.blue })
+
+hi("@keyword", { fg = colors.pink })
+hi("@keyword.function", { fg = colors.pink })
+hi("@keyword.return", { fg = colors.pink })
+hi("@keyword.operator", { fg = colors.pink })
+
+hi("@type", { fg = colors.blue })
+hi("@type.builtin", { fg = colors.blue })
+hi("@attribute", { fg = colors.lavender })
+hi("@property", { fg = colors.fg })
+
+hi("@punctuation.delimiter", { fg = colors.fg })
+hi("@punctuation.bracket", { fg = colors.fg })
+hi("@punctuation.special", { fg = colors.pink })
+
+hi("@comment", { fg = colors.comment, gui = "italic" })
+
+hi("@tag", { fg = colors.pink })
+hi("@tag.attribute", { fg = colors.lavender })
+hi("@tag.delimiter", { fg = colors.fg })
+
+-- LSP
+hi("DiagnosticError", { fg = colors.salmon })
+hi("DiagnosticWarn", { fg = colors.gold })
+hi("DiagnosticInfo", { fg = colors.blue })
+hi("DiagnosticHint", { fg = colors.mint })
+hi("DiagnosticUnderlineError", { sp = colors.salmon, gui = "underline" })
+hi("DiagnosticUnderlineWarn", { sp = colors.gold, gui = "underline" })
+hi("DiagnosticUnderlineInfo", { sp = colors.blue, gui = "underline" })
+hi("DiagnosticUnderlineHint", { sp = colors.mint, gui = "underline" })
+
+-- Telescope
+hi("TelescopeBorder", { fg = colors.border, bg = colors.bg })
+hi("TelescopeNormal", { fg = colors.fg, bg = colors.bg })
+hi("TelescopeSelection", { fg = colors.fg, bg = colors.bg_highlight })
+hi("TelescopeSelectionCaret", { fg = colors.pink, bg = colors.bg_highlight })
+hi("TelescopeMatching", { fg = colors.salmon, gui = "bold" })
+
+-- Git signs
+hi("GitSignsAdd", { fg = colors.mint })
+hi("GitSignsChange", { fg = colors.gold })
+hi("GitSignsDelete", { fg = colors.salmon })
+
+-- Diff
+hi("DiffAdd", { bg = "#e8f5e9" })
+hi("DiffChange", { bg = "#fff9e6" })
+hi("DiffDelete", { fg = colors.salmon, bg = "#ffebee" })
+hi("DiffText", { bg = "#ffe0b2" })
+
+-- Completion menu
+hi("Pmenu", { fg = colors.fg, bg = colors.bg_dark })
+hi("PmenuSel", { fg = colors.fg, bg = colors.bg_highlight })
+hi("PmenuSbar", { bg = colors.bg_dark })
+hi("PmenuThumb", { bg = colors.border })
