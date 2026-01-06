@@ -11,9 +11,10 @@ M.plugins = {
       local options = {}
 
       if nvim_config.claude.command ~= "" then
-        options.terminal_command = nvim_config.claude.command
+        options.terminal_cmd  = nvim_config.claude.command
       end
 
+      put(options)
       return options
     end,
     config = true,
