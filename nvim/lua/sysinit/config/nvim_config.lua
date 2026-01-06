@@ -7,6 +7,9 @@ end
 
 local function default_config()
   return {
+    claude = {
+      commmand = "",
+    },
     languages = {
       rust = {
         enabled = false,
