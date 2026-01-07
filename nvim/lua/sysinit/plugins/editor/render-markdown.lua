@@ -22,6 +22,7 @@ M.plugins = {
           border = "thin",
           position = "left",
           language_icon = true,
+          highlight = "RenderMarkdownCode",
         },
         latex = {
           enabled = false,
