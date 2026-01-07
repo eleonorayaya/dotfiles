@@ -2,9 +2,7 @@ local nvim_config = require("sysinit.config.nvim_config").load_config()
 local M = {}
 
 M.plugins = {
-
   {
-
     "coder/claudecode.nvim",
     dependencies = { "folke/snacks.nvim" },
     opts = function()
@@ -14,12 +12,10 @@ M.plugins = {
         options.terminal_cmd  = nvim_config.claude.command
       end
 
-      put(options)
       return options
     end,
     config = true,
       keys = {
-      { "<leader>a", nil, desc = "AI/Claude Code" },
       { "<leader>ac", "<cmd>ClaudeCode<cr>", desc = "Toggle Claude" },
       { "<leader>af", "<cmd>ClaudeCodeFocus<cr>", desc = "Focus Claude" },
       { "<leader>ar", "<cmd>ClaudeCode --resume<cr>", desc = "Resume Claude" },
