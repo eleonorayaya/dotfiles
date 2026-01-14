@@ -128,10 +128,15 @@ M.plugins = {
 				pickers = {
 					find_files = {
 						hidden = true,
+            follow = true,
 					},
 					live_grep = {
+            follow = true,
 						additional_args = function()
-							return { "--hidden" }
+							return {
+                "--hidden",
+                "--follow",
+              }
 						end,
 					},
 					colorscheme = {
@@ -143,6 +148,7 @@ M.plugins = {
 					"--color=never",
 					"--no-heading",
 					"--hidden",
+          "--follow",
 					"--with-filename",
 					"--line-number",
 					"--column",
@@ -214,6 +220,7 @@ M.plugins = {
           function()
             require("telescope").extensions.live_grep_args.live_grep_args({
             auto_quoting = true,
+            follow = true,
             mappings = {
               i = {
                 ["<C-i>"] = lga_actions.quote_prompt({ postfix = " --iglob *" }),
@@ -230,6 +237,7 @@ M.plugins = {
             local lga_shortcuts = require("telescope-live-grep-args.shortcuts")
 
             lga_shortcuts.grep_visual_selection({
+              follow = true,
               postfix = " --iglob *",
             })
           end,
