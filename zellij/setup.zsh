@@ -8,7 +8,6 @@ PLUGIN_CONFIG_DIR="$ZELLIJ_CONFIG_DIR/plugins"
 
 declare -A plugins=(
   [vim-zellij-navigator]="https://github.com/hiasr/vim-zellij-navigator/releases/latest/download/vim-zellij-navigator.wasm"
-  [zellij-sessionizer]="https://github.com/laperlej/zellij-sessionizer/releases/latest/download/zellij-sessionizer.wasm"
   [zjstatus]="https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm"
 )
 
