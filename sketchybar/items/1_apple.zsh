@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
 POPUP_OFF="sketchybar --set apple.logo popup.drawing=off"
 POPUP_CLICK_SCRIPT="sketchybar --set \$NAME popup.drawing=toggle"
@@ -14,7 +14,7 @@ apple_logo=(
   padding_left=4
   padding_right=4
 
-  click_script="$POPUP_CLICK_SCRIPT"          
+  click_script="$POPUP_CLICK_SCRIPT"
 )
 
 apple_prefs=(
@@ -46,3 +46,4 @@ sketchybar --add item apple.logo left                  \
                                                        \
            --add item apple.lock popup.apple.logo      \
            --set apple.lock "${apple_lock[@]}"
+

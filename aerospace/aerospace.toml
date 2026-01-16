@@ -6,13 +6,18 @@ enable-normalization-opposite-orientation-for-nested-containers = true
 accordion-padding = 50
 
 start-at-login = true
+exec-on-workspace-change = [
+  "/bin/bash",
+  "-c",
+  "sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE"
+]
 
 [gaps]
 inner.horizontal = 16
 inner.vertical = 16
 outer.left = 16
 outer.bottom = 16
-outer.top = 16
+outer.top = 64
 outer.right = 16
 
 
@@ -40,7 +45,7 @@ alt-shift-p = 'move-node-to-workspace 8 --focus-follows-window'
 alt-tab = 'workspace-back-and-forth'
 alt-shift-tab = [
   'move-workspace-to-monitor --wrap-around next',
-  'exec-and-forget $triggerWorkspaceMonitorChange'
+  'exec-and-forget sketchybar --trigger aerospace_workspace_monitor_change'
 ]
 
 alt-shift-semicolon = 'mode service'

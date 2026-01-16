@@ -1,8 +1,4 @@
-#!/usr/bin/env bash
-
-set -x
-
-echo "YEP clock"
+#!/usr/bin/env zsh
 
 ICON=$(date '+%a %B %d')
 LABEL=$(date '+%I:%M %p')
@@ -13,3 +9,4 @@ clock=(
 )
 
 sketchybar --set "$NAME" "${clock[@]}"
+
