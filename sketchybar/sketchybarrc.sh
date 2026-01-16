@@ -1,7 +1,17 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
-set -x
-. ./theme.sh
+echo "initializing sketchybar\n\n"
+
+# Load all style files
+STYLE_DIR="./styles"
+if [ -d "$STYLE_DIR" ]; then
+  for style_file in "$STYLE_DIR"/*; do
+    if [ -f "$style_file" ]; then
+      echo "Loading style: $(basename "$style_file")"
+      . "$style_file"
+    fi
+  done
+fi
 
 PADDINGS=3
 bar=(
@@ -37,8 +47,8 @@ default=(
   background.height=30
   background.corner_radius=9
 
-  popup.background.border_width=POPUP_BORDER_WIDTH 
-  popup.background.corner_radius=POPUP_CORNER_RADIUS 
+  popup.background.border_width=POPUP_BORDER_WIDTH
+  popup.background.corner_radius=POPUP_CORNER_RADIUS
   popup.background.border_color="$POPUP_BORDER_COLOR"
   popup.background.color="$POPUP_BACKGROUND_COLOR"
   popup.blur_radius=20
@@ -51,8 +61,17 @@ sketchybar \
   --bar "${bar[@]}" \
   --default "${default[@]}"
 
+# Load all item scripts from items directory
+ITEM_DIR="./items"
+if [ -d "$ITEM_DIR" ]; then
+  for item_script in "$ITEM_DIR"/*; do
+    if [ -f "$item_script" ] && [ -x "$item_script" ]; then
+      echo "Loading item: $(basename "$item_script")"
+      "./$item_script"
+    fi
+  done
+fi
 
-sketchybar --update
 
 echo "sketchybar configuation loaded.."
 
