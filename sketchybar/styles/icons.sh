@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
 export HERO_ICON="󰊠"
 export HOME_ICON=""
@@ -11,3 +11,4 @@ export TERMINAL_ICON=""
 export PREFERENCES_ICON="􀺽"
 export ACTIVITY_ICON=""
 export LOCK_ICON="􀒳"
+

@@ -1,7 +1,6 @@
 #! /usr/bin/env zsh
-#
-export DOTFILE_PATH=~/.dotfiles
-export CONFIG_PATH=~/.config
+
+. ./setup_env.zsh
 
 ./homebrew/setup.zsh
 

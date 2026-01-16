@@ -1,0 +1,10 @@
+#!/usr/bin/env zsh
+
+export BAR_HEIGHT=32
+export BAR_MARGIN=12
+export BAR_TOP_OFFSET=12
+export BAR_CORNER_RADIUS=8
+
+export POPUP_BORDER_WIDTH=2
+export POPUP_CORNER_RADIUS=9
+

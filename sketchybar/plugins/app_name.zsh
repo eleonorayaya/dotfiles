@@ -1,2 +1,3 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 sketchybar --set "${NAME}" label="${INFO}"
+
