@@ -45,6 +45,7 @@ func sync(cmd *cobra.Command, args []string) error {
 		{"jankyborders", jankyborders.Sync},
 		{"zellij", zellij.Sync},
 		{"nvim", nvim.Sync},
+		{"desktoppr", desktoppr.Sync},
 	}
 
 	// Sync each app
