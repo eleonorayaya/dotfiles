@@ -2,6 +2,8 @@ package internal
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path"
 )
@@ -81,5 +83,42 @@ func SyncAppFiles(fileMap map[string]string, outDir string) error {
 	}
 
 	return nil
+}
+
+func FetchRemoteAppFiles(outDir string, appName string, remoteFiles map[string]string) (map[string]string, error) {
+	appOutDir := path.Join(outDir, appName)
+	fileMap := make(map[string]string)
+
+	for relPath, url := range remoteFiles {
+		buildPath := path.Join(appOutDir, relPath)
+
+		if err := EnsureDirExists(path.Dir(buildPath)); err != nil {
+			return nil, fmt.Errorf("failed to create directory for %s: %w", relPath, err)
+		}
+
+		resp, err := http.Get(url)
+		if err != nil {
+			return nil, fmt.Errorf("failed to download %s: %w", relPath, err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("failed to download %s: status %d", relPath, resp.StatusCode)
+		}
+
+		out, err := os.Create(buildPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create %s: %w", relPath, err)
+		}
+		defer out.Close()
+
+		if _, err := io.Copy(out, resp.Body); err != nil {
+			return nil, fmt.Errorf("failed to write %s: %w", relPath, err)
+		}
+
+		fileMap[relPath] = buildPath
+	}
+
+	return fileMap, nil
 }
 
