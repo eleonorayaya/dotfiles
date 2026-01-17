@@ -4,9 +4,11 @@ import (
 	"fmt"
 
 	"github.com/eleonorayaya/shizuku/internal"
+	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 )
 
-func Sync(outDir string) error {
+func Sync(outDir string, config *shizukuconfig.Config) error {
+	fmt.Printf("Hi")
 	data := map[string]any{}
 
 	fileMap, err := internal.GenerateAppFiles("aerospace", data, outDir)

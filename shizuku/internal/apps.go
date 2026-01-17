@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"path"
+
+	"github.com/eleonorayaya/shizuku/internal/util"
 )
 
 func listAppFiles(appDir string, relativePath string) ([]string, error) {
@@ -64,11 +66,11 @@ func GenerateAppFiles(appName string, data map[string]any, outDir string) (map[s
 
 func SyncAppFile(fileName, filePath string, outDir string) error {
 	outFilePath := path.Join(outDir, fileName)
-	if err := EnsureDirExists(path.Dir(outFilePath)); err != nil {
+	if err := util.EnsureDirExists(path.Dir(outFilePath)); err != nil {
 		return fmt.Errorf("failed to sync file %s: %w", fileName, err)
 	}
 
-	if err := CopyFile(filePath, outFilePath); err != nil {
+	if err := util.CopyFile(filePath, outFilePath); err != nil {
 		return fmt.Errorf("failed to sync file %s: %w", fileName, err)
 	}
 
@@ -92,7 +94,7 @@ func FetchRemoteAppFiles(outDir string, appName string, remoteFiles map[string]s
 	for relPath, url := range remoteFiles {
 		buildPath := path.Join(appOutDir, relPath)
 
-		if err := EnsureDirExists(path.Dir(buildPath)); err != nil {
+		if err := util.EnsureDirExists(path.Dir(buildPath)); err != nil {
 			return nil, fmt.Errorf("failed to create directory for %s: %w", relPath, err)
 		}
 

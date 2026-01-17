@@ -1,20 +1,25 @@
 version: '3'
 
+vars:
+  GO_SOURCES: '{apps,cmd,internal}/**/*.go'
+
 tasks:
   build:
     sources:
-      - '**/*.go'
+      - "{{.GO_SOURCES}}"
     cmds:
       - go build -o out/shizuku cmd/main.go
-  dev:
-    deps:
-      - build
-    watch: true
+  run:
     cmds:
-      - ./out/main daemon
+      - go run cmd/main.go {{.CLI_ARGS}}
   fmt:
     sources:
-      - '**/*.go'
+      - "{{.GO_SOURCES}}"
     cmds:
       - go fmt ./...
+  test:
+    sources:
+      - "{{.GO_SOURCES}}"
+    cmds:
+      - go test {{.CLI_ARGS}} ./...
 
