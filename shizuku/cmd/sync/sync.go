@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"github.com/eleonorayaya/shizuku/apps/aerospace"
+	"github.com/eleonorayaya/shizuku/apps/desktoppr"
 	"github.com/eleonorayaya/shizuku/apps/fastfetch"
 	"github.com/eleonorayaya/shizuku/apps/jankyborders"
 	"github.com/eleonorayaya/shizuku/apps/kitty"
+	"github.com/eleonorayaya/shizuku/apps/nvim"
 	"github.com/eleonorayaya/shizuku/apps/sketchybar"
 	"github.com/eleonorayaya/shizuku/apps/zellij"
 	"github.com/spf13/cobra"
@@ -42,6 +44,7 @@ func sync(cmd *cobra.Command, args []string) error {
 		{"kitty", kitty.Sync},
 		{"jankyborders", jankyborders.Sync},
 		{"zellij", zellij.Sync},
+		{"nvim", nvim.Sync},
 	}
 
 	// Sync each app
