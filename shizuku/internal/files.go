@@ -76,4 +76,3 @@ func NormalizeFilePath(filePath string) (string, error) {
 
 	return strings.ReplaceAll(filePath, "~", homeDir), nil
 }
-

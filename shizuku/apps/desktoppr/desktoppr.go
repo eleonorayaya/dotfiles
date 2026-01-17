@@ -16,4 +16,3 @@ func Sync(outDir string) error {
 
 	return nil
 }
-

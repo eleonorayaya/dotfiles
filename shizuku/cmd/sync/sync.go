@@ -62,4 +62,3 @@ func sync(cmd *cobra.Command, args []string) error {
 	fmt.Printf("\nBuild output: %s\n", outDir)
 	return nil
 }
-
