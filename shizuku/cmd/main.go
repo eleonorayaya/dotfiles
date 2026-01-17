@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	initcmd "github.com/eleonorayaya/shizuku/cmd/init"
 	"github.com/eleonorayaya/shizuku/cmd/sync"
 	"github.com/spf13/cobra"
 )
@@ -25,6 +26,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	rootCmd.AddCommand(initcmd.InitCommand)
 	rootCmd.AddCommand(sync.SyncCommand)
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 }

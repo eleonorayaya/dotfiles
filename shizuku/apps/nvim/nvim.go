@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	"github.com/eleonorayaya/shizuku/internal"
+	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 )
 
-func Sync(outDir string) error {
+func Sync(outDir string, config *shizukuconfig.Config) error {
 	data := map[string]any{}
 
 	fileMap, err := internal.GenerateAppFiles("nvim", data, outDir)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/eleonorayaya/shizuku/internal"
+	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 )
 
 var remotePlugins = map[string]string{
@@ -11,7 +12,7 @@ var remotePlugins = map[string]string{
 	"plugins/zjstatus.wasm":             "https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm",
 }
 
-func Sync(outDir string) error {
+func Sync(outDir string, config *shizukuconfig.Config) error {
 	data := map[string]any{}
 
 	fileMap, err := internal.GenerateAppFiles("zellij", data, outDir)

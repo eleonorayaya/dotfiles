@@ -1,4 +1,4 @@
-package internal
+package util
 
 import (
 	"fmt"
@@ -7,10 +7,6 @@ import (
 	"os"
 	"strings"
 )
-
-func CopyFiles(inFiles []string, outDir string) error {
-	return nil
-}
 
 func CopyFile(inFile, outFile string) error {
 	slog.Debug("copying file", "inFile", inFile, "outFile", outFile)
