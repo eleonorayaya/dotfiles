@@ -5,7 +5,7 @@ tasks:
     sources:
       - '**/*.go'
     cmds:
-      - go build -o out/main cmd/main.go
+      - go build -o out/shizuku cmd/main.go
   dev:
     deps:
       - build

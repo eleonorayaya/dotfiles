@@ -121,4 +121,3 @@ func FetchRemoteAppFiles(outDir string, appName string, remoteFiles map[string]s
 
 	return fileMap, nil
 }
-

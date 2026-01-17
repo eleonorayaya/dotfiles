@@ -59,4 +59,3 @@ func generateTemplateFile(templatePath string, data map[string]any, outFile stri
 
 	return nil
 }
-
