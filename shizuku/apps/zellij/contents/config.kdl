@@ -59,8 +59,6 @@ keybinds clear-defaults=true {
             floating true
             move_to_focused_tab true
             cwd "/"
-            root_dirs "/Users/eleonora/dev/"
-            extra_dirs "/Users/eleonora/.dotfiles/"
         }
         SwitchToMode "Normal"
     }
