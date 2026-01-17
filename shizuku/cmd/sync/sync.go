@@ -15,6 +15,7 @@ import (
 	"github.com/eleonorayaya/shizuku/apps/nvim"
 	"github.com/eleonorayaya/shizuku/apps/sketchybar"
 	"github.com/eleonorayaya/shizuku/apps/zellij"
+	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -25,6 +26,10 @@ var SyncCommand = &cobra.Command{
 }
 
 func sync(cmd *cobra.Command, args []string) error {
+	appConfig, err := shizukuconfig.LoadConfig()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
 
 	buildId := fmt.Sprintf("%v", time.Now().Unix())
 
@@ -33,10 +38,9 @@ func sync(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error created output dir: %w", err)
 	}
 
-	// Define apps to sync in order
 	apps := []struct {
 		name string
-		fn   func(string) error
+		fn   func(string, *shizukuconfig.Config) error
 	}{
 		{"sketchybar", sketchybar.Sync},
 		{"aerospace", aerospace.Sync},
@@ -48,17 +52,15 @@ func sync(cmd *cobra.Command, args []string) error {
 		{"desktoppr", desktoppr.Sync},
 	}
 
-	// Sync each app
 	for _, app := range apps {
-		slog.Info("app synced", "appName", app.name)
+		slog.Info("app syncing", "appName", app.name)
 
-		if err := app.fn(outDir); err != nil {
+		if err := app.fn(outDir, appConfig); err != nil {
 			return fmt.Errorf("could not sync %s: %w", app.name, err)
 		}
 
 		slog.Info("app synced", "appName", app.name)
 	}
 
-	fmt.Printf("\nBuild output: %s\n", outDir)
 	return nil
 }

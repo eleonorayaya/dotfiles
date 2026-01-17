@@ -7,6 +7,8 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	"github.com/eleonorayaya/shizuku/internal/util"
 )
 
 const AppsRoot = "apps"
@@ -19,7 +21,7 @@ func GenerateAppFile(appDir string, inFile string, data map[string]any, appOutDi
 	outFilePath := path.Join(appOutDir, fileName)
 	outDirPath := path.Dir(outFilePath)
 
-	if err := EnsureDirExists(outDirPath); err != nil {
+	if err := util.EnsureDirExists(outDirPath); err != nil {
 		return "", "", fmt.Errorf("failed out make out dir %s for config file %s: %w", outDirPath, inFile, err)
 	}
 
@@ -28,7 +30,7 @@ func GenerateAppFile(appDir string, inFile string, data map[string]any, appOutDi
 			return "", "", fmt.Errorf("failed to generate file: %w", err)
 		}
 	} else {
-		if err := CopyFile(inFilePath, outFilePath); err != nil {
+		if err := util.CopyFile(inFilePath, outFilePath); err != nil {
 			return "", "", fmt.Errorf("failed to generate file: %w", err)
 		}
 	}
