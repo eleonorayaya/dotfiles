@@ -10,7 +10,8 @@ Shizuku manages application configurations by generating files from templates, d
 
 ```bash
 # Sync all application configurations
-go run cmd/main.go sync
+task build
+shizuku sync
 ```
 
 ## Architecture
@@ -85,3 +86,4 @@ Generated files are placed in `out/{timestamp}/` before being synced to their fi
 2. Create `{appName}.go` with a `Sync(outDir string) error` function
 3. Add source files to `contents/` directory (if needed)
 4. Import and register in `cmd/sync/sync.go`
+
