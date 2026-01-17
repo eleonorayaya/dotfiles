@@ -17,6 +17,19 @@ type LanguageConfig struct {
 	Config  map[string]any `yaml:",inline"`
 }
 
+func createDefaultLanguageConfig() map[string]LanguageConfig {
+	defaultConfig := make(map[string]LanguageConfig)
+
+	for _, lang := range languages {
+		defaultConfig[string(lang)] = LanguageConfig{
+			Enabled: false,
+			Config:  make(map[string]any),
+		}
+	}
+
+	return defaultConfig
+}
+
 func validateLanguageConfig(languageConfig map[string]LanguageConfig) error {
 	if languageConfig == nil {
 		return nil

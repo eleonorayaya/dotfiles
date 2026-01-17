@@ -13,20 +13,13 @@ type Config struct {
 	Languages map[string]LanguageConfig `yaml:"languages"`
 }
 
-const (
-	ConfigFilePath = "~/.config/shizuku/shizuku.yml"
-)
-
-func LoadConfig() (*Config, error) {
-	return LoadConfigFromPath(ConfigFilePath)
+func newConfig() *Config {
+	return &Config{
+		Languages: createDefaultLanguageConfig(),
+	}
 }
 
-func LoadConfigFromPath(configFilePath string) (*Config, error) {
-	configPath, err := util.NormalizeFilePath(configFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to normalize config path: %w", err)
-	}
-
+func newConfigFromPath(configPath string) (*Config, error) {
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -56,15 +49,20 @@ func (c *Config) validate() error {
 	return nil
 }
 
-func NormalizeConfigPath() (string, error) {
-	return util.NormalizeFilePath(ConfigFilePath)
-}
-
-func ConfigDir() (string, error) {
-	configPath, err := NormalizeConfigPath()
+func (c *Config) save(configPath string) error {
+	yamlData, err := yaml.Marshal(c)
 	if err != nil {
-		return "", err
+		return fmt.Errorf("failed to serialize config to YAML: %w", err)
 	}
 
-	return filepath.Dir(configPath), nil
+	configDir := filepath.Dir(configPath)
+	if err := util.EnsureDirExists(configDir); err != nil {
+		return fmt.Errorf("failed to create config directory: %w", err)
+	}
+
+	if err := os.WriteFile(configPath, yamlData, 0644); err != nil {
+		return fmt.Errorf("failed to write config file: %w", err)
+	}
+
+	return nil
 }

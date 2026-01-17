@@ -1,4 +1,4 @@
-package shizukuconfig_test
+package shizukuconfig
 
 import (
 	"os"
@@ -6,113 +6,141 @@ import (
 	"testing"
 )
 
-func TestLoadConfig(t *testing.T) {
-	// Create a temporary config file
-	tmpDir := t.TempDir()
-	configContent := `
+func TestNewConfig(t *testing.T) {
+	config := newConfig()
+
+	if config == nil {
+		t.Fatal("Expected non-nil config")
+	}
+
+	if config.Languages == nil {
+		t.Error("Expected Languages map to be initialized")
+	}
+
+	if len(config.Languages) == 0 {
+		t.Error("Expected Languages map to have default languages")
+	}
+
+	for lang, langConfig := range config.Languages {
+		if langConfig.Enabled {
+			t.Errorf("Expected language %s to be disabled by default", lang)
+		}
+	}
+}
+
+func TestNewConfigFromPath(t *testing.T) {
+	t.Run("loads valid config", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configContent := `
 languages:
   rust:
     enabled: true
     version: "1.75"
-
-sketchybar:
-  Test: "Aayaya"
-  bar_height: 36
-
-aerospace:
-  gap_h: 10
 `
+		configPath := filepath.Join(tmpDir, "shizuku.yml")
+		if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+			t.Fatalf("Failed to write test config: %v", err)
+		}
 
-	configPath := filepath.Join(tmpDir, "shizuku.yml")
-	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
-		t.Fatalf("Failed to write test config: %v", err)
-	}
+		config, err := newConfigFromPath(configPath)
+		if err != nil {
+			t.Fatalf("newConfigFromPath failed: %v", err)
+		}
 
-	// Load the config
-	config, err := LoadConfigFromPath(configPath)
-	if err != nil {
-		t.Fatalf("LoadConfig failed: %v", err)
-	}
+		rustConfig, exists := config.Languages["rust"]
+		if !exists {
+			t.Error("Expected Rust config to exist")
+		}
 
-	// Test language config
-	if !shizukuconfig.IsLanguageEnabled(LanguageRust) {
-		t.Error("Expected Rust to be enabled")
-	}
+		if !rustConfig.Enabled {
+			t.Error("Expected Rust to be enabled")
+		}
 
-	rustConfig, exists := shizukuconfig.GetLanguageConfig(LanguageRust)
-	if !exists {
-		t.Error("Expected Rust config to exist")
-	}
+		if rustConfig.Config["version"] != "1.75" {
+			t.Errorf("Expected version to be '1.75', got %v", rustConfig.Config["version"])
+		}
+	})
 
-	if !rustConfig.Enabled {
-		t.Error("Expected Rust to be enabled")
-	}
+	t.Run("returns error for non-existent file", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configPath := filepath.Join(tmpDir, "nonexistent.yml")
 
-	// Test app config
-	sketchybarConfig := shizukuconfig.GetAppConfig("sketchybar")
-	if sketchybarConfig["Test"] != "Aayaya" {
-		t.Errorf("Expected Test to be 'Aayaya', got %v", sketchybarConfig["Test"])
-	}
+		_, err := newConfigFromPath(configPath)
+		if err == nil {
+			t.Error("Expected error for non-existent file")
+		}
+	})
 
-	if sketchybarConfig["bar_height"] != 36 {
-		t.Errorf("Expected bar_height to be 36, got %v", sketchybarConfig["bar_height"])
-	}
+	t.Run("returns error for invalid YAML", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configPath := filepath.Join(tmpDir, "invalid.yml")
+		if err := os.WriteFile(configPath, []byte("invalid: yaml: content:"), 0644); err != nil {
+			t.Fatalf("Failed to write test config: %v", err)
+		}
 
-	aerospaceConfig := shizukuconfig.GetAppConfig("aerospace")
-	if aerospaceConfig["gap_h"] != 10 {
-		t.Errorf("Expected gap_h to be 10, got %v", aerospaceConfig["gap_h"])
-	}
+		_, err := newConfigFromPath(configPath)
+		if err == nil {
+			t.Error("Expected error for invalid YAML")
+		}
+	})
 }
 
-func TestValidateLanguages(t *testing.T) {
-	tests := []struct {
-		name      string
-		config    string
-		shouldErr bool
-	}{
-		{
-			name: "valid rust language",
-			config: `
-languages:
-  rust:
-    enabled: true
-`,
-			shouldErr: false,
-		},
-		{
-			name: "invalid language",
-			config: `
-languages:
-  python:
-    enabled: true
-`,
-			shouldErr: true,
-		},
-		{
-			name: "no languages section",
-			config: `
-sketchybar:
-  Test: "value"
-`,
-			shouldErr: false,
-		},
-	}
+func TestConfigSave(t *testing.T) {
+	t.Run("saves config to file", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configPath := filepath.Join(tmpDir, "test.yml")
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tmpDir := t.TempDir()
-			configPath := filepath.Join(tmpDir, "shizuku.yml")
-			if err := os.WriteFile(configPath, []byte(tt.config), 0644); err != nil {
-				t.Fatalf("Failed to write test config: %v", err)
-			}
+		config := newConfig()
+		if err := config.save(configPath); err != nil {
+			t.Fatalf("Failed to save config: %v", err)
+		}
 
-			_, err := LoadConfigFromPath(configPath)
-			if tt.shouldErr && err == nil {
-				t.Error("Expected error but got none")
-			}
-			if !tt.shouldErr && err != nil {
-				t.Errorf("Expected no error but got: %v", err)
-			}
-		})
-	}
+		if _, err := os.Stat(configPath); os.IsNotExist(err) {
+			t.Error("Config file was not created")
+		}
+
+		loadedConfig, err := newConfigFromPath(configPath)
+		if err != nil {
+			t.Fatalf("Failed to load saved config: %v", err)
+		}
+
+		if loadedConfig.Languages == nil {
+			t.Error("Expected Languages map in loaded config")
+		}
+	})
+
+	t.Run("creates directory if it doesn't exist", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configPath := filepath.Join(tmpDir, "nested", "dir", "config.yml")
+
+		config := newConfig()
+		if err := config.save(configPath); err != nil {
+			t.Fatalf("Failed to save config: %v", err)
+		}
+
+		if _, err := os.Stat(configPath); os.IsNotExist(err) {
+			t.Error("Config file was not created in nested directory")
+		}
+	})
+}
+
+func TestConfigValidate(t *testing.T) {
+	t.Run("validates correct config", func(t *testing.T) {
+		config := newConfig()
+		if err := config.validate(); err != nil {
+			t.Errorf("Expected valid config, got error: %v", err)
+		}
+	})
+
+	t.Run("rejects invalid language", func(t *testing.T) {
+		config := &Config{
+			Languages: map[string]LanguageConfig{
+				"invalid-lang": {Enabled: true},
+			},
+		}
+
+		if err := config.validate(); err == nil {
+			t.Error("Expected error for invalid language")
+		}
+	})
 }
