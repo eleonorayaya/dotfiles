@@ -9,6 +9,7 @@ import (
 
 	"github.com/eleonorayaya/shizuku/apps/aerospace"
 	"github.com/eleonorayaya/shizuku/apps/bat"
+	"github.com/eleonorayaya/shizuku/apps/desktoppr"
 	"github.com/eleonorayaya/shizuku/apps/fastfetch"
 	"github.com/eleonorayaya/shizuku/apps/git"
 	"github.com/eleonorayaya/shizuku/apps/golang"
@@ -67,6 +68,7 @@ func sync(cmd *cobra.Command, args []string) error {
 		{"rust", nil, rust.Env},
 		{"terminal", terminal.Sync, terminal.Env},
 		{"terraform", nil, terraform.Env},
+		{"desktoppr", desktoppr.Sync, nil},
 	}
 
 	for _, app := range apps {
