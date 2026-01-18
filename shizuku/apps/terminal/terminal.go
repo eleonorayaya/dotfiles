@@ -2,8 +2,17 @@ package terminal
 
 import "github.com/eleonorayaya/shizuku/internal/shizukuenv"
 
+const antigenInit = `source $(brew --prefix)/share/antigen/antigen.zsh
+
+antigen bundle jeffreytse/zsh-vi-mode > /dev/null
+
+antigen apply`
+
+const ohmyposhInit = `eval "$(oh-my-posh init zsh --config ~/.dotfiles/terminal/ohmyposh.json)"`
+
 func Env() (*shizukuenv.EnvSetup, error) {
 	return &shizukuenv.EnvSetup{
+		InitScripts: []string{antigenInit, ohmyposhInit},
 		Aliases: []shizukuenv.Alias{
 			{Name: "c", Command: "clear"},
 			{Name: "curltime", Command: "curl -o /dev/null -s -w 'Total: %{time_total}s\\n'"},

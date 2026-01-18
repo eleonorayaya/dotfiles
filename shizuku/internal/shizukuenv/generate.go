@@ -9,12 +9,15 @@ import (
 )
 
 func GenerateEnvFile(envSetups []*EnvSetup, outPath string) error {
+	initScripts := []string{}
 	vars := make(map[string]string)
 	pathDirs := []PathDir{}
 	aliases := make(map[string]string)
 	functions := make(map[string]string)
 
 	for _, setup := range envSetups {
+		initScripts = append(initScripts, setup.InitScripts...)
+
 		for _, v := range setup.Variables {
 			vars[v.Key] = v.Value
 		}
@@ -42,6 +45,16 @@ func GenerateEnvFile(envSetups []*EnvSetup, outPath string) error {
 	sb.WriteString("# Source this file from your .zshrc:\n")
 	sb.WriteString("#   source ~/.config/shizuku/shizuku.sh\n")
 	sb.WriteString("\n")
+
+	if len(initScripts) > 0 {
+		sb.WriteString("# ============================================================\n")
+		sb.WriteString("# Initialization Scripts\n")
+		sb.WriteString("# ============================================================\n")
+		for _, script := range initScripts {
+			sb.WriteString(script)
+			sb.WriteString("\n\n")
+		}
+	}
 
 	if len(vars) > 0 {
 		sb.WriteString("# ============================================================\n")
