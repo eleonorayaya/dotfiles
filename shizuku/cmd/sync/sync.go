@@ -14,7 +14,6 @@ import (
 	"github.com/eleonorayaya/shizuku/apps/golang"
 	"github.com/eleonorayaya/shizuku/apps/jankyborders"
 	"github.com/eleonorayaya/shizuku/apps/kitty"
-	"github.com/eleonorayaya/shizuku/apps/kubernetes"
 	"github.com/eleonorayaya/shizuku/apps/lsd"
 	"github.com/eleonorayaya/shizuku/apps/nvim"
 	"github.com/eleonorayaya/shizuku/apps/python"
@@ -55,7 +54,7 @@ func sync(cmd *cobra.Command, args []string) error {
 	}{
 		{"sketchybar", sketchybar.Sync, nil},
 		{"aerospace", aerospace.Sync, nil},
-		{"fastfetch", fastfetch.Sync, nil},
+		{"fastfetch", fastfetch.Sync, fastfetch.Env},
 		{"kitty", kitty.Sync, nil},
 		{"jankyborders", jankyborders.Sync, nil},
 		{"zellij", zellij.Sync, zellij.Env},
@@ -63,7 +62,6 @@ func sync(cmd *cobra.Command, args []string) error {
 		{"bat", nil, bat.Env},
 		{"git", nil, git.Env},
 		{"golang", nil, golang.Env},
-		{"kubernetes", nil, kubernetes.Env},
 		{"lsd", nil, lsd.Env},
 		{"python", nil, python.Env},
 		{"rust", nil, rust.Env},

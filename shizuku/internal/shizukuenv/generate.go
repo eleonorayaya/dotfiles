@@ -9,14 +9,18 @@ import (
 )
 
 func GenerateEnvFile(envSetups []*EnvSetup, outPath string) error {
-	initScripts := []string{}
+	preInitScripts := []string{}
 	vars := make(map[string]string)
 	pathDirs := []PathDir{}
+	initScripts := []string{}
 	aliases := make(map[string]string)
 	functions := make(map[string]string)
+	postInitScripts := []string{}
 
 	for _, setup := range envSetups {
+		preInitScripts = append(preInitScripts, setup.PreInitScripts...)
 		initScripts = append(initScripts, setup.InitScripts...)
+		postInitScripts = append(postInitScripts, setup.PostInitScripts...)
 
 		for _, v := range setup.Variables {
 			vars[v.Key] = v.Value
@@ -45,6 +49,16 @@ func GenerateEnvFile(envSetups []*EnvSetup, outPath string) error {
 	sb.WriteString("# Source this file from your .zshrc:\n")
 	sb.WriteString("#   source ~/.config/shizuku/shizuku.sh\n")
 	sb.WriteString("\n")
+
+	if len(preInitScripts) > 0 {
+		sb.WriteString("# ============================================================\n")
+		sb.WriteString("# Pre-Initialization Scripts\n")
+		sb.WriteString("# ============================================================\n")
+		for _, script := range preInitScripts {
+			sb.WriteString(script)
+			sb.WriteString("\n\n")
+		}
+	}
 
 	if len(vars) > 0 {
 		sb.WriteString("# ============================================================\n")
@@ -118,6 +132,16 @@ func GenerateEnvFile(envSetups []*EnvSetup, outPath string) error {
 
 		for _, k := range sortedFuncKeys {
 			sb.WriteString(fmt.Sprintf("function %s() {\n%s\n}\n\n", k, functions[k]))
+		}
+	}
+
+	if len(postInitScripts) > 0 {
+		sb.WriteString("# ============================================================\n")
+		sb.WriteString("# Post-Initialization Scripts\n")
+		sb.WriteString("# ============================================================\n")
+		for _, script := range postInitScripts {
+			sb.WriteString(script)
+			sb.WriteString("\n")
 		}
 	}
 

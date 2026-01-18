@@ -1,11 +1,13 @@
 package shizukuenv
 
 type EnvSetup struct {
-	InitScripts []string
-	Variables   []EnvVar
-	PathDirs    []PathDir
-	Aliases     []Alias
-	Functions   []ShellFunction
+	PreInitScripts  []string
+	Variables       []EnvVar
+	PathDirs        []PathDir
+	InitScripts     []string
+	Aliases         []Alias
+	Functions       []ShellFunction
+	PostInitScripts []string
 }
 
 type EnvVar struct {
