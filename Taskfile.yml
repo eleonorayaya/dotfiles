@@ -12,7 +12,7 @@ tasks:
   run:
     cmds:
       - go run cmd/main.go {{.CLI_ARGS}}
-  fmt:
+  lint:
     sources:
       - "{{.GO_SOURCES}}"
     cmds:

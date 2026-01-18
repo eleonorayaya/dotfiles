@@ -8,26 +8,7 @@ Shizuku is a Go-based configuration management tool for dotfiles. It generates f
 
 ## Development Commands
 
-### Build, Test, and Lint
-```bash
-# Build the binary (outputs to out/shizuku)
-task build
-
-# Run the application with arguments
-task run -- <args>
-
-# Format all Go code
-task fmt
-
-# Run all tests
-task test
-
-# Run tests for a specific package
-task test -- ./internal/shizukuconfig
-
-# Run a specific test
-task test -- -run TestLoadConfig ./internal/shizukuconfig
-```
+**CRITICAL: Always use the `/task` skill for all build, test, lint, and run operations. NEVER invoke `go build`, `go run`, `go fmt`, or `go test` directly.**
 
 ### Using the CLI
 ```bash
