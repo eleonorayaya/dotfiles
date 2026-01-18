@@ -70,7 +70,7 @@ func Sync(outDir string, config *shizukuconfig.Config) error {
     }
 
     // 2. Generate files from contents/
-    fileMap, err := internal.GenerateAppFiles("appName", data, outDir)
+    fileMap, err := shizukuapp.GenerateAppFiles("appName", data, outDir)
     if err != nil {
         return fmt.Errorf("failed to generate app files: %w", err)
     }
@@ -86,7 +86,7 @@ func Sync(outDir string, config *shizukuconfig.Config) error {
     maps.Copy(fileMap, pluginMap)
 
     // 4. Sync all files to destination
-    if err := internal.SyncAppFiles(fileMap, "~/.config/appName/"); err != nil {
+    if err := shizukuapp.SyncAppFiles(fileMap, "~/.config/appName/"); err != nil {
         return fmt.Errorf("failed to sync app files: %w", err)
     }
 
