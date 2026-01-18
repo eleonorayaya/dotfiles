@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"strings"
 )
 
 func GetBrewAppPrefix(appName string) (string, error) {
@@ -21,5 +22,5 @@ func runBrewCommand(args ...string) (string, error) {
 		log.Fatal(err)
 	}
 
-	return string(out), nil
+	return strings.TrimSpace(string(out)), nil
 }
