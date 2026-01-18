@@ -8,7 +8,6 @@ import (
 )
 
 func Sync(outDir string, config *shizukuconfig.Config) error {
-	fmt.Printf("Hi")
 	data := map[string]any{}
 
 	fileMap, err := internal.GenerateAppFiles("aerospace", data, outDir)
