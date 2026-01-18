@@ -2,10 +2,10 @@ package zellij
 
 import (
 	"fmt"
+	"maps"
 
-	"github.com/eleonorayaya/shizuku/internal"
+	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
-	"github.com/eleonorayaya/shizuku/internal/shizukuenv"
 )
 
 var remotePlugins = map[string]string{
@@ -13,33 +13,37 @@ var remotePlugins = map[string]string{
 	"plugins/zjstatus.wasm":             "https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm",
 }
 
-func Sync(outDir string, config *shizukuconfig.Config) error {
+type App struct{}
+
+func New() *App {
+	return &App{}
+}
+
+func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 	data := map[string]any{}
 
-	fileMap, err := internal.GenerateAppFiles("zellij", data, outDir)
+	fileMap, err := shizukuapp.GenerateAppFiles("zellij", data, outDir)
 	if err != nil {
 		return fmt.Errorf("failed to generate app files: %w", err)
 	}
 
-	pluginMap, err := internal.FetchRemoteAppFiles(outDir, "zellij", remotePlugins)
+	pluginMap, err := shizukuapp.FetchRemoteAppFiles(outDir, "zellij", remotePlugins)
 	if err != nil {
 		return fmt.Errorf("failed to fetch remote plugins: %w", err)
 	}
 
-	for fileName, filePath := range pluginMap {
-		fileMap[fileName] = filePath
-	}
+	maps.Copy(fileMap, pluginMap)
 
-	if err := internal.SyncAppFiles(fileMap, "~/.config/zellij/"); err != nil {
+	if err := shizukuapp.SyncAppFiles(fileMap, "~/.config/zellij/"); err != nil {
 		return fmt.Errorf("failed to sync app files: %w", err)
 	}
 
 	return nil
 }
 
-func Env() (*shizukuenv.EnvSetup, error) {
-	return &shizukuenv.EnvSetup{
-		Aliases: []shizukuenv.Alias{
+func (a *App) Env() (*shizukuapp.EnvSetup, error) {
+	return &shizukuapp.EnvSetup{
+		Aliases: []shizukuapp.Alias{
 			{Name: "zj", Command: "cd / && zellij -l welcome"},
 		},
 	}, nil

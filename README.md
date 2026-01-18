@@ -33,12 +33,12 @@ shizuku/apps/{appName}/
 func Sync(outDir string) error {
     data := map[string]any{} // Template data
 
-    fileMap, err := internal.GenerateAppFiles("appName", data, outDir)
+    fileMap, err := shizukuapp.GenerateAppFiles("appName", data, outDir)
     if err != nil {
         return fmt.Errorf("failed to generate app files: %w", err)
     }
 
-    if err := internal.SyncAppFiles(fileMap, "~/.config/appName/"); err != nil {
+    if err := shizukuapp.SyncAppFiles(fileMap, "~/.config/appName/"); err != nil {
         return fmt.Errorf("failed to sync app files: %w", err)
     }
 
