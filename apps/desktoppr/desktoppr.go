@@ -4,20 +4,26 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/eleonorayaya/shizuku/internal"
+	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 	"github.com/eleonorayaya/shizuku/internal/util"
 )
 
 const wallpaperPath = "~/.config/desktoppr/cozy-autumn-rain.png"
 
-func Sync(outDir string, config *shizukuconfig.Config) error {
-	fileMap, err := internal.GenerateAppFiles("desktoppr", nil, outDir)
+type App struct{}
+
+func New() *App {
+	return &App{}
+}
+
+func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+	fileMap, err := shizukuapp.GenerateAppFiles("desktoppr", nil, outDir)
 	if err != nil {
 		return fmt.Errorf("failed to generate desktoppr files: %w", err)
 	}
 
-	if err := internal.SyncAppFiles(fileMap, "~/.config/desktoppr/"); err != nil {
+	if err := shizukuapp.SyncAppFiles(fileMap, "~/.config/desktoppr/"); err != nil {
 		return fmt.Errorf("failed to sync desktoppr files: %w", err)
 	}
 

@@ -1,4 +1,4 @@
-package internal
+package shizukuapp
 
 import (
 	"fmt"
@@ -6,9 +6,15 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 
+	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 	"github.com/eleonorayaya/shizuku/internal/util"
 )
+
+type FileSyncer interface {
+	Sync(outDir string, config *shizukuconfig.Config) error
+}
 
 func listAppFiles(appDir string, relativePath string) ([]string, error) {
 	appFiles := make([]string, 0)
@@ -62,6 +68,31 @@ func GenerateAppFiles(appName string, data map[string]any, outDir string) (map[s
 	}
 
 	return generatedFiles, nil
+}
+
+func GenerateAppFile(appDir string, inFile string, data map[string]any, appOutDir string) (string, string, error) {
+	fileName := strings.ReplaceAll(inFile, ".tmpl", "")
+
+	inFilePath := path.Join(appDir, inFile)
+
+	outFilePath := path.Join(appOutDir, fileName)
+	outDirPath := path.Dir(outFilePath)
+
+	if err := util.EnsureDirExists(outDirPath); err != nil {
+		return "", "", fmt.Errorf("failed out make out dir %s for config file %s: %w", outDirPath, inFile, err)
+	}
+
+	if path.Ext(inFilePath) == ".tmpl" {
+		if err := util.GenerateTemplateFile(inFilePath, data, outFilePath); err != nil {
+			return "", "", fmt.Errorf("failed to generate file: %w", err)
+		}
+	} else {
+		if err := util.CopyFile(inFilePath, outFilePath); err != nil {
+			return "", "", fmt.Errorf("failed to generate file: %w", err)
+		}
+	}
+
+	return fileName, outFilePath, nil
 }
 
 func SyncAppFile(fileName, filePath string, outDir string) error {

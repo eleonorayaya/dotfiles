@@ -3,19 +3,25 @@ package kitty
 import (
 	"fmt"
 
-	"github.com/eleonorayaya/shizuku/internal"
+	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 )
 
-func Sync(outDir string, config *shizukuconfig.Config) error {
+type App struct{}
+
+func New() *App {
+	return &App{}
+}
+
+func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 	data := map[string]any{}
 
-	fileMap, err := internal.GenerateAppFiles("kitty", data, outDir)
+	fileMap, err := shizukuapp.GenerateAppFiles("kitty", data, outDir)
 	if err != nil {
 		return fmt.Errorf("failed to generate app files: %w", err)
 	}
 
-	if err := internal.SyncAppFiles(fileMap, "~/.config/kitty/"); err != nil {
+	if err := shizukuapp.SyncAppFiles(fileMap, "~/.config/kitty/"); err != nil {
 		return fmt.Errorf("failed to sync app files: %w", err)
 	}
 

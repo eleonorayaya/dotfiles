@@ -3,21 +3,27 @@ package sketchybar
 import (
 	"fmt"
 
-	"github.com/eleonorayaya/shizuku/internal"
+	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 )
 
-func Sync(outDir string, config *shizukuconfig.Config) error {
+type App struct{}
+
+func New() *App {
+	return &App{}
+}
+
+func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 	data := map[string]any{
 		"Test": "Aayaya",
 	}
 
-	fileMap, err := internal.GenerateAppFiles("sketchybar", data, outDir)
+	fileMap, err := shizukuapp.GenerateAppFiles("sketchybar", data, outDir)
 	if err != nil {
 		return fmt.Errorf("failed to generate app files: %w", err)
 	}
 
-	if err := internal.SyncAppFiles(fileMap, "~/.config/sketchybar/"); err != nil {
+	if err := shizukuapp.SyncAppFiles(fileMap, "~/.config/sketchybar/"); err != nil {
 		return fmt.Errorf("failed to sync app files: %w", err)
 	}
 
