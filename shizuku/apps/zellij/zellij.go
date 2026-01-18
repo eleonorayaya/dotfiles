@@ -5,6 +5,7 @@ import (
 
 	"github.com/eleonorayaya/shizuku/internal"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
+	"github.com/eleonorayaya/shizuku/internal/shizukuenv"
 )
 
 var remotePlugins = map[string]string{
@@ -34,4 +35,12 @@ func Sync(outDir string, config *shizukuconfig.Config) error {
 	}
 
 	return nil
+}
+
+func Env() (*shizukuenv.EnvSetup, error) {
+	return &shizukuenv.EnvSetup{
+		Aliases: []shizukuenv.Alias{
+			{Name: "zj", Command: "cd / && zellij -l welcome"},
+		},
+	}, nil
 }

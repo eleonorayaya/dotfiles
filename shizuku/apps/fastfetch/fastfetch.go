@@ -5,6 +5,7 @@ import (
 
 	"github.com/eleonorayaya/shizuku/internal"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
+	"github.com/eleonorayaya/shizuku/internal/shizukuenv"
 )
 
 func Sync(outDir string, config *shizukuconfig.Config) error {
@@ -20,4 +21,10 @@ func Sync(outDir string, config *shizukuconfig.Config) error {
 	}
 
 	return nil
+}
+
+func Env() (*shizukuenv.EnvSetup, error) {
+	return &shizukuenv.EnvSetup{
+		PostInitScripts: []string{"fastfetch"},
+	}, nil
 }
