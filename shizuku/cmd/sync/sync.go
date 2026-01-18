@@ -65,7 +65,7 @@ func sync(cmd *cobra.Command, args []string) error {
 		{"lsd", nil, lsd.Env},
 		{"python", nil, python.Env},
 		{"rust", nil, rust.Env},
-		{"terminal", nil, terminal.Env},
+		{"terminal", terminal.Sync, terminal.Env},
 		{"terraform", nil, terraform.Env},
 	}
 
