@@ -153,7 +153,7 @@ out/{unix_timestamp}/
 
 ## Adding a New App
 
-1. Create directory: `shizuku/apps/{appName}/`
+1. Create directory: `apps/{appName}/`
 2. Create `{appName}.go` with `Sync(outDir string, config *shizukuconfig.Config) error` function
 3. Add source files to `contents/` directory (if needed)
 4. Import and register the app in `cmd/sync/sync.go`:
