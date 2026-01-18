@@ -46,16 +46,6 @@ func GenerateEnvFile(envSetups []*EnvSetup, outPath string) error {
 	sb.WriteString("#   source ~/.config/shizuku/shizuku.sh\n")
 	sb.WriteString("\n")
 
-	if len(initScripts) > 0 {
-		sb.WriteString("# ============================================================\n")
-		sb.WriteString("# Initialization Scripts\n")
-		sb.WriteString("# ============================================================\n")
-		for _, script := range initScripts {
-			sb.WriteString(script)
-			sb.WriteString("\n\n")
-		}
-	}
-
 	if len(vars) > 0 {
 		sb.WriteString("# ============================================================\n")
 		sb.WriteString("# Environment Variables\n")
@@ -86,6 +76,16 @@ func GenerateEnvFile(envSetups []*EnvSetup, outPath string) error {
 
 		sb.WriteString(fmt.Sprintf("export PATH=\"%s\"\n", strings.Join(pathParts, ":")))
 		sb.WriteString("\n")
+	}
+
+	if len(initScripts) > 0 {
+		sb.WriteString("# ============================================================\n")
+		sb.WriteString("# Initialization Scripts\n")
+		sb.WriteString("# ============================================================\n")
+		for _, script := range initScripts {
+			sb.WriteString(script)
+			sb.WriteString("\n\n")
+		}
 	}
 
 	if len(aliases) > 0 {
