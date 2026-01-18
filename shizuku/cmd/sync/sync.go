@@ -76,9 +76,9 @@ func sync(cmd *cobra.Command, args []string) error {
 			if err := app.fn(outDir, appConfig); err != nil {
 				return fmt.Errorf("could not sync %s: %w", app.name, err)
 			}
-		}
 
-		slog.Info("app synced", "appName", app.name)
+			slog.Info("app synced", "appName", app.name)
+		}
 	}
 
 	envSetups := []*shizukuenv.EnvSetup{}
