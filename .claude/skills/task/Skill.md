@@ -1,6 +1,6 @@
 ---
 name: task
-description: Build, test, lint, or run the shizuku application. ALWAYS use this skill instead of invoking Go commands directly.
+description: Build, test, lint, or run the shizuku application. ALWAYS use this skill instead of invoking Go commands or out/shizuku directly.
 ---
 
 # Shizuku Task Runner
@@ -116,3 +116,4 @@ This skill should be invoked automatically whenever:
 - You're about to run tests
 
 **Always default to task commands. If you catch yourself about to use `go build`, `go run`, `go fmt`, or `go test`, STOP and use the appropriate task command instead.**
+

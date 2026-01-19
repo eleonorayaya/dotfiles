@@ -11,6 +11,7 @@ import (
 
 type Config struct {
 	Languages map[string]LanguageConfig `yaml:"languages"`
+	Apps      map[string]any            `yaml:"apps"`
 }
 
 func newConfig() *Config {
@@ -47,6 +48,43 @@ func (c *Config) validate() error {
 	}
 
 	return nil
+}
+
+func (c *Config) GetAppConfig(appName string, configKey string) (any, bool) {
+	if c.Apps == nil {
+		return nil, false
+	}
+
+	appConfig, ok := c.Apps[appName]
+	if !ok {
+		return nil, false
+	}
+
+	appMap, ok := appConfig.(map[string]any)
+	if !ok {
+		return nil, false
+	}
+
+	value, ok := appMap[configKey]
+	if !ok {
+		return nil, false
+	}
+
+	return value, true
+}
+
+func (c *Config) GetAppConfigBool(appName string, configKey string, defaultValue bool) bool {
+	value, ok := c.GetAppConfig(appName, configKey)
+	if !ok {
+		return defaultValue
+	}
+
+	boolValue, ok := value.(bool)
+	if !ok {
+		return defaultValue
+	}
+
+	return boolValue
 }
 
 func (c *Config) save(configPath string) error {

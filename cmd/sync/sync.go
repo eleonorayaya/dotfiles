@@ -7,22 +7,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/eleonorayaya/shizuku/apps/aerospace"
-	"github.com/eleonorayaya/shizuku/apps/bat"
-	"github.com/eleonorayaya/shizuku/apps/desktoppr"
-	"github.com/eleonorayaya/shizuku/apps/fastfetch"
-	"github.com/eleonorayaya/shizuku/apps/git"
-	"github.com/eleonorayaya/shizuku/apps/golang"
-	"github.com/eleonorayaya/shizuku/apps/jankyborders"
-	"github.com/eleonorayaya/shizuku/apps/kitty"
-	"github.com/eleonorayaya/shizuku/apps/lsd"
-	"github.com/eleonorayaya/shizuku/apps/nvim"
-	"github.com/eleonorayaya/shizuku/apps/python"
-	"github.com/eleonorayaya/shizuku/apps/rust"
-	"github.com/eleonorayaya/shizuku/apps/sketchybar"
-	"github.com/eleonorayaya/shizuku/apps/terminal"
-	"github.com/eleonorayaya/shizuku/apps/terraform"
-	"github.com/eleonorayaya/shizuku/apps/zellij"
+	"github.com/eleonorayaya/shizuku/apps"
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 	"github.com/spf13/cobra"
@@ -32,11 +17,6 @@ var SyncCommand = &cobra.Command{
 	Use:   "sync [flags] configs_path",
 	Short: "",
 	RunE:  sync,
-}
-
-type registeredApp struct {
-	name string
-	app  any
 }
 
 func sync(cmd *cobra.Command, args []string) error {
@@ -52,43 +32,27 @@ func sync(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error created output dir: %w", err)
 	}
 
-	apps := []registeredApp{
-		{"sketchybar", sketchybar.New()},
-		{"aerospace", aerospace.New()},
-		{"fastfetch", fastfetch.New()},
-		{"kitty", kitty.New()},
-		{"jankyborders", jankyborders.New()},
-		{"zellij", zellij.New()},
-		{"nvim", nvim.New()},
-		{"bat", bat.New()},
-		{"git", git.New()},
-		{"golang", golang.New()},
-		{"lsd", lsd.New()},
-		{"python", python.New()},
-		{"rust", rust.New()},
-		{"terminal", terminal.New()},
-		{"terraform", terraform.New()},
-		{"desktoppr", desktoppr.New()},
-	}
+	allApps := apps.GetApps()
+	enabledApps := shizukuapp.FilterEnabledApps(allApps, appConfig)
 
-	for _, regApp := range apps {
-		slog.Info("app syncing", "appName", regApp.name)
+	for _, app := range enabledApps {
+		slog.Info("app syncing", "appName", app.Name())
 
-		if syncer, ok := regApp.app.(shizukuapp.FileSyncer); ok {
+		if syncer, ok := app.(shizukuapp.FileSyncer); ok {
 			if err := syncer.Sync(outDir, appConfig); err != nil {
-				return fmt.Errorf("could not sync %s: %w", regApp.name, err)
+				return fmt.Errorf("could not sync %s: %w", app.Name(), err)
 			}
 
-			slog.Info("app synced", "appName", regApp.name)
+			slog.Info("app synced", "appName", app.Name())
 		}
 	}
 
 	envSetups := []*shizukuapp.EnvSetup{}
-	for _, regApp := range apps {
-		if provider, ok := regApp.app.(shizukuapp.EnvProvider); ok {
+	for _, app := range enabledApps {
+		if provider, ok := app.(shizukuapp.EnvProvider); ok {
 			envSetup, err := provider.Env()
 			if err != nil {
-				return fmt.Errorf("failed to get env setup for %s: %w", regApp.name, err)
+				return fmt.Errorf("failed to get env setup for %s: %w", app.Name(), err)
 			}
 			envSetups = append(envSetups, envSetup)
 		}

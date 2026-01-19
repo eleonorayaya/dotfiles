@@ -5,6 +5,7 @@ import (
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
+	"github.com/eleonorayaya/shizuku/internal/util"
 )
 
 const antigenInit = `source $(brew --prefix)/share/antigen/antigen.zsh
@@ -19,6 +20,30 @@ type App struct{}
 
 func New() *App {
 	return &App{}
+}
+
+func (a *App) Name() string {
+	return "terminal"
+}
+
+func (a *App) Enabled(config *shizukuconfig.Config) bool {
+	return config.GetAppConfigBool(a.Name(), "enabled", true)
+}
+
+func (a *App) Install(config *shizukuconfig.Config) error {
+	if err := util.InstallBrewPackage("antigen"); err != nil {
+		return fmt.Errorf("failed to install antigen: %w", err)
+	}
+
+	if err := util.AddTap("jandedobbeleer/oh-my-posh"); err != nil {
+		return fmt.Errorf("failed to add tap: %w", err)
+	}
+
+	if err := util.InstallBrewPackage("jandedobbeleer/oh-my-posh/oh-my-posh"); err != nil {
+		return fmt.Errorf("failed to install oh-my-posh: %w", err)
+	}
+
+	return nil
 }
 
 func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
