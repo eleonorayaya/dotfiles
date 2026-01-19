@@ -25,6 +25,11 @@ func sync(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
+	theme, err := appConfig.LoadTheme()
+	if err != nil {
+		return fmt.Errorf("failed to load theme: %w", err)
+	}
+
 	buildId := fmt.Sprintf("%v", time.Now().Unix())
 
 	outDir := path.Join("out", buildId)
@@ -39,7 +44,7 @@ func sync(cmd *cobra.Command, args []string) error {
 		slog.Info("app syncing", "appName", app.Name())
 
 		if syncer, ok := app.(shizukuapp.FileSyncer); ok {
-			if err := syncer.Sync(outDir, appConfig); err != nil {
+			if err := syncer.Sync(outDir, appConfig, theme); err != nil {
 				return fmt.Errorf("could not sync %s: %w", app.Name(), err)
 			}
 

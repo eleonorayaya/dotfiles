@@ -46,7 +46,7 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 	return nil
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+func (a *App) Sync(outDir string, config *shizukuconfig.Config, theme *shizukuconfig.Theme) error {
 	data := map[string]any{}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("terminal", data, outDir)

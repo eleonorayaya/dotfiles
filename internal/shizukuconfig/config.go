@@ -10,12 +10,14 @@ import (
 )
 
 type Config struct {
+	Theme     string                    `yaml:"theme"`
 	Languages map[string]LanguageConfig `yaml:"languages"`
 	Apps      map[string]any            `yaml:"apps"`
 }
 
 func newConfig() *Config {
 	return &Config{
+		Theme:     "monade",
 		Languages: createDefaultLanguageConfig(),
 	}
 }
@@ -45,6 +47,12 @@ func newConfigFromPath(configPath string) (*Config, error) {
 func (c *Config) validate() error {
 	if err := validateLanguageConfig(c.Languages); err != nil {
 		return fmt.Errorf("invalid language config: %w", err)
+	}
+
+	if c.Theme != "" {
+		if _, err := loadTheme(c.Theme); err != nil {
+			return fmt.Errorf("invalid theme: %w", err)
+		}
 	}
 
 	return nil
@@ -85,6 +93,13 @@ func (c *Config) GetAppConfigBool(appName string, configKey string, defaultValue
 	}
 
 	return boolValue
+}
+
+func (c *Config) LoadTheme() (*Theme, error) {
+	if c.Theme == "" {
+		return nil, fmt.Errorf("no theme configured")
+	}
+	return loadTheme(c.Theme)
 }
 
 func (c *Config) save(configPath string) error {

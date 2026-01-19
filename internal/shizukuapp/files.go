@@ -13,7 +13,7 @@ import (
 )
 
 type FileSyncer interface {
-	Sync(outDir string, config *shizukuconfig.Config) error
+	Sync(outDir string, config *shizukuconfig.Config, theme *shizukuconfig.Theme) error
 }
 
 func listAppFiles(appDir string, relativePath string) ([]string, error) {

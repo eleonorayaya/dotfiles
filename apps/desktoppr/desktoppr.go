@@ -33,7 +33,7 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 	return nil
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+func (a *App) Sync(outDir string, config *shizukuconfig.Config, theme *shizukuconfig.Theme) error {
 	fileMap, err := shizukuapp.GenerateAppFiles("desktoppr", nil, outDir)
 	if err != nil {
 		return fmt.Errorf("failed to generate desktoppr files: %w", err)
