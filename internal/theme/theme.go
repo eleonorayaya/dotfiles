@@ -3,52 +3,52 @@ package theme
 import "fmt"
 
 type ThemeColors struct {
-	Surface               string `json:"surface"`
-	SurfaceVariant        string `json:"surfaceVariant"`
-	SurfaceHighlight      string `json:"surfaceHighlight"`
-	SurfaceBorder         string `json:"surfaceBorder"`
-	TextOnSurface         string `json:"textOnSurface"`
-	TextOnSurfaceVariant  string `json:"textOnSurfaceVariant"`
-	TextOnSurfaceMuted    string `json:"textOnSurfaceMuted"`
-	TextOnSurfaceEmphasis string `json:"textOnSurfaceEmphasis"`
-	Primary               string `json:"primary"`
-	PrimaryVariant        string `json:"primaryVariant"`
-	TextOnPrimary         string `json:"textOnPrimary"`
-	Secondary             string `json:"secondary"`
-	TextOnSecondary       string `json:"textOnSecondary"`
-	Tertiary              string `json:"tertiary"`
-	TertiaryVariant       string `json:"tertiaryVariant"`
-	TextOnTertiary        string `json:"textOnTertiary"`
-	Accent                string `json:"accent"`
-	AccentPeach           string `json:"accentPeach"`
-	AccentSalmon          string `json:"accentSalmon"`
-	AccentPurple          string `json:"accentPurple"`
-	AccentLavender        string `json:"accentLavender"`
-	AccentGold            string `json:"accentGold"`
-	AccentYellow          string `json:"accentYellow"`
-	AccentMint            string `json:"accentMint"`
-	AccentBlue            string `json:"accentBlue"`
-	Error                 string `json:"error"`
-	TextOnError           string `json:"textOnError"`
-	Warning               string `json:"warning"`
-	TextOnWarning         string `json:"textOnWarning"`
-	Success               string `json:"success"`
-	TextOnSuccess         string `json:"textOnSuccess"`
-	Info                  string `json:"info"`
-	TextOnInfo            string `json:"textOnInfo"`
-	Selection             string `json:"selection"`
-	SelectionForeground   string `json:"selectionForeground"`
-	Cursor                string `json:"cursor"`
-	CursorText            string `json:"cursorText"`
-	Link                  string `json:"link"`
-	LinkHover             string `json:"linkHover"`
-	Comment               string `json:"comment"`
+	Surface              string
+	SurfaceVariant       string
+	SurfaceHighlight     string
+	SurfaceBorder        string
+	TextOnSurface        string
+	TextOnSurfaceVariant string
+	TextOnSurfaceMuted   string
+	TextOnSurfaceEmphasis string
+	Primary              string
+	PrimaryVariant       string
+	TextOnPrimary        string
+	Secondary            string
+	TextOnSecondary      string
+	Tertiary             string
+	TertiaryVariant      string
+	TextOnTertiary       string
+	Accent               string
+	AccentPeach          string
+	AccentSalmon         string
+	AccentPurple         string
+	AccentLavender       string
+	AccentGold           string
+	AccentYellow         string
+	AccentMint           string
+	AccentBlue           string
+	Error                string
+	TextOnError          string
+	Warning              string
+	TextOnWarning        string
+	Success              string
+	TextOnSuccess        string
+	Info                 string
+	TextOnInfo           string
+	Selection            string
+	SelectionForeground  string
+	Cursor               string
+	CursorText           string
+	Link                 string
+	LinkHover            string
+	Comment              string
 }
 
 type Theme struct {
-	Name   string      `json:"name"`
-	Type   string      `json:"type"`
-	Colors ThemeColors `json:"colors"`
+	Name   string
+	Type   string
+	Colors ThemeColors
 }
 
 func (c *ThemeColors) Validate() error {

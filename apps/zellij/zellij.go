@@ -6,6 +6,7 @@ import (
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
+	"github.com/eleonorayaya/shizuku/internal/theme"
 	"github.com/eleonorayaya/shizuku/internal/util"
 )
 
@@ -36,7 +37,7 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 	return nil
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config, theme *shizukuconfig.Theme) error {
+func (a *App) Sync(outDir string, config *shizukuconfig.Config, theme *theme.Theme) error {
 	data := map[string]any{}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("zellij", data, outDir)

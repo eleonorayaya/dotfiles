@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/eleonorayaya/shizuku/internal/theme"
 	"github.com/eleonorayaya/shizuku/internal/util"
 	"gopkg.in/yaml.v3"
 )
@@ -50,7 +51,7 @@ func (c *Config) validate() error {
 	}
 
 	if c.Theme != "" {
-		if _, err := loadTheme(c.Theme); err != nil {
+		if _, err := theme.LoadTheme(c.Theme); err != nil {
 			return fmt.Errorf("invalid theme: %w", err)
 		}
 	}
@@ -95,11 +96,11 @@ func (c *Config) GetAppConfigBool(appName string, configKey string, defaultValue
 	return boolValue
 }
 
-func (c *Config) LoadTheme() (*Theme, error) {
+func (c *Config) LoadTheme() (*theme.Theme, error) {
 	if c.Theme == "" {
 		return nil, fmt.Errorf("no theme configured")
 	}
-	return loadTheme(c.Theme)
+	return theme.LoadTheme(c.Theme)
 }
 
 func (c *Config) save(configPath string) error {

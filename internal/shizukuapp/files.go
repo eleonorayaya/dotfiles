@@ -9,11 +9,12 @@ import (
 	"strings"
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
+	"github.com/eleonorayaya/shizuku/internal/theme"
 	"github.com/eleonorayaya/shizuku/internal/util"
 )
 
 type FileSyncer interface {
-	Sync(outDir string, config *shizukuconfig.Config, theme *shizukuconfig.Theme) error
+	Sync(outDir string, config *shizukuconfig.Config, theme *theme.Theme) error
 }
 
 func listAppFiles(appDir string, relativePath string) ([]string, error) {
