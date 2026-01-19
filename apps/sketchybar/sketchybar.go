@@ -34,24 +34,19 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 	return nil
 }
 
-func hexToARGB(hex string, alpha string) string {
-	hex = hex[1:]
-	return "0x" + alpha + hex
-}
-
 func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 	data := map[string]any{
-		"BarColor":                hexToARGB(config.Styles.Theme.Colors.Surface, "D9"),
-		"BarBorderColor":          hexToARGB(config.Styles.Theme.Colors.SurfaceBorder, "FF"),
-		"IconColor":               hexToARGB(config.Styles.Theme.Colors.TextOnSurface, "FF"),
-		"IconHighlightColor":      hexToARGB(config.Styles.Theme.Colors.Primary, "FF"),
-		"LabelColor":              hexToARGB(config.Styles.Theme.Colors.TextOnSurface, "FF"),
-		"LabelHighlightColor":     hexToARGB(config.Styles.Theme.Colors.Primary, "FF"),
-		"PopupBorderColor":        hexToARGB(config.Styles.Theme.Colors.SurfaceBorder, "FF"),
-		"PopupBackgroundColor":    hexToARGB(config.Styles.Theme.Colors.Surface, "FF"),
-		"ActiveWorkspaceColor":    hexToARGB(config.Styles.Theme.Colors.Primary, "FF"),
-		"SpacesWrapperBackground": hexToARGB(config.Styles.Theme.Colors.Surface, "FF"),
-		"SpacesItemBackground":    hexToARGB(config.Styles.Theme.Colors.Primary, "FF"),
+		"BarColor":                util.HexToARGB(config.Styles.Theme.Colors.Surface, config.Styles.WindowOpacity),
+		"BarBorderColor":          util.HexToARGB(config.Styles.Theme.Colors.SurfaceBorder, config.Styles.WindowOpacity),
+		"IconColor":               util.HexToARGB(config.Styles.Theme.Colors.TextOnSurface, 100),
+		"IconHighlightColor":      util.HexToARGB(config.Styles.Theme.Colors.Primary, 100),
+		"LabelColor":              util.HexToARGB(config.Styles.Theme.Colors.TextOnSurface, 100),
+		"LabelHighlightColor":     util.HexToARGB(config.Styles.Theme.Colors.Primary, 100),
+		"PopupBorderColor":        util.HexToARGB(config.Styles.Theme.Colors.SurfaceBorder, 100),
+		"PopupBackgroundColor":    util.HexToARGB(config.Styles.Theme.Colors.Surface, 100),
+		"ActiveWorkspaceColor":    util.HexToARGB(config.Styles.Theme.Colors.Primary, 100),
+		"SpacesWrapperBackground": util.HexToARGB(config.Styles.Theme.Colors.Surface, 100),
+		"SpacesItemBackground":    util.HexToARGB(config.Styles.Theme.Colors.Primary, 100),
 	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("sketchybar", data, outDir)
