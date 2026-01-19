@@ -1,9 +1,8 @@
-package golang
+package protonvpn
 
 import (
 	"fmt"
 
-	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 	"github.com/eleonorayaya/shizuku/internal/util"
 )
@@ -15,7 +14,7 @@ func New() *App {
 }
 
 func (a *App) Name() string {
-	return "golang"
+	return "protonvpn"
 }
 
 func (a *App) Enabled(config *shizukuconfig.Config) bool {
@@ -23,18 +22,9 @@ func (a *App) Enabled(config *shizukuconfig.Config) bool {
 }
 
 func (a *App) Install(config *shizukuconfig.Config) error {
-	if err := util.InstallBrewPackage("go-task"); err != nil {
-		return fmt.Errorf("failed to install go-task: %w", err)
+	if err := util.InstallCask("protonvpn"); err != nil {
+		return fmt.Errorf("failed to install protonvpn: %w", err)
 	}
 
 	return nil
 }
-
-func (a *App) Env() (*shizukuapp.EnvSetup, error) {
-	return &shizukuapp.EnvSetup{
-		PathDirs: []shizukuapp.PathDir{
-			{Path: "$HOME/go/bin", Priority: 20},
-		},
-	}, nil
-}
-
