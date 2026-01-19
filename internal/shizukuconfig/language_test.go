@@ -100,35 +100,36 @@ other_config: value
 
 func TestValidateLanguageConfigDirect(t *testing.T) {
 	t.Run("accepts valid languages", func(t *testing.T) {
-		langConfig := map[string]LanguageConfig{
+		langConfig := LanguageConfigs{
 			"rust": {Enabled: true},
 		}
 
-		if err := validateLanguageConfig(langConfig); err != nil {
+		if err := langConfig.validate(); err != nil {
 			t.Errorf("Expected valid config, got error: %v", err)
 		}
 	})
 
 	t.Run("rejects invalid languages", func(t *testing.T) {
-		langConfig := map[string]LanguageConfig{
+		langConfig := LanguageConfigs{
 			"python": {Enabled: true},
 		}
 
-		if err := validateLanguageConfig(langConfig); err == nil {
+		if err := langConfig.validate(); err == nil {
 			t.Error("Expected error for invalid language")
 		}
 	})
 
 	t.Run("accepts nil config", func(t *testing.T) {
-		if err := validateLanguageConfig(nil); err != nil {
+		var langConfig LanguageConfigs
+		if err := langConfig.validate(); err != nil {
 			t.Errorf("Expected nil config to be valid, got error: %v", err)
 		}
 	})
 
 	t.Run("accepts empty config", func(t *testing.T) {
-		langConfig := map[string]LanguageConfig{}
+		langConfig := LanguageConfigs{}
 
-		if err := validateLanguageConfig(langConfig); err != nil {
+		if err := langConfig.validate(); err != nil {
 			t.Errorf("Expected empty config to be valid, got error: %v", err)
 		}
 	})
