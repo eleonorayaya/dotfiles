@@ -8,19 +8,40 @@ Shizuku is a Go-based configuration management tool for dotfiles. It generates f
 
 ## Development Commands
 
-**CRITICAL: Always use the `/task` skill for all build, test, lint, and run operations. NEVER invoke `go build`, `go run`, `go fmt`, or `go test` directly.**
+**CRITICAL: ALWAYS use the `/task` skill for all build, test, lint, and run operations.**
 
-### Using the CLI
+### Task Skill Usage (MANDATORY)
+
+The `/task` skill MUST be used for:
+- **Building**: NEVER use `go build` or `make` directly
+- **Testing**: NEVER use `go test` directly
+- **Linting**: NEVER use `go fmt`, `golangci-lint`, or other linters directly
+- **Running**: NEVER use `go run` or `./out/shizuku` directly
+
+**Examples:**
+- Build: `/task build` (NOT `go build`)
+- Test: `/task test` (NOT `go test ./...`)
+- Lint: `/task lint` (NOT `go fmt ./...`)
+- Run: `/task run` (NOT `go run main.go` or `./out/shizuku`)
+
+This ensures consistent build processes and proper dependency management.
+
+### Running the CLI
+
+**NEVER execute the built binary directly.** Always use `/task run` with arguments:
+
 ```bash
 # Initialize default config at ~/.config/shizuku/shizuku.yml
-./out/shizuku init
+/task run init
 
 # Sync all application configurations
-./out/shizuku sync
+/task run sync
 
 # Enable verbose logging
-./out/shizuku sync --verbose
+/task run sync --verbose
 ```
+
+**FORBIDDEN**: Do NOT use `./out/shizuku`, `go run`, or any direct binary execution.
 
 ## Code Architecture
 

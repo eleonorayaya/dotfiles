@@ -27,4 +27,3 @@ func (a *App) Env() (*shizukuapp.EnvSetup, error) {
 		},
 	}, nil
 }
-

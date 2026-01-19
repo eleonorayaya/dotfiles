@@ -34,8 +34,16 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 	return nil
 }
 
+func hexToARGB(hex string, alpha string) string {
+	hex = hex[1:]
+	return "0x" + alpha + hex
+}
+
 func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
-	data := map[string]any{}
+	data := map[string]any{
+		"ActiveColor":   hexToARGB(config.Styles.Theme.Colors.AccentLavender, "ff"),
+		"InactiveColor": hexToARGB(config.Styles.Theme.Colors.AccentLavender, "ff"),
+	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("jankyborders", data, outDir)
 	if err != nil {
