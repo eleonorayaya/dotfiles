@@ -16,7 +16,7 @@ func (a *App) Name() string {
 }
 
 func (a *App) Enabled(config *shizukuconfig.Config) bool {
-	return true
+	return config.GetAppConfigBool(a.Name(), "enabled", false)
 }
 
 func (a *App) Env() (*shizukuapp.EnvSetup, error) {
@@ -27,3 +27,4 @@ func (a *App) Env() (*shizukuapp.EnvSetup, error) {
 		},
 	}, nil
 }
+
