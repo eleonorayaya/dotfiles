@@ -1,41 +1,38 @@
--- Monade theme - inspired by pastel terminal aesthetic
--- Based on soft pinks, corals, and cream tones
-
 vim.cmd("hi clear")
 if vim.fn.exists("syntax_on") then
   vim.cmd("syntax reset")
 end
 
-vim.o.background = "light"
-vim.g.colors_name = "monade"
+vim.o.background = "{{.ThemeType}}"
+vim.g.colors_name = "{{.ThemeName}}"
 
 -- Color palette
 local colors = {
   -- Backgrounds
-  bg = "#e8dfd5",           -- Light cream (softened more)
-  bg_dark = "#dfd6cc",      -- Slightly darker cream
-  bg_highlight = "#edd5d0", -- Misty rose
+  bg = "{{.Colors.Surface}}",
+  bg_dark = "{{.Colors.SurfaceVariant}}",
+  bg_highlight = "{{.Colors.SurfaceHighlight}}",
 
   -- Foregrounds
-  fg = "#4a4a4a",           -- Dark gray for text
-  fg_dark = "#2a2a2a",      -- Darker gray
-  fg_light = "#6a6a6a",     -- Light gray
+  fg = "{{.Colors.TextOnSurface}}",
+  fg_dark = "{{.Colors.TextOnSurfaceEmphasis}}",
+  fg_light = "{{.Colors.TextOnSurfaceVariant}}",
 
   -- Accents
-  pink = "#e6537a",         -- Coral pink (more saturated)
-  peach = "#d97c6e",        -- Soft peach (darker)
-  salmon = "#d16577",       -- Salmon (darker)
-  purple = "#9370b9",       -- Soft purple (more saturated)
-  lavender = "#a87bb7",     -- Lavender (darker)
-  gold = "#b8733f",         -- Warm gold (darker for better contrast)
-  yellow = "#b8873f",       -- Soft yellow (darker for better contrast)
-  mint = "#5fafa5",         -- Soft mint (darker)
-  blue = "#6a9bc3",         -- Soft blue (darker)
+  pink = "{{.Colors.Primary}}",
+  peach = "{{.Colors.AccentPeach}}",
+  salmon = "{{.Colors.AccentSalmon}}",
+  purple = "{{.Colors.AccentPurple}}",
+  lavender = "{{.Colors.AccentLavender}}",
+  gold = "{{.Colors.AccentGold}}",
+  yellow = "{{.Colors.AccentYellow}}",
+  mint = "{{.Colors.AccentMint}}",
+  blue = "{{.Colors.AccentBlue}}",
 
   -- UI
-  border = "#e8d0c4",       -- Warm border
-  selection = "#ffd5d5",    -- Light pink selection (slightly more saturated)
-  comment = "#8a7873",      -- Muted brown (darker for better readability)
+  border = "{{.Colors.SurfaceBorder}}",
+  selection = "{{.Colors.Selection}}",
+  comment = "{{.Colors.Comment}}",
 }
 
 -- Helper function to set highlights

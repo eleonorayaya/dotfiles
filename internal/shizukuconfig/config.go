@@ -10,14 +10,28 @@ import (
 )
 
 type Config struct {
-	Languages map[string]LanguageConfig `yaml:"languages"`
-	Apps      map[string]any            `yaml:"apps"`
+	StylesConfig StylesConfig              `yaml:"styles"`
+	Languages    map[string]LanguageConfig `yaml:"languages"`
+	Apps         map[string]any            `yaml:"apps"`
+
+	Styles *Styles `yaml:"-"`
 }
 
 func newConfig() *Config {
-	return &Config{
+	c := &Config{
+		StylesConfig: StylesConfig{
+			ThemeName: "monade",
+		},
 		Languages: createDefaultLanguageConfig(),
 	}
+
+	theme, err := loadThemeFromRegistry(c.StylesConfig.ThemeName)
+	if err != nil {
+		return nil
+	}
+
+	c.Styles = &Styles{Theme: theme}
+	return c
 }
 
 func newConfigFromPath(configPath string) (*Config, error) {
@@ -39,12 +53,25 @@ func newConfigFromPath(configPath string) (*Config, error) {
 		return nil, fmt.Errorf("invalid language configuration: %w", err)
 	}
 
+	theme, err := loadThemeFromRegistry(c.StylesConfig.ThemeName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load theme: %w", err)
+	}
+
+	c.Styles = &Styles{Theme: theme}
+
 	return &c, nil
 }
 
 func (c *Config) validate() error {
 	if err := validateLanguageConfig(c.Languages); err != nil {
 		return fmt.Errorf("invalid language config: %w", err)
+	}
+
+	if c.StylesConfig.ThemeName != "" {
+		if _, err := loadThemeFromRegistry(c.StylesConfig.ThemeName); err != nil {
+			return fmt.Errorf("invalid theme: %w", err)
+		}
 	}
 
 	return nil

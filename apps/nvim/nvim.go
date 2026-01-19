@@ -31,7 +31,11 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 }
 
 func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
-	data := map[string]any{}
+	data := map[string]any{
+		"ThemeName": config.Styles.Theme.Name,
+		"ThemeType": config.Styles.Theme.Type,
+		"Colors":    config.Styles.Theme.Colors,
+	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("nvim", data, outDir)
 	if err != nil {

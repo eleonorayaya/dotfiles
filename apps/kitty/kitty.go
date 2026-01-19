@@ -44,7 +44,9 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 }
 
 func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
-	data := map[string]any{}
+	data := map[string]any{
+		"Colors": config.Styles.Theme.Colors,
+	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("kitty", data, outDir)
 	if err != nil {
