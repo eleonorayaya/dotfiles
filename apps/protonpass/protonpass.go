@@ -13,6 +13,14 @@ func New() *App {
 	return &App{}
 }
 
+func (a *App) Name() string {
+	return "protonpass"
+}
+
+func (a *App) Enabled(config *shizukuconfig.Config) bool {
+	return true
+}
+
 func (a *App) Install(config *shizukuconfig.Config) error {
 	if err := util.InstallCask("proton-pass"); err != nil {
 		return fmt.Errorf("failed to install proton-pass: %w", err)

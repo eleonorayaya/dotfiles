@@ -1,6 +1,9 @@
 package git
 
-import "github.com/eleonorayaya/shizuku/internal/shizukuapp"
+import (
+	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
+	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
+)
 
 const gitCompletionInit = `fpath=(~/.zsh $fpath)
 
@@ -10,6 +13,14 @@ type App struct{}
 
 func New() *App {
 	return &App{}
+}
+
+func (a *App) Name() string {
+	return "git"
+}
+
+func (a *App) Enabled(config *shizukuconfig.Config) bool {
+	return true
 }
 
 func (a *App) Env() (*shizukuapp.EnvSetup, error) {
