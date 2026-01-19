@@ -31,8 +31,10 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 	return nil
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config, theme *theme.Theme) error {
-	data := map[string]any{}
+func (a *App) Sync(outDir string, config *shizukuconfig.Config, themeData *theme.Theme) error {
+	data := map[string]any{
+		"Colors": themeData.Colors,
+	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("fastfetch", data, outDir)
 	if err != nil {

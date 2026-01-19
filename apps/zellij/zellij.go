@@ -3,6 +3,7 @@ package zellij
 import (
 	"fmt"
 	"maps"
+	"strconv"
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
@@ -37,8 +38,32 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 	return nil
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config, theme *theme.Theme) error {
-	data := map[string]any{}
+func hexToRGB(hex string) string {
+	hex = hex[1:]
+	r, _ := strconv.ParseInt(hex[0:2], 16, 64)
+	g, _ := strconv.ParseInt(hex[2:4], 16, 64)
+	b, _ := strconv.ParseInt(hex[4:6], 16, 64)
+	return fmt.Sprintf("%d %d %d", r, g, b)
+}
+
+func (a *App) Sync(outDir string, config *shizukuconfig.Config, themeData *theme.Theme) error {
+	data := map[string]any{
+		"ThemeName":            themeData.Name,
+		"Surface":              hexToRGB(themeData.Colors.Surface),
+		"SurfaceVariant":       hexToRGB(themeData.Colors.SurfaceVariant),
+		"SurfaceHighlight":     hexToRGB(themeData.Colors.SurfaceHighlight),
+		"TextOnSurface":        hexToRGB(themeData.Colors.TextOnSurface),
+		"TextOnSurfaceVariant": hexToRGB(themeData.Colors.TextOnSurfaceVariant),
+		"TextOnSurfaceMuted":   hexToRGB(themeData.Colors.TextOnSurfaceMuted),
+		"Primary":              hexToRGB(themeData.Colors.Primary),
+		"AccentSalmon":         hexToRGB(themeData.Colors.AccentSalmon),
+		"AccentBlue":           hexToRGB(themeData.Colors.AccentBlue),
+		"AccentMint":           hexToRGB(themeData.Colors.AccentMint),
+		"AccentLavender":       hexToRGB(themeData.Colors.AccentLavender),
+		"AccentPeach":          hexToRGB(themeData.Colors.AccentPeach),
+		"AccentGold":           hexToRGB(themeData.Colors.AccentGold),
+		"AccentPurple":         hexToRGB(themeData.Colors.AccentPurple),
+	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("zellij", data, outDir)
 	if err != nil {

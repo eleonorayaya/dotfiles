@@ -35,9 +35,24 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 	return nil
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config, theme *theme.Theme) error {
+func hexToARGB(hex string, alpha string) string {
+	hex = hex[1:]
+	return "0x" + alpha + hex
+}
+
+func (a *App) Sync(outDir string, config *shizukuconfig.Config, themeData *theme.Theme) error {
 	data := map[string]any{
-		"Test": "Aayaya",
+		"BarColor":                hexToARGB(themeData.Colors.Surface, "D9"),
+		"BarBorderColor":          hexToARGB(themeData.Colors.SurfaceBorder, "FF"),
+		"IconColor":               hexToARGB(themeData.Colors.TextOnSurface, "FF"),
+		"IconHighlightColor":      hexToARGB(themeData.Colors.Primary, "FF"),
+		"LabelColor":              hexToARGB(themeData.Colors.TextOnSurface, "FF"),
+		"LabelHighlightColor":     hexToARGB(themeData.Colors.Primary, "FF"),
+		"PopupBorderColor":        hexToARGB(themeData.Colors.SurfaceBorder, "FF"),
+		"PopupBackgroundColor":    hexToARGB(themeData.Colors.Surface, "FF"),
+		"ActiveWorkspaceColor":    hexToARGB(themeData.Colors.Primary, "FF"),
+		"SpacesWrapperBackground": hexToARGB(themeData.Colors.Surface, "FF"),
+		"SpacesItemBackground":    hexToARGB(themeData.Colors.Primary, "FF"),
 	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("sketchybar", data, outDir)

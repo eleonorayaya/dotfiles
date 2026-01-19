@@ -1,13 +1,10 @@
--- Monade theme - inspired by pastel terminal aesthetic
--- Based on soft pinks, corals, and cream tones
-
 vim.cmd("hi clear")
 if vim.fn.exists("syntax_on") then
   vim.cmd("syntax reset")
 end
 
-vim.o.background = "light"
-vim.g.colors_name = "monade"
+vim.o.background = "{{.ThemeType}}"
+vim.g.colors_name = "{{.ThemeName}}"
 
 -- Color palette
 local colors = {
