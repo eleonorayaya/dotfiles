@@ -27,6 +27,18 @@ func InitConfig() (bool, string, error) {
 	}
 
 	if _, err := os.Stat(configPath); err == nil {
+		existingConfig, err := loadConfigFromPath(configPath)
+		if err != nil {
+			return false, "", fmt.Errorf("failed to load existing config: %w", err)
+		}
+
+		defaultConfig := newConfig()
+		existingConfig.mergeWithDefaults(defaultConfig)
+
+		if err := existingConfig.save(configPath); err != nil {
+			return false, "", fmt.Errorf("failed to save merged config: %w", err)
+		}
+
 		return false, configPath, nil
 	}
 

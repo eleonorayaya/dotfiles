@@ -1,6 +1,10 @@
 package shizukuconfig
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/eleonorayaya/shizuku/internal/util"
+)
 
 type Language string
 
@@ -47,4 +51,23 @@ func validateLanguageConfig(languageConfig map[string]LanguageConfig) error {
 	}
 
 	return nil
+}
+
+func mergeLanguageConfigs(existing, defaults map[string]LanguageConfig) map[string]LanguageConfig {
+	result := make(map[string]LanguageConfig)
+
+	for lang, config := range existing {
+		result[lang] = config
+	}
+
+	for lang, defaultConfig := range defaults {
+		if existingLang, exists := result[lang]; exists {
+			existingLang.Config = util.MergeStringAnyMap(existingLang.Config, defaultConfig.Config)
+			result[lang] = existingLang
+		} else {
+			result[lang] = defaultConfig
+		}
+	}
+
+	return result
 }

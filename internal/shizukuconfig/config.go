@@ -35,6 +35,26 @@ func newConfig() *Config {
 }
 
 func newConfigFromPath(configPath string) (*Config, error) {
+	c, err := loadConfigFromPath(configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := c.validate(); err != nil {
+		return nil, fmt.Errorf("invalid language configuration: %w", err)
+	}
+
+	theme, err := loadThemeFromRegistry(c.StylesConfig.ThemeName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load theme: %w", err)
+	}
+
+	c.Styles = &Styles{Theme: theme}
+
+	return c, nil
+}
+
+func loadConfigFromPath(configPath string) (*Config, error) {
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -48,17 +68,6 @@ func newConfigFromPath(configPath string) (*Config, error) {
 	if err := yaml.Unmarshal(data, &c); err != nil {
 		return nil, fmt.Errorf("failed to parse YAML config: %w", err)
 	}
-
-	if err := c.validate(); err != nil {
-		return nil, fmt.Errorf("invalid language configuration: %w", err)
-	}
-
-	theme, err := loadThemeFromRegistry(c.StylesConfig.ThemeName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load theme: %w", err)
-	}
-
-	c.Styles = &Styles{Theme: theme}
 
 	return &c, nil
 }
@@ -130,4 +139,26 @@ func (c *Config) save(configPath string) error {
 	}
 
 	return nil
+}
+
+func (c *Config) mergeWithDefaults(defaultConfig *Config) {
+	if c.StylesConfig.ThemeName == "" {
+		c.StylesConfig.ThemeName = defaultConfig.StylesConfig.ThemeName
+	}
+
+	if c.Languages == nil {
+		c.Languages = defaultConfig.Languages
+	} else {
+		c.Languages = mergeLanguageConfigs(c.Languages, defaultConfig.Languages)
+	}
+
+	if c.Apps == nil {
+		c.Apps = defaultConfig.Apps
+	} else if defaultConfig.Apps != nil {
+		c.Apps = mergeAppConfigs(c.Apps, defaultConfig.Apps)
+	}
+}
+
+func mergeAppConfigs(existing, defaults map[string]any) map[string]any {
+	return util.MergeStringAnyMap(existing, defaults)
 }

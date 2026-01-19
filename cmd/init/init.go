@@ -22,7 +22,7 @@ func initConfig(cmd *cobra.Command, args []string) error {
 	if created {
 		fmt.Printf("Created default shizuku configuration at %s\n", configPath)
 	} else {
-		fmt.Printf("Shizuku configuration already exists at %s\n", configPath)
+		fmt.Printf("Merged existing configuration with defaults at %s\n", configPath)
 	}
 
 	return nil
