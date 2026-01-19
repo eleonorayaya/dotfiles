@@ -22,13 +22,10 @@ func install(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	registeredApps := apps.GetApps()
+	allApps := apps.GetApps()
+	enabledApps := shizukuapp.FilterEnabledApps(allApps, appConfig)
 
-	for _, app := range registeredApps {
-		if !app.Enabled(appConfig) {
-			continue
-		}
-
+	for _, app := range enabledApps {
 		if installer, ok := app.(shizukuapp.Installer); ok {
 			slog.Info("installing app dependencies", "appName", app.Name())
 

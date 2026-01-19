@@ -32,13 +32,10 @@ func sync(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error created output dir: %w", err)
 	}
 
-	registeredApps := apps.GetApps()
+	allApps := apps.GetApps()
+	enabledApps := shizukuapp.FilterEnabledApps(allApps, appConfig)
 
-	for _, app := range registeredApps {
-		if !app.Enabled(appConfig) {
-			continue
-		}
-
+	for _, app := range enabledApps {
 		slog.Info("app syncing", "appName", app.Name())
 
 		if syncer, ok := app.(shizukuapp.FileSyncer); ok {
@@ -51,11 +48,7 @@ func sync(cmd *cobra.Command, args []string) error {
 	}
 
 	envSetups := []*shizukuapp.EnvSetup{}
-	for _, app := range registeredApps {
-		if !app.Enabled(appConfig) {
-			continue
-		}
-
+	for _, app := range enabledApps {
 		if provider, ok := app.(shizukuapp.EnvProvider); ok {
 			envSetup, err := provider.Env()
 			if err != nil {
