@@ -1,9 +1,9 @@
-package theme
+package shizukustyle
 
 import (
 	"fmt"
 
-	"github.com/eleonorayaya/shizuku/internal/theme/monade"
+	"github.com/eleonorayaya/shizuku/internal/shizukustyle/monade"
 )
 
 type ThemeProvider interface {

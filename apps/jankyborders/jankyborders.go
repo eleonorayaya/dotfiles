@@ -5,7 +5,7 @@ import (
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
-	"github.com/eleonorayaya/shizuku/internal/theme"
+	"github.com/eleonorayaya/shizuku/internal/shizukustyle"
 	"github.com/eleonorayaya/shizuku/internal/util"
 )
 
@@ -40,10 +40,10 @@ func hexToARGB(hex string, alpha string) string {
 	return "0x" + alpha + hex
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config, themeData *theme.Theme) error {
+func (a *App) Sync(outDir string, config *shizukuconfig.Config, styles *shizukustyle.Styles) error {
 	data := map[string]any{
-		"ActiveColor":   hexToARGB(themeData.Colors.AccentLavender, "ff"),
-		"InactiveColor": hexToARGB(themeData.Colors.AccentLavender, "ff"),
+		"ActiveColor":   hexToARGB(styles.Theme.Colors.AccentLavender, "ff"),
+		"InactiveColor": hexToARGB(styles.Theme.Colors.AccentLavender, "ff"),
 	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("jankyborders", data, outDir)

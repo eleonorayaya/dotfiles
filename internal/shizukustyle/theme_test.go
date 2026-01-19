@@ -1,4 +1,4 @@
-package theme
+package shizukustyle
 
 import (
 	"encoding/json"

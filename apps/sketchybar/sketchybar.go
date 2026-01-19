@@ -5,7 +5,7 @@ import (
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
-	"github.com/eleonorayaya/shizuku/internal/theme"
+	"github.com/eleonorayaya/shizuku/internal/shizukustyle"
 	"github.com/eleonorayaya/shizuku/internal/util"
 )
 
@@ -40,19 +40,19 @@ func hexToARGB(hex string, alpha string) string {
 	return "0x" + alpha + hex
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config, themeData *theme.Theme) error {
+func (a *App) Sync(outDir string, config *shizukuconfig.Config, styles *shizukustyle.Styles) error {
 	data := map[string]any{
-		"BarColor":                hexToARGB(themeData.Colors.Surface, "D9"),
-		"BarBorderColor":          hexToARGB(themeData.Colors.SurfaceBorder, "FF"),
-		"IconColor":               hexToARGB(themeData.Colors.TextOnSurface, "FF"),
-		"IconHighlightColor":      hexToARGB(themeData.Colors.Primary, "FF"),
-		"LabelColor":              hexToARGB(themeData.Colors.TextOnSurface, "FF"),
-		"LabelHighlightColor":     hexToARGB(themeData.Colors.Primary, "FF"),
-		"PopupBorderColor":        hexToARGB(themeData.Colors.SurfaceBorder, "FF"),
-		"PopupBackgroundColor":    hexToARGB(themeData.Colors.Surface, "FF"),
-		"ActiveWorkspaceColor":    hexToARGB(themeData.Colors.Primary, "FF"),
-		"SpacesWrapperBackground": hexToARGB(themeData.Colors.Surface, "FF"),
-		"SpacesItemBackground":    hexToARGB(themeData.Colors.Primary, "FF"),
+		"BarColor":                hexToARGB(styles.Theme.Colors.Surface, "D9"),
+		"BarBorderColor":          hexToARGB(styles.Theme.Colors.SurfaceBorder, "FF"),
+		"IconColor":               hexToARGB(styles.Theme.Colors.TextOnSurface, "FF"),
+		"IconHighlightColor":      hexToARGB(styles.Theme.Colors.Primary, "FF"),
+		"LabelColor":              hexToARGB(styles.Theme.Colors.TextOnSurface, "FF"),
+		"LabelHighlightColor":     hexToARGB(styles.Theme.Colors.Primary, "FF"),
+		"PopupBorderColor":        hexToARGB(styles.Theme.Colors.SurfaceBorder, "FF"),
+		"PopupBackgroundColor":    hexToARGB(styles.Theme.Colors.Surface, "FF"),
+		"ActiveWorkspaceColor":    hexToARGB(styles.Theme.Colors.Primary, "FF"),
+		"SpacesWrapperBackground": hexToARGB(styles.Theme.Colors.Surface, "FF"),
+		"SpacesItemBackground":    hexToARGB(styles.Theme.Colors.Primary, "FF"),
 	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("sketchybar", data, outDir)
