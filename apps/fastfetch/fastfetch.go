@@ -5,12 +5,21 @@ import (
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
+	"github.com/eleonorayaya/shizuku/internal/util"
 )
 
 type App struct{}
 
 func New() *App {
 	return &App{}
+}
+
+func (a *App) Install(config *shizukuconfig.Config) error {
+	if err := util.InstallBrewPackage("fastfetch"); err != nil {
+		return fmt.Errorf("failed to install fastfetch: %w", err)
+	}
+
+	return nil
 }
 
 func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {

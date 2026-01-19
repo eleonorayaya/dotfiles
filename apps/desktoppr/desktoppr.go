@@ -17,6 +17,14 @@ func New() *App {
 	return &App{}
 }
 
+func (a *App) Install(config *shizukuconfig.Config) error {
+	if err := util.InstallCask("desktoppr"); err != nil {
+		return fmt.Errorf("failed to install desktoppr: %w", err)
+	}
+
+	return nil
+}
+
 func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 	fileMap, err := shizukuapp.GenerateAppFiles("desktoppr", nil, outDir)
 	if err != nil {

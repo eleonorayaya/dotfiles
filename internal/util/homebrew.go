@@ -48,6 +48,30 @@ func BrewPackageExists(packageName string) (bool, error) {
 	return true, nil
 }
 
+func AddTap(tapName string) error {
+	slog.Debug("adding brew tap", "tap", tapName)
+
+	_, err := runBrewCommand("tap", tapName)
+	if err != nil {
+		return fmt.Errorf("brew tap %s failed: %w", tapName, err)
+	}
+
+	slog.Debug("brew tap added", "tap", tapName)
+	return nil
+}
+
+func InstallCask(caskName string) error {
+	slog.Debug("installing brew cask", "cask", caskName)
+
+	_, err := runBrewCommand("install", "--cask", caskName)
+	if err != nil {
+		return fmt.Errorf("brew install --cask %s failed: %w", caskName, err)
+	}
+
+	slog.Debug("brew cask installed", "cask", caskName)
+	return nil
+}
+
 func runBrewCommand(args ...string) (string, error) {
 	out, err := exec.Command("brew", args...).Output()
 	if err != nil {
@@ -56,4 +80,3 @@ func runBrewCommand(args ...string) (string, error) {
 
 	return strings.TrimSpace(string(out)), nil
 }
-

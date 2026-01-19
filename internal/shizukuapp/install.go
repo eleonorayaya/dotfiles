@@ -18,4 +18,3 @@ func VerifyInstallation(binaryName string) error {
 
 	return nil
 }
-
