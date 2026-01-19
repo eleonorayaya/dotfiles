@@ -7,7 +7,6 @@ import (
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
-	"github.com/eleonorayaya/shizuku/internal/shizukustyle"
 	"github.com/eleonorayaya/shizuku/internal/util"
 )
 
@@ -46,23 +45,23 @@ func hexToRGB(hex string) string {
 	return fmt.Sprintf("%d %d %d", r, g, b)
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config, styles *shizukustyle.Styles) error {
+func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 	data := map[string]any{
-		"ThemeName":            styles.Theme.Name,
-		"Surface":              hexToRGB(styles.Theme.Colors.Surface),
-		"SurfaceVariant":       hexToRGB(styles.Theme.Colors.SurfaceVariant),
-		"SurfaceHighlight":     hexToRGB(styles.Theme.Colors.SurfaceHighlight),
-		"TextOnSurface":        hexToRGB(styles.Theme.Colors.TextOnSurface),
-		"TextOnSurfaceVariant": hexToRGB(styles.Theme.Colors.TextOnSurfaceVariant),
-		"TextOnSurfaceMuted":   hexToRGB(styles.Theme.Colors.TextOnSurfaceMuted),
-		"Primary":              hexToRGB(styles.Theme.Colors.Primary),
-		"AccentSalmon":         hexToRGB(styles.Theme.Colors.AccentSalmon),
-		"AccentBlue":           hexToRGB(styles.Theme.Colors.AccentBlue),
-		"AccentMint":           hexToRGB(styles.Theme.Colors.AccentMint),
-		"AccentLavender":       hexToRGB(styles.Theme.Colors.AccentLavender),
-		"AccentPeach":          hexToRGB(styles.Theme.Colors.AccentPeach),
-		"AccentGold":           hexToRGB(styles.Theme.Colors.AccentGold),
-		"AccentPurple":         hexToRGB(styles.Theme.Colors.AccentPurple),
+		"ThemeName":            config.Styles.Theme.Name,
+		"Surface":              hexToRGB(config.Styles.Theme.Colors.Surface),
+		"SurfaceVariant":       hexToRGB(config.Styles.Theme.Colors.SurfaceVariant),
+		"SurfaceHighlight":     hexToRGB(config.Styles.Theme.Colors.SurfaceHighlight),
+		"TextOnSurface":        hexToRGB(config.Styles.Theme.Colors.TextOnSurface),
+		"TextOnSurfaceVariant": hexToRGB(config.Styles.Theme.Colors.TextOnSurfaceVariant),
+		"TextOnSurfaceMuted":   hexToRGB(config.Styles.Theme.Colors.TextOnSurfaceMuted),
+		"Primary":              hexToRGB(config.Styles.Theme.Colors.Primary),
+		"AccentSalmon":         hexToRGB(config.Styles.Theme.Colors.AccentSalmon),
+		"AccentBlue":           hexToRGB(config.Styles.Theme.Colors.AccentBlue),
+		"AccentMint":           hexToRGB(config.Styles.Theme.Colors.AccentMint),
+		"AccentLavender":       hexToRGB(config.Styles.Theme.Colors.AccentLavender),
+		"AccentPeach":          hexToRGB(config.Styles.Theme.Colors.AccentPeach),
+		"AccentGold":           hexToRGB(config.Styles.Theme.Colors.AccentGold),
+		"AccentPurple":         hexToRGB(config.Styles.Theme.Colors.AccentPurple),
 	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("zellij", data, outDir)

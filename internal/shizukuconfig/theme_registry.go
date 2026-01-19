@@ -1,9 +1,9 @@
-package shizukustyle
+package shizukuconfig
 
 import (
 	"fmt"
 
-	"github.com/eleonorayaya/shizuku/internal/shizukustyle/monade"
+	"github.com/eleonorayaya/shizuku/internal/shizukuconfig/themes/monade"
 )
 
 type ThemeProvider interface {
@@ -16,7 +16,7 @@ var providers = map[string]ThemeProvider{
 	"monade": monade.Provider,
 }
 
-func LoadTheme(themeName string) (*Theme, error) {
+func loadThemeFromRegistry(themeName string) (*Theme, error) {
 	provider, exists := providers[themeName]
 	if !exists {
 		return nil, fmt.Errorf("unknown theme '%s'", themeName)

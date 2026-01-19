@@ -1,4 +1,4 @@
-package shizukustyle
+package shizukuconfig
 
 import (
 	"encoding/json"

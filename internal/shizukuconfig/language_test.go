@@ -41,6 +41,8 @@ func TestValidateLanguageConfig(t *testing.T) {
 		{
 			name: "valid rust language",
 			config: `
+styles:
+  theme: monade
 languages:
   rust:
     enabled: true
@@ -50,6 +52,8 @@ languages:
 		{
 			name: "invalid language",
 			config: `
+styles:
+  theme: monade
 languages:
   python:
     enabled: true
@@ -57,13 +61,18 @@ languages:
 			shouldErr: true,
 		},
 		{
-			name:      "no languages section",
-			config:    ``,
+			name: "no languages section",
+			config: `
+styles:
+  theme: monade
+`,
 			shouldErr: false,
 		},
 		{
 			name: "nil languages map",
 			config: `
+styles:
+  theme: monade
 other_config: value
 `,
 			shouldErr: false,

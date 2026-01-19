@@ -7,7 +7,6 @@ import (
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
-	"github.com/eleonorayaya/shizuku/internal/shizukustyle"
 	"github.com/eleonorayaya/shizuku/internal/util"
 )
 
@@ -44,9 +43,9 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 	return nil
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config, styles *shizukustyle.Styles) error {
+func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 	data := map[string]any{
-		"Colors": styles.Theme.Colors,
+		"Colors": config.Styles.Theme.Colors,
 	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("kitty", data, outDir)

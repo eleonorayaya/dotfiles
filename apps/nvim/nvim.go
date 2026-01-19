@@ -5,7 +5,6 @@ import (
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
-	"github.com/eleonorayaya/shizuku/internal/shizukustyle"
 	"github.com/eleonorayaya/shizuku/internal/util"
 )
 
@@ -31,11 +30,11 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 	return nil
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config, styles *shizukustyle.Styles) error {
+func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 	data := map[string]any{
-		"ThemeName": styles.Theme.Name,
-		"ThemeType": styles.Theme.Type,
-		"Colors":    styles.Theme.Colors,
+		"ThemeName": config.Styles.Theme.Name,
+		"ThemeType": config.Styles.Theme.Type,
+		"Colors":    config.Styles.Theme.Colors,
 	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("nvim", data, outDir)

@@ -10,7 +10,6 @@ import (
 	"github.com/eleonorayaya/shizuku/apps"
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
-	"github.com/eleonorayaya/shizuku/internal/shizukustyle"
 	"github.com/spf13/cobra"
 )
 
@@ -24,15 +23,6 @@ func sync(cmd *cobra.Command, args []string) error {
 	appConfig, err := shizukuconfig.LoadConfig()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
-	}
-
-	loadedTheme, err := appConfig.LoadTheme()
-	if err != nil {
-		return fmt.Errorf("failed to load theme: %w", err)
-	}
-
-	styles := &shizukustyle.Styles{
-		Theme: loadedTheme,
 	}
 
 	buildId := fmt.Sprintf("%v", time.Now().Unix())
@@ -49,7 +39,7 @@ func sync(cmd *cobra.Command, args []string) error {
 		slog.Info("app syncing", "appName", app.Name())
 
 		if syncer, ok := app.(shizukuapp.FileSyncer); ok {
-			if err := syncer.Sync(outDir, appConfig, styles); err != nil {
+			if err := syncer.Sync(outDir, appConfig); err != nil {
 				return fmt.Errorf("could not sync %s: %w", app.Name(), err)
 			}
 

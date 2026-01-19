@@ -5,22 +5,33 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/eleonorayaya/shizuku/internal/shizukustyle"
 	"github.com/eleonorayaya/shizuku/internal/util"
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	Theme     string                    `yaml:"theme"`
-	Languages map[string]LanguageConfig `yaml:"languages"`
-	Apps      map[string]any            `yaml:"apps"`
+	StylesConfig StylesConfig              `yaml:"styles"`
+	Languages    map[string]LanguageConfig `yaml:"languages"`
+	Apps         map[string]any            `yaml:"apps"`
+
+	Styles *Styles `yaml:"-"`
 }
 
 func newConfig() *Config {
-	return &Config{
-		Theme:     "monade",
+	c := &Config{
+		StylesConfig: StylesConfig{
+			ThemeName: "monade",
+		},
 		Languages: createDefaultLanguageConfig(),
 	}
+
+	theme, err := loadThemeFromRegistry(c.StylesConfig.ThemeName)
+	if err != nil {
+		return nil
+	}
+
+	c.Styles = &Styles{Theme: theme}
+	return c
 }
 
 func newConfigFromPath(configPath string) (*Config, error) {
@@ -42,6 +53,13 @@ func newConfigFromPath(configPath string) (*Config, error) {
 		return nil, fmt.Errorf("invalid language configuration: %w", err)
 	}
 
+	theme, err := loadThemeFromRegistry(c.StylesConfig.ThemeName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load theme: %w", err)
+	}
+
+	c.Styles = &Styles{Theme: theme}
+
 	return &c, nil
 }
 
@@ -50,8 +68,8 @@ func (c *Config) validate() error {
 		return fmt.Errorf("invalid language config: %w", err)
 	}
 
-	if c.Theme != "" {
-		if _, err := shizukustyle.LoadTheme(c.Theme); err != nil {
+	if c.StylesConfig.ThemeName != "" {
+		if _, err := loadThemeFromRegistry(c.StylesConfig.ThemeName); err != nil {
 			return fmt.Errorf("invalid theme: %w", err)
 		}
 	}
@@ -94,14 +112,6 @@ func (c *Config) GetAppConfigBool(appName string, configKey string, defaultValue
 	}
 
 	return boolValue
-}
-
-func (c *Config) LoadTheme() (*shizukustyle.Theme, error) {
-	if c.Theme == "" {
-		return nil, fmt.Errorf("no theme configured")
-	}
-
-	return shizukustyle.LoadTheme(c.Theme)
 }
 
 func (c *Config) save(configPath string) error {

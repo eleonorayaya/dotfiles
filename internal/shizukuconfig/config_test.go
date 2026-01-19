@@ -32,6 +32,8 @@ func TestNewConfigFromPath(t *testing.T) {
 	t.Run("loads valid config", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		configContent := `
+styles:
+  theme: monade
 languages:
   rust:
     enabled: true
@@ -134,6 +136,9 @@ func TestConfigValidate(t *testing.T) {
 
 	t.Run("rejects invalid language", func(t *testing.T) {
 		config := &Config{
+			StylesConfig: StylesConfig{
+				ThemeName: "monade",
+			},
 			Languages: map[string]LanguageConfig{
 				"invalid-lang": {Enabled: true},
 			},
