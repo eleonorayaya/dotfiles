@@ -21,8 +21,10 @@ type LanguageConfig struct {
 	Config  map[string]any `yaml:",inline"`
 }
 
-func createDefaultLanguageConfig() map[string]LanguageConfig {
-	defaultConfig := make(map[string]LanguageConfig)
+type LanguageConfigs map[string]LanguageConfig
+
+func createDefaultLanguageConfig() LanguageConfigs {
+	defaultConfig := make(LanguageConfigs)
 
 	for _, lang := range languages {
 		defaultConfig[string(lang)] = LanguageConfig{
@@ -34,8 +36,8 @@ func createDefaultLanguageConfig() map[string]LanguageConfig {
 	return defaultConfig
 }
 
-func validateLanguageConfig(languageConfig map[string]LanguageConfig) error {
-	if languageConfig == nil {
+func (lc LanguageConfigs) validate() error {
+	if lc == nil {
 		return nil
 	}
 
@@ -44,7 +46,7 @@ func validateLanguageConfig(languageConfig map[string]LanguageConfig) error {
 		validLangs[string(lang)] = true
 	}
 
-	for langName := range languageConfig {
+	for langName := range lc {
 		if !validLangs[langName] {
 			return fmt.Errorf("unsupported language '%s': valid languages are %v", langName, languages)
 		}
@@ -53,21 +55,13 @@ func validateLanguageConfig(languageConfig map[string]LanguageConfig) error {
 	return nil
 }
 
-func mergeLanguageConfigs(existing, defaults map[string]LanguageConfig) map[string]LanguageConfig {
-	result := make(map[string]LanguageConfig)
-
-	for lang, config := range existing {
-		result[lang] = config
-	}
-
+func (lc LanguageConfigs) merge(defaults LanguageConfigs) {
 	for lang, defaultConfig := range defaults {
-		if existingLang, exists := result[lang]; exists {
+		if existingLang, exists := lc[lang]; exists {
 			existingLang.Config = util.MergeStringAnyMap(existingLang.Config, defaultConfig.Config)
-			result[lang] = existingLang
+			lc[lang] = existingLang
 		} else {
-			result[lang] = defaultConfig
+			lc[lang] = defaultConfig
 		}
 	}
-
-	return result
 }

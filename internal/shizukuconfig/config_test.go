@@ -85,6 +85,87 @@ languages:
 			t.Error("Expected error for invalid YAML")
 		}
 	})
+
+	t.Run("loads config with windowOpacity", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configContent := `
+styles:
+  theme: monade
+  windowOpacity: 85
+languages:
+  rust:
+    enabled: true
+`
+		configPath := filepath.Join(tmpDir, "shizuku.yml")
+		if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+			t.Fatalf("Failed to write test config: %v", err)
+		}
+
+		config, err := newConfigFromPath(configPath)
+		if err != nil {
+			t.Fatalf("newConfigFromPath failed: %v", err)
+		}
+
+		if config.Styles.WindowOpacity != 85 {
+			t.Errorf("Expected windowOpacity 85, got %d", config.Styles.WindowOpacity)
+		}
+
+		if config.Styles.ThemeName != "monade" {
+			t.Errorf("Expected theme name 'monade', got %q", config.Styles.ThemeName)
+		}
+
+		if config.Styles.Theme == nil {
+			t.Error("Expected theme to be loaded automatically")
+		}
+	})
+
+	t.Run("merges default windowOpacity when missing", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configContent := `
+styles:
+  theme: monade
+languages:
+  rust:
+    enabled: true
+`
+		configPath := filepath.Join(tmpDir, "shizuku.yml")
+		if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+			t.Fatalf("Failed to write test config: %v", err)
+		}
+
+		config, err := newConfigFromPath(configPath)
+		if err != nil {
+			t.Fatalf("newConfigFromPath failed: %v", err)
+		}
+
+		defaults := newConfig()
+		config.mergeWithDefaults(defaults)
+
+		if config.Styles.WindowOpacity != 100 {
+			t.Errorf("Expected default windowOpacity 100, got %d", config.Styles.WindowOpacity)
+		}
+	})
+
+	t.Run("rejects invalid windowOpacity", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configContent := `
+styles:
+  theme: monade
+  windowOpacity: 150
+languages:
+  rust:
+    enabled: true
+`
+		configPath := filepath.Join(tmpDir, "shizuku.yml")
+		if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+			t.Fatalf("Failed to write test config: %v", err)
+		}
+
+		_, err := newConfigFromPath(configPath)
+		if err == nil {
+			t.Error("Expected error for windowOpacity out of range")
+		}
+	})
 }
 
 func TestConfigSave(t *testing.T) {
@@ -135,11 +216,14 @@ func TestConfigValidate(t *testing.T) {
 	})
 
 	t.Run("rejects invalid language", func(t *testing.T) {
+		theme, _ := loadThemeFromRegistry("monade")
 		config := &Config{
-			StylesConfig: StylesConfig{
-				ThemeName: "monade",
+			Styles: Styles{
+				ThemeName:     "monade",
+				WindowOpacity: 100,
+				Theme:         theme,
 			},
-			Languages: map[string]LanguageConfig{
+			Languages: LanguageConfigs{
 				"invalid-lang": {Enabled: true},
 			},
 		}
