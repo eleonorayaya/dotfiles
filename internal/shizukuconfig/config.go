@@ -10,28 +10,16 @@ import (
 )
 
 type Config struct {
-	StylesConfig StylesConfig              `yaml:"styles"`
-	Languages    map[string]LanguageConfig `yaml:"languages"`
-	Apps         map[string]any            `yaml:"apps"`
-
-	Styles *Styles `yaml:"-"`
+	Styles    Styles          `yaml:"styles"`
+	Languages LanguageConfigs `yaml:"languages"`
+	Apps      map[string]any  `yaml:"apps"`
 }
 
 func newConfig() *Config {
-	c := &Config{
-		StylesConfig: StylesConfig{
-			ThemeName: "monade",
-		},
+	return &Config{
+		Styles:    createDefaultStyles(),
 		Languages: createDefaultLanguageConfig(),
 	}
-
-	theme, err := loadThemeFromRegistry(c.StylesConfig.ThemeName)
-	if err != nil {
-		return nil
-	}
-
-	c.Styles = &Styles{Theme: theme}
-	return c
 }
 
 func newConfigFromPath(configPath string) (*Config, error) {
@@ -41,15 +29,8 @@ func newConfigFromPath(configPath string) (*Config, error) {
 	}
 
 	if err := c.validate(); err != nil {
-		return nil, fmt.Errorf("invalid language configuration: %w", err)
+		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
-
-	theme, err := loadThemeFromRegistry(c.StylesConfig.ThemeName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load theme: %w", err)
-	}
-
-	c.Styles = &Styles{Theme: theme}
 
 	return c, nil
 }
@@ -73,14 +54,12 @@ func loadConfigFromPath(configPath string) (*Config, error) {
 }
 
 func (c *Config) validate() error {
-	if err := validateLanguageConfig(c.Languages); err != nil {
-		return fmt.Errorf("invalid language config: %w", err)
+	if err := c.Styles.validate(); err != nil {
+		return fmt.Errorf("invalid styles config: %w", err)
 	}
 
-	if c.StylesConfig.ThemeName != "" {
-		if _, err := loadThemeFromRegistry(c.StylesConfig.ThemeName); err != nil {
-			return fmt.Errorf("invalid theme: %w", err)
-		}
+	if err := c.Languages.validate(); err != nil {
+		return fmt.Errorf("invalid language config: %w", err)
 	}
 
 	return nil
@@ -142,14 +121,12 @@ func (c *Config) save(configPath string) error {
 }
 
 func (c *Config) mergeWithDefaults(defaultConfig *Config) {
-	if c.StylesConfig.ThemeName == "" {
-		c.StylesConfig.ThemeName = defaultConfig.StylesConfig.ThemeName
-	}
+	c.Styles.merge(defaultConfig.Styles)
 
 	if c.Languages == nil {
 		c.Languages = defaultConfig.Languages
 	} else {
-		c.Languages = mergeLanguageConfigs(c.Languages, defaultConfig.Languages)
+		c.Languages.merge(defaultConfig.Languages)
 	}
 
 	if c.Apps == nil {
