@@ -26,7 +26,7 @@ func (a *App) Enabled(config *shizukuconfig.Config) bool {
 }
 
 func (a *App) Install(config *shizukuconfig.Config) error {
-	if err := util.InstallCask("desktoppr"); err != nil {
+	if err := util.InstallBrewPackage("desktoppr", true); err != nil {
 		return fmt.Errorf("failed to install desktoppr: %w", err)
 	}
 

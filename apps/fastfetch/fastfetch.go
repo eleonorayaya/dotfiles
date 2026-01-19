@@ -23,7 +23,7 @@ func (a *App) Enabled(config *shizukuconfig.Config) bool {
 }
 
 func (a *App) Install(config *shizukuconfig.Config) error {
-	if err := util.InstallBrewPackage("fastfetch"); err != nil {
+	if err := util.InstallBrewPackage("fastfetch", false); err != nil {
 		return fmt.Errorf("failed to install fastfetch: %w", err)
 	}
 

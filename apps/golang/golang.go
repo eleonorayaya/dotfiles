@@ -23,7 +23,7 @@ func (a *App) Enabled(config *shizukuconfig.Config) bool {
 }
 
 func (a *App) Install(config *shizukuconfig.Config) error {
-	if err := util.InstallBrewPackage("go-task"); err != nil {
+	if err := util.InstallBrewPackage("go-task", false); err != nil {
 		return fmt.Errorf("failed to install go-task: %w", err)
 	}
 
