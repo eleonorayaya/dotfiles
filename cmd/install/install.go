@@ -14,8 +14,11 @@ import (
 	"github.com/eleonorayaya/shizuku/apps/kitty"
 	"github.com/eleonorayaya/shizuku/apps/lsd"
 	"github.com/eleonorayaya/shizuku/apps/nvim"
+	"github.com/eleonorayaya/shizuku/apps/protonpass"
+	"github.com/eleonorayaya/shizuku/apps/protonvpn"
 	"github.com/eleonorayaya/shizuku/apps/python"
 	"github.com/eleonorayaya/shizuku/apps/rust"
+	"github.com/eleonorayaya/shizuku/apps/sfsymbols"
 	"github.com/eleonorayaya/shizuku/apps/sketchybar"
 	"github.com/eleonorayaya/shizuku/apps/terminal"
 	"github.com/eleonorayaya/shizuku/apps/terraform"
@@ -54,8 +57,11 @@ func install(cmd *cobra.Command, args []string) error {
 		{"git", git.New()},
 		{"golang", golang.New()},
 		{"lsd", lsd.New()},
+		{"protonpass", protonpass.New()},
+		{"protonvpn", protonvpn.New()},
 		{"python", python.New()},
 		{"rust", rust.New()},
+		{"sfsymbols", sfsymbols.New()},
 		{"terminal", terminal.New()},
 		{"terraform", terraform.New()},
 		{"desktoppr", desktoppr.New()},

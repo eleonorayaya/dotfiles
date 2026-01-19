@@ -1,4 +1,0 @@
-brew "go-task"
-cask "proton-pass"
-cask "protonvpn"
-cask "sf-symbols"
