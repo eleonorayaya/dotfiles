@@ -7,6 +7,7 @@ import (
 
 	initcmd "github.com/eleonorayaya/shizuku/cmd/init"
 	installcmd "github.com/eleonorayaya/shizuku/cmd/install"
+	listcmd "github.com/eleonorayaya/shizuku/cmd/list"
 	"github.com/eleonorayaya/shizuku/cmd/sync"
 	"github.com/spf13/cobra"
 )
@@ -29,6 +30,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(initcmd.InitCommand)
 	rootCmd.AddCommand(installcmd.InstallCommand)
+	rootCmd.AddCommand(listcmd.ListCommand)
 	rootCmd.AddCommand(sync.SyncCommand)
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 }
