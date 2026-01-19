@@ -16,36 +16,45 @@ func GetBrewAppPrefix(appName string) (string, error) {
 	return prefix, nil
 }
 
-func InstallBrewPackage(packageName string) error {
-	exists, err := BrewPackageExists(packageName)
-	if err != nil {
-		return fmt.Errorf("failed to check if package exists: %w", err)
-	}
-
-	if exists {
-		slog.Debug("brew package already installed, skipping", "package", packageName)
+func InstallBrewPackage(name string, isCask bool) error {
+	if BrewPackageExists(name, isCask) {
+		slog.Debug("brew package already installed, skipping", "package", name)
 		return nil
 	}
 
-	slog.Debug("installing brew package", "package", packageName)
-
-	_, err = runBrewCommand("install", packageName)
-	if err != nil {
-		return fmt.Errorf("brew install %s failed: %w", packageName, err)
+	args := []string{
+		"install",
+		name,
 	}
 
-	slog.Debug("brew package installed", "package", packageName)
+	if isCask {
+		args = append(args, "--cask")
+	}
+
+	slog.Debug("installing brew package", "package", name, "isCask", isCask)
+
+	_, err := runBrewCommand(args...)
+	if err != nil {
+		return fmt.Errorf("brew install %s failed: %w", name, err)
+	}
+
+	slog.Debug("brew package installed", "package", name, "isCask", isCask)
 
 	return nil
 }
 
-func BrewPackageExists(packageName string) (bool, error) {
-	_, err := runBrewCommand("list", packageName)
-	if err != nil {
-		return false, fmt.Errorf("failed to check if brew package exists: %w", err)
+func BrewPackageExists(name string, isCask bool) bool {
+	args := []string{
+		"list",
+		name,
 	}
 
-	return true, nil
+	if isCask {
+		args = append(args, "--cask")
+	}
+
+	_, err := runBrewCommand(args...)
+	return err == nil
 }
 
 func AddTap(tapName string) error {
@@ -60,22 +69,16 @@ func AddTap(tapName string) error {
 	return nil
 }
 
-func InstallCask(caskName string) error {
-	slog.Debug("installing brew cask", "cask", caskName)
-
-	_, err := runBrewCommand("install", "--cask", caskName)
-	if err != nil {
-		return fmt.Errorf("brew install --cask %s failed: %w", caskName, err)
-	}
-
-	slog.Debug("brew cask installed", "cask", caskName)
-	return nil
-}
-
 func runBrewCommand(args ...string) (string, error) {
-	out, err := exec.Command("brew", args...).Output()
+	cmd := exec.Command("brew", args...)
+	out, err := cmd.Output()
+
 	if err != nil {
-		return "", err
+		if exitError, ok := err.(*exec.ExitError); ok {
+			return "", fmt.Errorf("Command failed with stderr: %s\n", string(exitError.Stderr))
+		} else {
+			return "", err
+		}
 	}
 
 	return strings.TrimSpace(string(out)), nil

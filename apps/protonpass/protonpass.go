@@ -22,7 +22,7 @@ func (a *App) Enabled(config *shizukuconfig.Config) bool {
 }
 
 func (a *App) Install(config *shizukuconfig.Config) error {
-	if err := util.InstallCask("proton-pass"); err != nil {
+	if err := util.InstallBrewPackage("proton-pass", true); err != nil {
 		return fmt.Errorf("failed to install proton-pass: %w", err)
 	}
 

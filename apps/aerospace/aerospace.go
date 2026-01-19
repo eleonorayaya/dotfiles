@@ -27,7 +27,7 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 		return fmt.Errorf("failed to add tap: %w", err)
 	}
 
-	if err := util.InstallCask("aerospace"); err != nil {
+	if err := util.InstallBrewPackage("aerospace", true); err != nil {
 		return fmt.Errorf("failed to install aerospace: %w", err)
 	}
 

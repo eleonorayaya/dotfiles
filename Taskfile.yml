@@ -22,4 +22,9 @@ tasks:
       - "{{.GO_SOURCES}}"
     cmds:
       - go test {{.CLI_ARGS}} ./...
+  install:
+    deps:
+      - build
+    cmds:
+      - mv out/shizuku "$(go env GOPATH)/bin/"
 

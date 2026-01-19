@@ -31,7 +31,7 @@ func (a *App) Enabled(config *shizukuconfig.Config) bool {
 }
 
 func (a *App) Install(config *shizukuconfig.Config) error {
-	if err := util.InstallBrewPackage("antigen"); err != nil {
+	if err := util.InstallBrewPackage("antigen", false); err != nil {
 		return fmt.Errorf("failed to install antigen: %w", err)
 	}
 
@@ -39,7 +39,7 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 		return fmt.Errorf("failed to add tap: %w", err)
 	}
 
-	if err := util.InstallBrewPackage("jandedobbeleer/oh-my-posh/oh-my-posh"); err != nil {
+	if err := util.InstallBrewPackage("jandedobbeleer/oh-my-posh/oh-my-posh", false); err != nil {
 		return fmt.Errorf("failed to install oh-my-posh: %w", err)
 	}
 

@@ -22,7 +22,7 @@ func (a *App) Enabled(config *shizukuconfig.Config) bool {
 }
 
 func (a *App) Install(config *shizukuconfig.Config) error {
-	if err := util.InstallCask("sf-symbols"); err != nil {
+	if err := util.InstallBrewPackage("sf-symbols", true); err != nil {
 		return fmt.Errorf("failed to install sf-symbols: %w", err)
 	}
 
