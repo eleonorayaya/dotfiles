@@ -1,10 +1,10 @@
 local M = {}
 
-local session = require("sysinit.utils.ai.session")
-local agents = require("sysinit.utils.ai.agents")
-local input = require("sysinit.utils.ai.input")
-local picker = require("sysinit.utils.ai.picker")
-local history = require("sysinit.utils.ai.history")
+local session = require("utils.ai.session")
+local agents = require("utils.ai.agents")
+local input = require("utils.ai.input")
+local picker = require("utils.ai.picker")
+local history = require("utils.ai.history")
 
 local function ensure_active_terminal()
   local active = session.get_active()
@@ -123,7 +123,7 @@ function M.generate_all_keymaps()
         return
       end
 
-      local terminal = require("sysinit.utils.ai.terminal")
+      local terminal = require("utils.ai.terminal")
       local last_prompt = terminal.get_last_prompt(active)
       if last_prompt and last_prompt ~= "" then
         session.ensure_active_and_send(last_prompt)

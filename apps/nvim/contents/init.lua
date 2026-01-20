@@ -1,6 +1,8 @@
 vim.g.mapleader = " "
-vim.g.maplocalleader = "\\"
+vim.g.maplocalleader = ","
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+
+require("utils.helpers")
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
@@ -23,7 +25,10 @@ require("lazy").setup({
     { import = "plugins" },
   },
 
-  install = { colorscheme = { "habamax" } },
+  install = {},
   checker = { enabled = true },
 })
 
+vim.cmd.colorscheme("lush_template")
+
+require("config")

@@ -1,0 +1,22 @@
+vim.opt.mouse = "a"
+vim.o.mousemoveevent = true
+vim.opt.clipboard = "unnamedplus"
+
+
+vim.opt.number = true
+vim.opt.relativenumber = true
+vim.opt.signcolumn = "yes:3"
+vim.opt.numberwidth = 4
+vim.opt.fillchars:append({ eob = " ", diff = " " })
+vim.opt.diffopt = {
+  "internal",
+  "filler",
+  "closeoff",
+  "context:12",
+  "algorithm:histogram",
+  "linematch:200",
+}
+vim.opt.cursorline = true
+vim.opt.spell = true
+vim.opt.fixeol = false
+

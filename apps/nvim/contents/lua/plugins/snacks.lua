@@ -116,7 +116,7 @@ return {
           },
           sections = {
             { section = "header" },
-            { section = "keys", gap = 1, padding = 1 },
+            { section = "keys",   gap = 1, padding = 1 },
             { section = "startup" },
           },
         },
@@ -196,8 +196,8 @@ return {
           },
           filter = function(buf)
             return vim.g.snacks_scroll ~= false
-              and vim.b[buf].snacks_scroll ~= false
-              and vim.bo[buf].buftype ~= "terminal"
+                and vim.b[buf].snacks_scroll ~= false
+                and vim.bo[buf].buftype ~= "terminal"
           end,
         },
         toggle = {
@@ -241,43 +241,43 @@ return {
         return Snacks.notifier.notify(msg, level, opts or {})
       end
 
-      local agents = require("sysinit.utils.ai.agents")
-      local session = require("sysinit.utils.ai.session")
-      local completion = require("sysinit.utils.ai.completion")
-      local file_refresh = require("sysinit.utils.ai.file_refresh")
+      -- local agents = require("utils.ai.agents")
+      -- local session = require("utils.ai.session")
+      -- local completion = require("utils.ai.completion")
+      -- local file_refresh = require("utils.ai.file_refresh")
 
-      completion.setup()
+      -- completion.setup()
 
       local terminals_config = {}
-      for _, agent in ipairs(agents.get_all()) do
-        terminals_config[agent.name] = {
-          cmd = agent.cmd,
-        }
-      end
+      -- for _, agent in ipairs(agents.get_all()) do
+      --   terminals_config[agent.name] = {
+      --     cmd = agent.cmd,
+      --   }
+      -- end
 
-      session.setup({
-        terminals = terminals_config,
-        env = {
-          PAGER = "bat",
-        },
-      })
+      -- session.setup({
+      --   terminals = terminals_config,
+      --   env = {
+      --     PAGER = "bat",
+      --   },
+      -- })
 
-      file_refresh.setup({
-        file_refresh = {
-          enable = true,
-          timer_interval = 1000,
-          updatetime = 100,
-          show_notifications = true,
-        },
-      })
+      -- file_refresh.setup({
+      --   file_refresh = {
+      --     enable = true,
+      --     timer_interval = 1000,
+      --     updatetime = 100,
+      --     show_notifications = true,
+      --   },
+      -- })
     end,
     keys = function()
-      local keymaps = require("sysinit.utils.ai.keymaps")
+      local keymaps = require("utils.ai.keymaps")
       local ai_keys = keymaps.generate_all_keymaps()
 
       local default_keys = {
         {
-          "<leader>fr",
+          "<leader>ff",
           function()
             Snacks.picker.grep()
           end,
@@ -316,7 +316,7 @@ return {
           desc = "Diagnostics",
         },
         {
-          "<leader>ff",
+          "<D-p>",
           function()
             Snacks.picker.files({
               hidden = true,
@@ -379,3 +379,4 @@ return {
     end,
   },
 }
+

@@ -56,7 +56,7 @@ function M.create_history_picker(termname)
     end
   else
     -- Load from all agents
-    local agents_module = require("sysinit.utils.ai.agents")
+    local agents_module = require("utils.ai.agents")
     for _, agent in ipairs(agents_module.get_all()) do
       local history = M.load_history(agent.name)
       for _, entry in ipairs(history) do

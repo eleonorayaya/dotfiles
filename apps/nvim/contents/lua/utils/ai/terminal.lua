@@ -6,7 +6,7 @@ local last_prompts = {}
 function M.ensure_terminal_and_send(termname, text)
   last_prompts[termname] = text
 
-  local session = require("sysinit.utils.ai.session")
+  local session = require("utils.ai.session")
   local term_info = session.get_info(termname)
 
   if not term_info or not term_info.visible then

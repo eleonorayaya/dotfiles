@@ -1,5 +1,5 @@
 local M = {}
-local context = require("sysinit.utils.ai.context")
+local context = require("utils.ai.context")
 
 local git_root_cache = {}
 

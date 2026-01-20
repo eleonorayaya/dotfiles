@@ -144,13 +144,15 @@ return {
     end,
     keys = {
       {
-        "<leader>et",
+        "<D-b>",
         function()
           vim.cmd("Neotree toggle")
           vim.cmd("wincmd p")
         end,
+        mode = { "n", "t" },
         desc = "Toggle explorer tree",
       },
     },
   },
 }
+

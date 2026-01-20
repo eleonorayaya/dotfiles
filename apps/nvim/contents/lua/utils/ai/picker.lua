@@ -1,8 +1,8 @@
 local M = {}
 
 function M.pick_agent()
-  local agents = require("sysinit.utils.ai.agents")
-  local session = require("sysinit.utils.ai.session")
+  local agents = require("utils.ai.agents")
+  local session = require("utils.ai.session")
   local active = session.get_active()
 
   -- If there's an active terminal and its tmux session exists, toggle visibility
@@ -43,7 +43,7 @@ function M.pick_agent()
 end
 
 function M.kill_and_pick()
-  local session = require("sysinit.utils.ai.session")
+  local session = require("utils.ai.session")
   local active = session.get_active()
 
   if active then
@@ -54,7 +54,7 @@ function M.kill_and_pick()
 end
 
 function M.kill_active()
-  local session = require("sysinit.utils.ai.session")
+  local session = require("utils.ai.session")
   local active = session.get_active()
 
   if not active then
