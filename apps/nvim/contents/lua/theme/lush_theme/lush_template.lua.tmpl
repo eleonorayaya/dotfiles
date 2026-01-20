@@ -84,7 +84,7 @@ local theme = lush(function(injected_functions)
     text_on_warning = hsl("{{.Colors.TextOnWarning}}"),
     success = hsl("{{.Colors.Success}}"),
     text_on_success = hsl("{{.Colors.TextOnSuccess}}"),
-    info = hsl("{{.Colors.Info}}"),
+    info = hsl("{{.Colors.AccentPurple}}"),
     text_on_info = hsl("{{.Colors.TextOnInfo}}"),
     selection = hsl("{{.Colors.Selection}}"),
     selection_foreground = hsl("{{.Colors.SelectionForeground}}"),
@@ -162,7 +162,7 @@ local theme = lush(function(injected_functions)
 
     MatchParen     { bg = colors.accent_lavender, fg = colors.surface, gui = "bold" },
 
-    Directory      { fg = colors.accent_blue },
+    Directory      { fg = colors.accent_peach },
 
     DiffAdd        { bg = colors.success.darken(60), fg = colors.success },
     DiffChange     { bg = colors.warning.darken(60), fg = colors.warning },
@@ -172,8 +172,8 @@ local theme = lush(function(injected_functions)
     ErrorMsg       { fg = colors.error, gui = "bold" },
     WarningMsg     { fg = colors.warning, gui = "bold" },
     ModeMsg        { fg = colors.text_on_surface_variant },
-    MoreMsg        { fg = colors.accent_mint },
-    Question       { fg = colors.accent_blue, gui = "bold" },
+    MoreMsg        { fg = colors.accent_gold },
+    Question       { fg = colors.accent_peach, gui = "bold" },
 
     Title          { fg = colors.primary, gui = "bold" },
     SpecialKey     { fg = colors.text_on_surface_muted },
@@ -204,25 +204,25 @@ local theme = lush(function(injected_functions)
 
     Comment        { fg = colors.comment, gui = "italic" },
 
-    Constant       { fg = colors.accent_peach },
-    String         { fg = colors.accent_mint },
-    Character      { fg = colors.accent_gold },
+    Constant       { fg = colors.accent_salmon },
+    String         { fg = colors.accent_gold },
+    Character      { fg = colors.accent_yellow },
     Number         { fg = colors.accent_salmon },
-    Boolean        { fg = colors.accent_purple },
+    Boolean        { fg = colors.accent_peach },
     Float          { Number },
 
     Identifier     { fg = colors.text_on_surface },
-    Function       { fg = colors.accent_blue, gui = "bold" },
+    Function       { fg = colors.secondary, gui = "bold" },
 
     Statement      { fg = colors.primary, gui = "bold" },
     Conditional    { Statement },
     Repeat         { Statement },
     Label          { fg = colors.primary_variant },
     Operator       { fg = colors.text_on_surface_variant },
-    Keyword        { fg = colors.tertiary, gui = "bold" },
+    Keyword        { fg = colors.accent_peach, gui = "bold" },
     Exception      { fg = colors.error, gui = "bold" },
 
-    PreProc        { fg = colors.accent_lavender },
+    PreProc        { fg = colors.accent_salmon },
     Include        { PreProc },
     Define         { PreProc },
     Macro          { PreProc },
@@ -235,7 +235,7 @@ local theme = lush(function(injected_functions)
 
     Special        { fg = colors.accent },
     SpecialChar    { fg = colors.accent_gold },
-    Tag            { fg = colors.tertiary_variant },
+    Tag            { fg = colors.accent_lavender },
     Delimiter      { fg = colors.text_on_surface_variant },
     SpecialComment { fg = colors.comment.lighten(20), gui = "italic,bold" },
     Debug          { fg = colors.warning },
@@ -287,12 +287,6 @@ local theme = lush(function(injected_functions)
     DiagnosticSignOk           { DiagnosticOk },
 
     -- NeoTree
-    NeoTreeDirectoryName       { fg=colors.text_on_surface_variant},
-    NeoTreeDirectoryIcon       { fg=colors.text_on_surface_variant},
-    NeoTreeFileIcon            { fg=colors.text_on_surface_muted},
-    NeoTreeFileName            { fg=colors.text_on_surface_muted},
-    NeoTreeFileNameOpened            { fg=colors.text_on_surface_emphasis},
-    NeoTreeCursorLine                     { fg=colors.text_on_surface_emphasis, bg = colors.surface_highlight},
 
     -- Tree-Sitter syntax groups.
     --
@@ -337,8 +331,8 @@ local theme = lush(function(injected_functions)
     sym"@function.macro"    { Macro },
     sym"@parameter"         { fg = colors.text_on_surface_emphasis },
     sym"@method"            { Function },
-    sym"@field"             { fg = colors.accent_peach },
-    sym"@property"          { fg = colors.accent_peach },
+    sym"@field"             { fg = colors.accent_salmon },
+    sym"@property"          { fg = colors.accent_salmon },
     sym"@constructor"       { Special },
     sym"@conditional"       { Conditional },
     sym"@repeat"            { Repeat },
@@ -351,7 +345,7 @@ local theme = lush(function(injected_functions)
     sym"@type.definition"   { Typedef },
     sym"@storageclass"      { StorageClass },
     sym"@structure"         { Structure },
-    sym"@namespace"         { fg = colors.tertiary },
+    sym"@namespace"         { fg = colors.accent_peach },
     sym"@include"           { Include },
     sym"@preproc"           { PreProc },
     sym"@debug"             { Debug },
