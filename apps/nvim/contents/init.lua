@@ -1,124 +1,29 @@
-require("sysinit.pkg.pre.profiler").setup()
+vim.g.mapleader = " "
+vim.g.maplocalleader = "\\"
+vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
-vim.env.PATH = vim.fn.getenv("PATH")
-package.path = package.path
-    .. ";"
-    .. vim.fn.stdpath("config")
-    .. "/?.lua"
-    .. ";"
-    .. vim.fn.stdpath("config")
-    .. "/lua/?.lua"
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not (vim.uv or vim.loop).fs_stat(lazypath) then
+  local lazyrepo = "https://github.com/folke/lazy.nvim.git"
+  local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
+  if vim.v.shell_error ~= 0 then
+    vim.api.nvim_echo({
+      { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
+      { out,                            "WarningMsg" },
+      { "\nPress any key to exit..." },
+    }, true, {})
+    vim.fn.getchar()
+    os.exit(1)
+  end
+end
+vim.opt.rtp:prepend(lazypath)
 
-require("sysinit.pkg.utils.helpers")
-require("sysinit.pkg.opts.leader").setup()
-require("sysinit.pkg.opts.environment").setup()
-require("sysinit.pkg.opts.editor").setup()
-require("sysinit.pkg.opts.search").setup()
-require("sysinit.pkg.opts.indentation").setup()
-require("sysinit.pkg.opts.wrapping").setup()
-require("sysinit.pkg.opts.split_behavior").setup()
-require("sysinit.pkg.opts.performance").setup()
-require("sysinit.pkg.opts.scroll").setup()
-require("sysinit.pkg.opts.ui").setup()
-require("sysinit.pkg.opts.folding").setup()
-require("sysinit.pkg.opts.completion").setup()
-require("sysinit.pkg.opts.autoread").setup()
-require("sysinit.pkg.opts.undo").setup()
+require("lazy").setup({
+  spec = {
+    { import = "plugins" },
+  },
 
-require("sysinit.pkg.autocmds.buf").setup()
-require("sysinit.pkg.autocmds.force_transparency").setup()
-require("sysinit.pkg.autocmds.help").setup()
-
-require("sysinit.pkg.utils.plugin_manager").setup_package_manager()
-require("sysinit.pkg.utils.plugin_manager").setup_plugins({
-  require("sysinit.plugins.core.plenary"),
-  require("sysinit.plugins.debugger.dap-ui"),
-  require("sysinit.plugins.debugger.dap-virtual-text"),
-  require("sysinit.plugins.debugger.dap"),
-  require("sysinit.plugins.debugger.nvim-dap-docker"),
-  require("sysinit.plugins.debugger.nvim-dap-go"),
-  require("sysinit.plugins.debugger.nvim-dap-ruby"),
-  require("sysinit.plugins.editor.bqf"),
-  require("sysinit.plugins.editor.colorizer"),
-  require("sysinit.plugins.editor.comment"),
-  require("sysinit.plugins.editor.foldsign"),
-  require("sysinit.plugins.editor.grug-far"),
-  require("sysinit.plugins.editor.harpoon"),
-  require("sysinit.plugins.editor.hlchunk"),
-  require("sysinit.plugins.editor.hop"),
-  require("sysinit.plugins.editor.intellitab"),
-  require("sysinit.plugins.editor.markdown-preview"),
-  require("sysinit.plugins.editor.marks"),
-  require("sysinit.plugins.editor.move"),
-  require("sysinit.plugins.editor.multicursor"),
-  require("sysinit.plugins.editor.render-markdown"),
-  require("sysinit.plugins.editor.searchbox"),
-  require("sysinit.plugins.file.neo-tree"),
-  require("sysinit.plugins.file.oil"),
-  require("sysinit.plugins.file.persisted"),
-  require("sysinit.plugins.file.telescope"),
-  require("sysinit.plugins.git.blamer"),
-  require("sysinit.plugins.git.diffview"),
-  require("sysinit.plugins.git.octo"),
-  require("sysinit.plugins.git.signs"),
-  require("sysinit.plugins.intellicode.blink-cmp"),
-  require("sysinit.plugins.intellicode.blink-compat"),
-  require("sysinit.plugins.intellicode.claudecode"),
-  require("sysinit.plugins.intellicode.conform"),
-  require("sysinit.plugins.intellicode.dropbar"),
-  require("sysinit.plugins.intellicode.fastaction"),
-  require("sysinit.plugins.intellicode.friendly-snippets"),
-  require("sysinit.plugins.intellicode.glance"),
-  require("sysinit.plugins.intellicode.lazydev"),
-  require("sysinit.plugins.intellicode.lsp-lines"),
-  require("sysinit.plugins.intellicode.lspkind"),
-  require("sysinit.plugins.intellicode.luasnip"),
-  require("sysinit.plugins.intellicode.minty"),
-  -- require("sysinit.plugins.intellicode.none-ls"),
-  require("sysinit.plugins.intellicode.nvim-autopairs"),
-  require("sysinit.plugins.intellicode.nvim-lspconfig"),
-  require("sysinit.plugins.intellicode.outline"),
-  require("sysinit.plugins.intellicode.pretty-hover"),
-  require("sysinit.plugins.intellicode.refactoring"),
-  require("sysinit.plugins.intellicode.schemastore"),
-  require("sysinit.plugins.intellicode.sort"),
-  require("sysinit.plugins.intellicode.trailspace"),
-  require("sysinit.plugins.intellicode.treesitter-context"),
-  require("sysinit.plugins.intellicode.treesitter"),
-  require("sysinit.plugins.intellicode.trouble"),
-  -- require("sysinit.plugins.intellicode.typescript-tools"),
-  require("sysinit.plugins.keymaps.which-key"),
-  require("sysinit.plugins.library.nio"),
-  require("sysinit.plugins.library.nui"),
-  require("sysinit.plugins.library.snacks"),
-  require("sysinit.plugins.library.volt"),
-  require("sysinit.plugins.notes.notion"),
-  require("sysinit.plugins.ui.alpha"),
-  require("sysinit.plugins.ui.auto-cmdheight"),
-  require("sysinit.plugins.ui.devicons"),
-  require("sysinit.plugins.ui.dressing"),
-  require("sysinit.plugins.ui.edgy"),
-  require("sysinit.plugins.ui.live-command"),
-  require("sysinit.plugins.ui.minimap"),
-  require("sysinit.plugins.ui.neoscroll"),
-  require("sysinit.plugins.ui.noice"),
-  require("sysinit.plugins.ui.scrollview"),
-  require("sysinit.plugins.ui.smart-splits"),
-  require("sysinit.plugins.ui.smear-cursor"),
-  require("sysinit.plugins.ui.staline"),
-  require("sysinit.plugins.ui.themes"),
-  require("sysinit.plugins.ui.tiny-glimmer"),
-  require("sysinit.plugins.ui.tiny-devicons-auto-colors"),
-  require("sysinit.plugins.ui.wilder"),
-  require("sysinit.plugins.ui.window-picker"),
+  install = { colorscheme = { "habamax" } },
+  checker = { enabled = true },
 })
 
-require("sysinit.pkg.keybindings.buffer").setup()
-require("sysinit.pkg.keybindings.editor").setup()
-require("sysinit.pkg.keybindings.leader").setup()
-require("sysinit.pkg.keybindings.marks").setup()
-require("sysinit.pkg.keybindings.super").setup()
-require("sysinit.pkg.keybindings.undo").setup()
-require("sysinit.pkg.keybindings.vim").setup()
-
-require("sysinit.pkg.entrypoint.no-session").setup()
