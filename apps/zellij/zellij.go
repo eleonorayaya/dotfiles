@@ -61,7 +61,12 @@ func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 		"AccentLavender":       hexToRGB(config.Styles.Theme.Colors.AccentLavender),
 		"AccentPeach":          hexToRGB(config.Styles.Theme.Colors.AccentPeach),
 		"AccentGold":           hexToRGB(config.Styles.Theme.Colors.AccentGold),
-		"AccentPurple":         hexToRGB(config.Styles.Theme.Colors.AccentPurple),
+		"AccentPurple":          hexToRGB(config.Styles.Theme.Colors.AccentPurple),
+		"HexPrimary":            config.Styles.Theme.Colors.Primary,
+		"HexAccentPeach":        config.Styles.Theme.Colors.AccentPeach,
+		"HexAccentMint":         config.Styles.Theme.Colors.AccentMint,
+		"HexAccentSalmon":       config.Styles.Theme.Colors.AccentSalmon,
+		"HexTextOnSurfaceMuted": config.Styles.Theme.Colors.TextOnSurfaceMuted,
 	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("zellij", data, outDir)

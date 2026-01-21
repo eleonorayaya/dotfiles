@@ -16,7 +16,7 @@ vim.opt.diffopt = {
   "algorithm:histogram",
   "linematch:200",
 }
-vim.opt.cursorline = true
+vim.opt.cursorline = false
 vim.opt.spell = true
 vim.opt.fixeol = false
 

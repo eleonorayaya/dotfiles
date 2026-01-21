@@ -28,6 +28,7 @@ return {
         end
       end,
     },
+
     no_restore_cmds = {
       function()
         -- Open dashboard when starting without arguments and no session to restore

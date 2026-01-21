@@ -286,7 +286,8 @@ local theme = lush(function(injected_functions)
     DiagnosticSignHint         { DiagnosticHint },
     DiagnosticSignOk           { DiagnosticOk },
 
-    -- NeoTree
+
+    NeoTreeGitModified { fg = colors.success  },
 
     -- Tree-Sitter syntax groups.
     --
@@ -304,7 +305,6 @@ local theme = lush(function(injected_functions)
     -- sym'@text.literal'
     --
     -- For more information see https://github.com/rktjmp/lush.nvim/issues/109
-
     sym"@text.literal"      { String },
     sym"@text.reference"    { Identifier },
     sym"@text.title"        { Title },
