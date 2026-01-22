@@ -9,7 +9,7 @@ local theme = lush(function(injected_functions)
     surface = hsl("{{.Colors.Surface}}"),
     surface_variant = hsl("{{.Colors.SurfaceVariant}}"),
     surface_highlight = hsl("{{.Colors.SurfaceHighlight}}"),
-    surface_border = hsl("{{.Colors.SurfaceBorder}}"),
+    surface_border = hsl("{{.Colors.TextOnSurfaceMuted}}"),
     text_on_surface = hsl("{{.Colors.TextOnSurface}}"),
     text_on_surface_variant = hsl("{{.Colors.TextOnSurfaceVariant}}"),
     text_on_surface_muted = hsl("{{.Colors.TextOnSurfaceMuted}}"),
@@ -86,7 +86,7 @@ local theme = lush(function(injected_functions)
     Folded         { bg = colors.surface_variant, fg = colors.text_on_surface_variant },
     FoldColumn     { fg = colors.text_on_surface_muted },
 
-    VertSplit      { fg = colors.surface_border },
+    VertSplit      { fg = colors.surface_border.lighten(20) },
     Winseparator   { VertSplit },
 
     Pmenu          { bg = colors.surface_variant, fg = colors.text_on_surface },
