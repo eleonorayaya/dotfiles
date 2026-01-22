@@ -9,6 +9,12 @@ tasks:
       - "{{.GO_SOURCES}}"
     cmds:
       - go build -o out/shizuku cmd/main.go
+  configmax:
+    watch: true
+    sources:
+      - "apps/**/*"
+    cmds:
+      - go run cmd/main.go sync
   run:
     cmds:
       - go run cmd/main.go {{.CLI_ARGS}}
