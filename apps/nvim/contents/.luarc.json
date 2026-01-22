@@ -1,0 +1,22 @@
+{
+  "runtime": {
+    "version": "LuaJIT"
+  },
+  "diagnostics": {
+    "disable": [
+      "undefined-doc-name",
+      "undefined_global"
+    ],
+    "globals": [
+      "vim",
+      "Snacks"
+    ]
+  },
+  "workspace": {
+    "library": [
+      "${3rd}/luv/library",
+      "${3rd}/busted/library"
+    ],
+    "checkThirdParty": false
+  }
+}

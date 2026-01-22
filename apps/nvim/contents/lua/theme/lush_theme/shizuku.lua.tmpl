@@ -1,0 +1,359 @@
+local lush = require('lush')
+local hsl = lush.hsl
+
+local theme = lush(function(injected_functions)
+  local sym = injected_functions.sym
+
+  -- Theme colors from template
+  local colors = {
+    surface = hsl("{{.Colors.Surface}}"),
+    surface_variant = hsl("{{.Colors.SurfaceVariant}}"),
+    surface_highlight = hsl("{{.Colors.SurfaceHighlight}}"),
+    surface_border = hsl("{{.Colors.SurfaceBorder}}"),
+    text_on_surface = hsl("{{.Colors.TextOnSurface}}"),
+    text_on_surface_variant = hsl("{{.Colors.TextOnSurfaceVariant}}"),
+    text_on_surface_muted = hsl("{{.Colors.TextOnSurfaceMuted}}"),
+    text_on_surface_emphasis = hsl("{{.Colors.TextOnSurfaceEmphasis}}"),
+    primary = hsl("{{.Colors.Primary}}"),
+    primary_variant = hsl("{{.Colors.PrimaryVariant}}"),
+    text_on_primary = hsl("{{.Colors.TextOnPrimary}}"),
+    secondary = hsl("{{.Colors.Secondary}}"),
+    text_on_secondary = hsl("{{.Colors.TextOnSecondary}}"),
+    tertiary = hsl("{{.Colors.Tertiary}}"),
+    tertiary_variant = hsl("{{.Colors.TertiaryVariant}}"),
+    text_on_tertiary = hsl("{{.Colors.TextOnTertiary}}"),
+    accent = hsl("{{.Colors.Accent}}"),
+    accent_peach = hsl("{{.Colors.AccentPeach}}"),
+    accent_salmon = hsl("{{.Colors.AccentSalmon}}"),
+    accent_purple = hsl("{{.Colors.AccentPurple}}"),
+    accent_lavender = hsl("{{.Colors.AccentLavender}}"),
+    accent_gold = hsl("{{.Colors.AccentGold}}"),
+    accent_yellow = hsl("{{.Colors.AccentYellow}}"),
+    accent_mint = hsl("{{.Colors.AccentMint}}"),
+    accent_blue = hsl("{{.Colors.AccentBlue}}"),
+    error = hsl("{{.Colors.Error}}"),
+    text_on_error = hsl("{{.Colors.TextOnError}}"),
+    warning = hsl("{{.Colors.Warning}}"),
+    text_on_warning = hsl("{{.Colors.TextOnWarning}}"),
+    success = hsl("{{.Colors.Success}}"),
+    text_on_success = hsl("{{.Colors.TextOnSuccess}}"),
+    info = hsl("{{.Colors.AccentPurple}}"),
+    text_on_info = hsl("{{.Colors.TextOnInfo}}"),
+    selection = hsl("{{.Colors.Selection}}"),
+    selection_foreground = hsl("{{.Colors.SelectionForeground}}"),
+    cursor = hsl("{{.Colors.Cursor}}"),
+    cursor_text = hsl("{{.Colors.CursorText}}"),
+    link = hsl("{{.Colors.Link}}"),
+    link_hover = hsl("{{.Colors.LinkHover}}"),
+    comment = hsl("{{.Colors.Comment}}"),
+  }
+
+  return {
+    -- The following are the Neovim (as of 0.8.0-dev+100-g371dfb174) highlight
+    -- groups, mostly used for styling UI elements.
+    -- Comment them out and add your own properties to override the defaults.
+    -- An empty definition `{}` will clear all styling, leaving elements looking
+    -- like the 'Normal' group.
+    -- To be able to link to a group, it must already be defined, so you may have
+    -- to reorder items as you go.
+    --
+    -- See :h highlight-groups
+    --
+    Normal         { bg = 'none', fg = colors.text_on_surface },
+    NormalFloat    { bg = 'none', fg = colors.text_on_surface },
+    FloatBorder    { fg = colors.surface_border },
+    FloatTitle     { fg = colors.text_on_surface_emphasis, gui = "bold" },
+    NormalNC       { bg = 'none', fg = colors.text_on_surface_muted },
+
+    Cursor         { bg = colors.cursor, fg = colors.cursor_text },
+    CurSearch      { bg = colors.accent, fg = colors.text_on_primary },
+    lCursor        { Cursor },
+    CursorIM       { Cursor },
+    CursorLine     { bg = colors.surface_highlight },
+    CursorColumn   { CursorLine },
+    CursorLineNr   { fg = colors.text_on_surface_emphasis, gui = "bold" },
+    CursorLineFold { CursorLine },
+    CursorLineSign { CursorLine },
+
+    ColorColumn    { bg = 'none' },
+    Conceal        { fg = colors.text_on_surface_muted },
+
+    LineNr         { fg = colors.text_on_surface_muted },
+    LineNrAbove    { LineNr },
+    LineNrBelow    { LineNr },
+    SignColumn     { bg = 'none' },
+
+    Folded         { bg = colors.surface_variant, fg = colors.text_on_surface_variant },
+    FoldColumn     { fg = colors.text_on_surface_muted },
+
+    VertSplit      { fg = colors.surface_border },
+    Winseparator   { VertSplit },
+
+    Pmenu          { bg = colors.surface_variant, fg = colors.text_on_surface },
+    PmenuSel       { bg = colors.selection, fg = colors.selection_foreground, gui = "bold" },
+    PmenuKind      { Pmenu },
+    PmenuKindSel   { PmenuSel },
+    PmenuExtra     { Pmenu, fg = colors.text_on_surface_muted },
+    PmenuExtraSel  { PmenuSel },
+    PmenuSbar      { bg = colors.surface_variant },
+    PmenuThumb     { bg = colors.surface_border },
+
+    StatusLine     { bg = 'none', fg = colors.text_on_surface },
+    StatusLineNC   { bg = 'none', fg = colors.text_on_surface_muted },
+    TabLine        { bg = 'none', fg = colors.text_on_surface_variant },
+    TabLineFill    { bg = 'none' },
+    TabLineSel     { bg = 'none', fg = colors.text_on_surface_emphasis, gui = "bold" },
+    WinBar         { StatusLine },
+    WinBarNC       { StatusLineNC },
+
+    Visual         { bg = colors.selection, fg = colors.selection_foreground },
+    VisualNOS      { Visual },
+
+    Search         { bg = colors.accent_yellow, fg = colors.surface },
+    IncSearch      { bg = colors.accent, fg = colors.text_on_primary, gui = "bold" },
+    Substitute     { IncSearch },
+
+    MatchParen     { bg = colors.accent_lavender, fg = colors.surface, gui = "bold" },
+
+    Directory      { fg = colors.accent_peach },
+
+    DiffAdd        { bg = colors.success.darken(60), fg = colors.success },
+    DiffChange     { bg = colors.warning.darken(60), fg = colors.warning },
+    DiffDelete     { bg = colors.error.darken(60), fg = colors.error },
+    DiffText       { bg = colors.accent.darken(50), fg = colors.accent, gui = "bold" },
+
+    ErrorMsg       { fg = colors.error, gui = "bold" },
+    WarningMsg     { fg = colors.warning, gui = "bold" },
+    ModeMsg        { fg = colors.text_on_surface_variant },
+    MoreMsg        { fg = colors.accent_gold },
+    Question       { fg = colors.accent_peach, gui = "bold" },
+
+    Title          { fg = colors.primary, gui = "bold" },
+    SpecialKey     { fg = colors.text_on_surface_muted },
+    NonText        { fg = colors.text_on_surface_muted },
+    EndOfBuffer    { NonText },
+    Whitespace     { fg = colors.text_on_surface_muted },
+
+    WildMenu       { PmenuSel },
+
+    TermCursor     { Cursor },
+    TermCursorNC   { bg = colors.text_on_surface_muted },
+
+    SpellBad       { sp = colors.error, gui = "undercurl" },
+    SpellCap       { sp = colors.warning, gui = "undercurl" },
+    SpellLocal     { sp = colors.info, gui = "undercurl" },
+    SpellRare      { sp = colors.accent_purple, gui = "undercurl" },
+
+    MsgArea        { Normal },
+    MsgSeparator   { fg = colors.surface_border },
+
+    -- Common vim syntax groups used for all kinds of code and markup.
+    -- Commented-out groups should chain up to their preferred (*) group
+    -- by default.
+    --
+    -- See :h group-name
+    --
+    -- Uncomment and edit if you want more specific syntax highlighting.
+
+    Comment        { fg = colors.comment, gui = "italic" },
+
+    Constant       { fg = colors.accent_salmon },
+    String         { fg = colors.accent_gold },
+    Character      { fg = colors.accent_yellow },
+    Number         { fg = colors.accent_salmon },
+    Boolean        { fg = colors.accent_peach },
+    Float          { Number },
+
+    Identifier     { fg = colors.text_on_surface },
+    Function       { fg = colors.secondary, gui = "bold" },
+
+    Statement      { fg = colors.primary, gui = "bold" },
+    Conditional    { Statement },
+    Repeat         { Statement },
+    Label          { fg = colors.primary_variant },
+    Operator       { fg = colors.text_on_surface_variant },
+    Keyword        { fg = colors.accent_peach, gui = "bold" },
+    Exception      { fg = colors.error, gui = "bold" },
+
+    PreProc        { fg = colors.accent_salmon },
+    Include        { PreProc },
+    Define         { PreProc },
+    Macro          { PreProc },
+    PreCondit      { PreProc },
+
+    Type           { fg = colors.secondary, gui = "bold" },
+    StorageClass   { Type },
+    Structure      { Type },
+    Typedef        { Type },
+
+    Special        { fg = colors.accent },
+    SpecialChar    { fg = colors.accent_gold },
+    Tag            { fg = colors.accent_lavender },
+    Delimiter      { fg = colors.text_on_surface_variant },
+    SpecialComment { fg = colors.comment.lighten(20), gui = "italic,bold" },
+    Debug          { fg = colors.warning },
+
+    Underlined     { fg = colors.link, gui = "underline" },
+    Ignore         { fg = colors.text_on_surface_muted },
+    Error          { fg = colors.text_on_error, bg = colors.error },
+    Todo           { fg = colors.text_on_surface_muted, bg = colors.surface },
+
+    -- These groups are for the native LSP client and diagnostic system. Some
+    -- other LSP clients may use these groups, or use their own. Consult your
+    -- LSP client's documentation.
+
+    -- See :h lsp-highlight, some groups may not be listed, submit a PR fix to lush-template!
+    --
+    LspReferenceText            { bg = colors.surface_highlight },
+    LspReferenceRead            { LspReferenceText },
+    LspReferenceWrite           { LspReferenceText, gui = "bold" },
+    LspCodeLens                 { fg = colors.text_on_surface_muted, gui = "italic" },
+    LspCodeLensSeparator        { fg = colors.surface_border },
+    LspSignatureActiveParameter { bg = colors.selection, gui = "bold" },
+
+    -- See :h diagnostic-highlights, some groups may not be listed, submit a PR fix to lush-template!
+    --
+    DiagnosticError            { fg = colors.error },
+    DiagnosticWarn             { fg = colors.warning },
+    DiagnosticInfo             { fg = colors.info },
+    DiagnosticHint             { fg = colors.text_on_surface_variant },
+    DiagnosticOk               { fg = colors.success },
+    DiagnosticVirtualTextError { Error },
+    DiagnosticVirtualTextWarn  { fg = colors.text_on_warning, bg = colors.warning },
+    DiagnosticVirtualTextInfo  { fg = colors.text_on_info, bg = colors.info },
+    DiagnosticVirtualTextHint  { fg = colors.text_on_surface_variant, bg = colors.surface_variant },
+    DiagnosticVirtualTextOk    { fg = colors.text_on_success, bg = colors.success },
+    DiagnosticUnderlineError   { sp = colors.error, gui = "undercurl" },
+    DiagnosticUnderlineWarn    { sp = colors.warning, gui = "undercurl" },
+    DiagnosticUnderlineInfo    { sp = colors.info, gui = "undercurl" },
+    DiagnosticUnderlineHint    { sp = colors.text_on_surface_variant, gui = "undercurl" },
+    DiagnosticUnderlineOk      { sp = colors.success, gui = "undercurl" },
+    DiagnosticFloatingError    { DiagnosticError },
+    DiagnosticFloatingWarn     { DiagnosticWarn },
+    DiagnosticFloatingInfo     { DiagnosticInfo },
+    DiagnosticFloatingHint     { DiagnosticHint },
+    DiagnosticFloatingOk       { DiagnosticOk },
+    DiagnosticSignError        { DiagnosticError },
+    DiagnosticSignWarn         { DiagnosticWarn },
+    DiagnosticSignInfo         { DiagnosticInfo },
+    DiagnosticSignHint         { DiagnosticHint },
+    DiagnosticSignOk           { DiagnosticOk },
+
+
+    NeoTreeDirectoryName { fg = colors.text_on_surface },
+    NeoTreeFileName      { fg = colors.text_on_surface },
+    NeoTreeFileNameOpened      { fg = colors.text_on_surface_emphasis },
+    NeoTreeGitAdded            { fg = colors.accent_mint  },
+    NeoTreeGitModified { fg = colors.success  },
+    NeoTreeGitDeleted { fg = colors.accent_salmon  },
+    NeoTreeGitUntracked        { fg = colors.warning  },
+
+    -- Tree-Sitter syntax groups.
+    --
+    -- See :h treesitter-highlight-groups, some groups may not be listed,
+    -- submit a PR fix to lush-template!
+    --
+    -- Tree-Sitter groups are defined with an "@" symbol, which must be
+    -- specially handled to be valid lua code, we do this via the special
+    -- sym function. The following are all valid ways to call the sym function,
+    -- for more details see https://www.lua.org/pil/5.html
+    --
+    -- sym("@text.literal")
+    -- sym('@text.literal')
+    -- sym"@text.literal"
+    -- sym'@text.literal'
+    --
+    -- For more information see https://github.com/rktjmp/lush.nvim/issues/109
+    sym"@text.literal"      { String },
+    sym"@text.reference"    { Identifier },
+    sym"@text.title"        { Title },
+    sym"@text.uri"          { Underlined },
+    sym"@text.underline"    { Underlined },
+    sym"@text.todo"         { Todo },
+    sym"@comment"           { Comment },
+    sym"@punctuation"       { Delimiter },
+    sym"@constant"          { Constant },
+    sym"@constant.builtin"  { Special },
+    sym"@constant.macro"    { Define },
+    sym"@define"            { Define },
+    sym"@macro"             { Macro },
+    sym"@string"            { String },
+    sym"@string.escape"     { SpecialChar },
+    sym"@string.special"    { SpecialChar },
+    sym"@character"         { Character },
+    sym"@character.special" { SpecialChar },
+    sym"@number"            { Number },
+    sym"@boolean"           { Boolean },
+    sym"@float"             { Float },
+    sym"@function"          { Function },
+    sym"@function.builtin"  { Special },
+    sym"@function.macro"    { Macro },
+    sym"@parameter"         { fg = colors.text_on_surface_emphasis },
+    sym"@method"            { Function },
+    sym"@field"             { fg = colors.accent_salmon },
+    sym"@property"          { fg = colors.accent_salmon },
+    sym"@constructor"       { Special },
+    sym"@conditional"       { Conditional },
+    sym"@repeat"            { Repeat },
+    sym"@label"             { Label },
+    sym"@operator"          { Operator },
+    sym"@keyword"           { Keyword },
+    sym"@exception"         { Exception },
+    sym"@variable"          { Identifier },
+    sym"@type"              { Type },
+    sym"@type.definition"   { Typedef },
+    sym"@storageclass"      { StorageClass },
+    sym"@structure"         { Structure },
+    sym"@namespace"         { fg = colors.accent_peach },
+    sym"@include"           { Include },
+    sym"@preproc"           { PreProc },
+    sym"@debug"             { Debug },
+    sym"@tag"               { Tag },
+
+    -- Markview highlight groups
+    MarkviewPalette0       { fg = colors.primary, gui = "bold" },
+    MarkviewPalette0Fg     { fg = colors.primary },
+    MarkviewPalette0Bg     { bg = colors.primary.darken(60) },
+    MarkviewPalette0Sign   { fg = colors.primary },
+
+    MarkviewPalette1       { fg = colors.secondary, gui = "bold" },
+    MarkviewPalette1Fg     { fg = colors.secondary },
+    MarkviewPalette1Bg     { bg = colors.secondary.darken(60) },
+    MarkviewPalette1Sign   { fg = colors.secondary },
+
+    MarkviewPalette2       { fg = colors.accent_peach, gui = "bold" },
+    MarkviewPalette2Fg     { fg = colors.accent_peach },
+    MarkviewPalette2Bg     { bg = colors.accent_peach.darken(60) },
+    MarkviewPalette2Sign   { fg = colors.accent_peach },
+
+    MarkviewPalette3       { fg = colors.accent_gold, gui = "bold" },
+    MarkviewPalette3Fg     { fg = colors.accent_gold },
+    MarkviewPalette3Bg     { bg = colors.accent_gold.darken(60) },
+    MarkviewPalette3Sign   { fg = colors.accent_gold },
+
+    MarkviewPalette4       { fg = colors.accent_lavender, gui = "bold" },
+    MarkviewPalette4Fg     { fg = colors.accent_lavender },
+    MarkviewPalette4Bg     { bg = colors.accent_lavender.darken(60) },
+    MarkviewPalette4Sign   { fg = colors.accent_lavender },
+
+    MarkviewPalette5       { fg = colors.accent_blue, gui = "bold" },
+    MarkviewPalette5Fg     { fg = colors.accent_blue },
+    MarkviewPalette5Bg     { bg = colors.accent_blue.darken(60) },
+    MarkviewPalette5Sign   { fg = colors.accent_blue },
+
+    MarkviewPalette6       { fg = colors.accent_mint, gui = "bold" },
+    MarkviewPalette6Fg     { fg = colors.accent_mint },
+    MarkviewPalette6Bg     { bg = colors.accent_mint.darken(60) },
+    MarkviewPalette6Sign   { fg = colors.accent_mint },
+
+    MarkviewCode           { bg = colors.surface_variant, fg = colors.text_on_surface },
+    MarkviewCodeInfo       { fg = colors.text_on_surface_variant, gui = "italic" },
+    MarkviewCodeFg         { fg = colors.text_on_surface },
+    MarkviewInlineCode     { bg = colors.surface_variant, fg = colors.accent_salmon }
+
+  }
+end)
+
+-- Return our parsed theme for extension or use elsewhere.
+return theme
+

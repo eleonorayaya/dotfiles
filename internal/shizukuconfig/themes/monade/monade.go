@@ -43,7 +43,7 @@ func (p *provider) GetColors() map[string]string {
 		"textOnError":           "#fef6f0",
 		"warning":               "#b8733f",
 		"textOnWarning":         "#2a2a2a",
-		"success":               "#5fafa5",
+		"success":               "#9370b9",
 		"textOnSuccess":         "#2a2a2a",
 		"info":                  "#6a9bc3",
 		"textOnInfo":            "#2a2a2a",
