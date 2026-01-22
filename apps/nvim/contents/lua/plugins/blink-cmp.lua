@@ -67,25 +67,6 @@ return {
             return items
           end,
         },
-        copilot = {
-          name = "copilot",
-          module = "blink-copilot",
-          score_offset = 100,
-          async = true,
-          ---@diagnostic disable-next-line: unused-local
-          transform_items = function(ctx, items)
-            for _, item in ipairs(items) do
-              item.kind_icon = " Copilot "
-              item.kind_name = "Copilot"
-            end
-            return items
-          end,
-        },
-        orgmode = {
-          name = "Orgmode",
-          module = "orgmode.org.autocompletion.blink",
-          fallbacks = { "buffer" },
-        },
       }
 
       local sources = {
@@ -94,10 +75,6 @@ return {
         "lsp",
         "path",
         "snippets",
-        "copilot",
-        per_filetype = {
-          org = { "orgmode" },
-        },
       }
 
       return {

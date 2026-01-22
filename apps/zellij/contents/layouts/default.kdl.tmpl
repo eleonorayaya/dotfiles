@@ -20,14 +20,14 @@ layout name="dev" {
     children
     pane size=1 borderless=true {
       plugin location="zjstatus" {
-        format_left  "#[fg={{.HexPrimary}},bold] {session}#[] {tabs}"
+        format_left  "#[fg={{.HexTextOnSurface}},bold] {session}#[] {tabs}"
         format_right "{command_git_branch}"
         format_space "#[]"
 
         mode_normal          "#[] "
 
-        tab_normal               "#[fg={{.HexAccentMint}}] {name} {fullscreen_indicator}{sync_indicator}{floating_indicator}"
-        tab_active               "#[fg={{.HexAccentPeach}},bold,italic] {name} {fullscreen_indicator}{sync_indicator}{floating_indicator}"
+        tab_normal               "#[fg={{.HexTextOnSurfaceMuted}}] {name} {fullscreen_indicator}{sync_indicator}{floating_indicator}"
+        tab_active               "#[fg={{.HexAccentLavender}},bold,italic] {name} {fullscreen_indicator}{sync_indicator}{floating_indicator}"
         tab_fullscreen_indicator "□ "
         tab_sync_indicator       "  "
         tab_floating_indicator   "󰉈 "

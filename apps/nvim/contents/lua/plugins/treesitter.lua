@@ -2,11 +2,11 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
-    event = "VimEnter",
+    lazy = false,
     branch = "master",
     init = function(plugin)
       require("lazy.core.loader").add_to_rtp(plugin)
-      -- require("nvim-treesitter.query_predicates")
+      require("nvim-treesitter.query_predicates")
     end,
     config = function()
       require("nvim-treesitter.configs").setup({
@@ -69,21 +69,21 @@ return {
         modules = {},
         highlight = {
           enable = true,
-          -- additional_vim_regex_highlighting = false,
-          -- disable = function(lang, buf)
-          --   -- Disable treesitter for very large files
-          --   local line_count = vim.api.nvim_buf_line_count(buf)
-          --   local file_size = vim.fn.getfsize(vim.api.nvim_buf_get_name(buf))
-          --
-          --   -- Disable for files > 5000 lines or > 2MB
-          --   if line_count > 5000 or file_size > 2 * 1024 * 1024 then
-          --     return true
-          --   end
-          --
-          --   -- Disable for certain filetypes that don't benefit much
-          --   local disable_ft = { "log", "txt", "csv", "json" }
-          --   return vim.tbl_contains(disable_ft, lang)
-          -- end,
+          additional_vim_regex_highlighting = false,
+          disable = function(lang, buf)
+            -- Disable treesitter for very large files
+            local line_count = vim.api.nvim_buf_line_count(buf)
+            local file_size = vim.fn.getfsize(vim.api.nvim_buf_get_name(buf))
+
+            -- Disable for files > 5000 lines or > 2MB
+            if line_count > 5000 or file_size > 2 * 1024 * 1024 then
+              return true
+            end
+
+            -- Disable for certain filetypes that don't benefit much
+            local disable_ft = { "log", "txt", "csv", "json" }
+            return vim.tbl_contains(disable_ft, lang)
+          end,
         },
         rainbow = {
           enable = true,
@@ -172,6 +172,34 @@ return {
           end, 100)
         end,
       })
+
+      -- vim.treesitter.query.add_directive("inject-go-tmpl!", function(_, _, bufnr, _, metadata)
+      --   local fname = vim.api.nvim_buf_get_name(bufnr)
+      --   local ft = vim.filetype.match({ filename = fname })
+      --   if not ft then
+      --     return
+      --   end
+      --   metadata["injection.language"] = ft
+      -- end, {})
+      --
+      -- -- Make sure vim recognizes .tmpl files as gotmpl ft
+      -- vim.filetype.add({
+      --   extension = {
+      --     tmpl = "gotmpl",
+      --   },
+      -- })
+      --
+      -- -- Moved query inline
+      -- vim.treesitter.query.set(
+      --   "gotmpl",
+      --   "injections",
+      --   [[
+      -- ((text) @injection.content
+      --   (#inject-go-tmpl!)
+      --   (#set! injection.combined))
+      -- ]]
+      -- )
+
     end,
     keys = {
       {
@@ -183,5 +211,5 @@ return {
         desc = "Selection decrement",
       },
     },
-  },
+  }
 }

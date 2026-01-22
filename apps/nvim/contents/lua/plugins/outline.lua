@@ -26,7 +26,6 @@ return {
           rename_symbol = "grn",
           code_actions = "gra",
           fold = {},
-          fold_toggle = { "<Tab", "za" },
           fold_toggle_all = {},
           unfold = {},
           fold_all = {},

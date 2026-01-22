@@ -1,10 +1,6 @@
-
 local lush = require('lush')
 local hsl = lush.hsl
 
--- LSP/Linters mistakenly show `undefined global` errors in the spec, they may
--- support an annotation like the following. Consult your server documentation.
----@diagnostic disable: undefined-global
 local theme = lush(function(injected_functions)
   local sym = injected_functions.sym
 
@@ -102,9 +98,9 @@ local theme = lush(function(injected_functions)
     PmenuSbar      { bg = colors.surface_variant },
     PmenuThumb     { bg = colors.surface_border },
 
-    StatusLine     { bg = colors.surface_variant, fg = colors.text_on_surface },
+    StatusLine     { bg = 'none', fg = colors.text_on_surface },
     StatusLineNC   { bg = 'none', fg = colors.text_on_surface_muted },
-    TabLine        { bg = colors.surface_variant, fg = colors.text_on_surface_variant },
+    TabLine        { bg = 'none', fg = colors.text_on_surface_variant },
     TabLineFill    { bg = 'none' },
     TabLineSel     { bg = 'none', fg = colors.text_on_surface_emphasis, gui = "bold" },
     WinBar         { StatusLine },
@@ -199,8 +195,8 @@ local theme = lush(function(injected_functions)
 
     Underlined     { fg = colors.link, gui = "underline" },
     Ignore         { fg = colors.text_on_surface_muted },
-    Error          { fg = colors.error, bg = colors.error.darken(70), gui = "bold" },
-    Todo           { fg = colors.accent_yellow, bg = colors.accent_yellow.darken(70), gui = "bold" },
+    Error          { fg = colors.text_on_error, bg = colors.error },
+    Todo           { fg = colors.text_on_surface_muted, bg = colors.surface },
 
     -- These groups are for the native LSP client and diagnostic system. Some
     -- other LSP clients may use these groups, or use their own. Consult your
@@ -222,11 +218,11 @@ local theme = lush(function(injected_functions)
     DiagnosticInfo             { fg = colors.info },
     DiagnosticHint             { fg = colors.text_on_surface_variant },
     DiagnosticOk               { fg = colors.success },
-    DiagnosticVirtualTextError { DiagnosticError, bg = colors.error.darken(70) },
-    DiagnosticVirtualTextWarn  { DiagnosticWarn, bg = colors.warning.darken(70) },
-    DiagnosticVirtualTextInfo  { DiagnosticInfo, bg = colors.info.darken(70) },
-    DiagnosticVirtualTextHint  { DiagnosticHint, bg = colors.surface_variant },
-    DiagnosticVirtualTextOk    { DiagnosticOk, bg = colors.success.darken(70) },
+    DiagnosticVirtualTextError { Error },
+    DiagnosticVirtualTextWarn  { fg = colors.text_on_warning, bg = colors.warning },
+    DiagnosticVirtualTextInfo  { fg = colors.text_on_info, bg = colors.info },
+    DiagnosticVirtualTextHint  { fg = colors.text_on_surface_variant, bg = colors.surface_variant },
+    DiagnosticVirtualTextOk    { fg = colors.text_on_success, bg = colors.success },
     DiagnosticUnderlineError   { sp = colors.error, gui = "undercurl" },
     DiagnosticUnderlineWarn    { sp = colors.warning, gui = "undercurl" },
     DiagnosticUnderlineInfo    { sp = colors.info, gui = "undercurl" },
@@ -244,7 +240,13 @@ local theme = lush(function(injected_functions)
     DiagnosticSignOk           { DiagnosticOk },
 
 
+    NeoTreeDirectoryName { fg = colors.text_on_surface },
+    NeoTreeFileName      { fg = colors.text_on_surface },
+    NeoTreeFileNameOpened      { fg = colors.text_on_surface_emphasis },
+    NeoTreeGitAdded            { fg = colors.accent_mint  },
     NeoTreeGitModified { fg = colors.success  },
+    NeoTreeGitDeleted { fg = colors.accent_salmon  },
+    NeoTreeGitUntracked        { fg = colors.warning  },
 
     -- Tree-Sitter syntax groups.
     --
@@ -307,6 +309,48 @@ local theme = lush(function(injected_functions)
     sym"@preproc"           { PreProc },
     sym"@debug"             { Debug },
     sym"@tag"               { Tag },
+
+    -- Markview highlight groups
+    MarkviewPalette0       { fg = colors.primary, gui = "bold" },
+    MarkviewPalette0Fg     { fg = colors.primary },
+    MarkviewPalette0Bg     { bg = colors.primary.darken(60) },
+    MarkviewPalette0Sign   { fg = colors.primary },
+
+    MarkviewPalette1       { fg = colors.secondary, gui = "bold" },
+    MarkviewPalette1Fg     { fg = colors.secondary },
+    MarkviewPalette1Bg     { bg = colors.secondary.darken(60) },
+    MarkviewPalette1Sign   { fg = colors.secondary },
+
+    MarkviewPalette2       { fg = colors.accent_peach, gui = "bold" },
+    MarkviewPalette2Fg     { fg = colors.accent_peach },
+    MarkviewPalette2Bg     { bg = colors.accent_peach.darken(60) },
+    MarkviewPalette2Sign   { fg = colors.accent_peach },
+
+    MarkviewPalette3       { fg = colors.accent_gold, gui = "bold" },
+    MarkviewPalette3Fg     { fg = colors.accent_gold },
+    MarkviewPalette3Bg     { bg = colors.accent_gold.darken(60) },
+    MarkviewPalette3Sign   { fg = colors.accent_gold },
+
+    MarkviewPalette4       { fg = colors.accent_lavender, gui = "bold" },
+    MarkviewPalette4Fg     { fg = colors.accent_lavender },
+    MarkviewPalette4Bg     { bg = colors.accent_lavender.darken(60) },
+    MarkviewPalette4Sign   { fg = colors.accent_lavender },
+
+    MarkviewPalette5       { fg = colors.accent_blue, gui = "bold" },
+    MarkviewPalette5Fg     { fg = colors.accent_blue },
+    MarkviewPalette5Bg     { bg = colors.accent_blue.darken(60) },
+    MarkviewPalette5Sign   { fg = colors.accent_blue },
+
+    MarkviewPalette6       { fg = colors.accent_mint, gui = "bold" },
+    MarkviewPalette6Fg     { fg = colors.accent_mint },
+    MarkviewPalette6Bg     { bg = colors.accent_mint.darken(60) },
+    MarkviewPalette6Sign   { fg = colors.accent_mint },
+
+    MarkviewCode           { bg = colors.surface_variant, fg = colors.text_on_surface },
+    MarkviewCodeInfo       { fg = colors.text_on_surface_variant, gui = "italic" },
+    MarkviewCodeFg         { fg = colors.text_on_surface },
+    MarkviewInlineCode     { bg = colors.surface_variant, fg = colors.accent_salmon }
+
   }
 end)
 
