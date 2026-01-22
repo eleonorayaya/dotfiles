@@ -1,0 +1,73 @@
+return {
+  {
+    "tamton-aquib/staline.nvim",
+    dependencies = {
+      "nvim-tree/nvim-web-devicons",
+    },
+    lazy = false,
+    config = function()
+      require("staline").setup({
+        sections = {
+          left = {
+            "mode",
+            "branch",
+            "file_name",
+          },
+          mid = {},
+          right = {
+            "lsp",
+            "lsp_name",
+            "file_size",
+            "line_column",
+          },
+        },
+        defaults = {
+          expand_null_ls = false,
+          true_colors = true,
+          line_column = ":%c [%l/%L]",
+          lsp_client_symbol = "󰘧 ",
+          lsp_client_character_length = 40,
+          file_size_suffix = true,
+          branch_symbol = " ",
+        },
+        special_table = {
+          qf = { "QuickFix", " " },
+          ["neo-tree"] = { "File Tree", " " },
+          Outline = { "Outline", " " },
+        },
+        mode_colors = {
+          n = "{{.Colors.TextOnSurface}}",
+          i = "{{.Colors.AccentGold}}",
+          c = "{{.Colors.Accent}}",
+          v = "{{.Colors.Primary}}",
+          V = "{{.Colors.Primary}}",
+          [""] = "{{.Colors.Primary}}",
+          R = "{{.Colors.AccentSalmon}}",
+          r = "{{.Colors.AccentSalmon}}",
+          s = "{{.Colors.Secondary}}",
+          S = "{{.Colors.Secondary}}",
+          t = "{{.Colors.AccentPeach}}",
+          ic = "{{.Colors.AccentGold}}",
+          Rc = "{{.Colors.AccentSalmon}}",
+          cv = "{{.Colors.Accent}}",
+        },
+        mode_icons = {
+          n = "NORMAL",
+          i = "INSERT",
+          c = "COMMAND",
+          v = "VISUAL",
+          V = "V-LINE",
+          [""] = "V-BLOCK",
+          R = "REPLACE",
+          r = "REPLACE",
+          s = "SELECT",
+          S = "S-LINE",
+          t = "TERMINAL",
+          ic = "INSERT",
+          Rc = "REPLACE",
+          cv = "VIM EX",
+        },
+      })
+    end,
+  },
+}
