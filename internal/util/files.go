@@ -1,10 +1,12 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -66,6 +68,46 @@ func EnsureDirExists(dirPath string) error {
 
 	if err := os.MkdirAll(normalized, os.ModePerm); err != nil {
 		return fmt.Errorf("failed to ensure dir %s: %w", dirPath, err)
+	}
+
+	return nil
+}
+
+func ReadJSONMap(path string) (map[string]any, error) {
+	normalized, err := NormalizeFilePath(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to normalize path: %w", err)
+	}
+
+	data, err := os.ReadFile(normalized)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return map[string]any{}, nil
+		}
+		return nil, fmt.Errorf("failed to read %s: %w", path, err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(data, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse %s: %w", path, err)
+	}
+
+	return result, nil
+}
+
+func WriteJSONMap(path string, data map[string]any) error {
+	if err := os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
+		return fmt.Errorf("failed to create directory for %s: %w", path, err)
+	}
+
+	merged, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+	merged = append(merged, '\n')
+
+	if err := os.WriteFile(path, merged, os.ModePerm); err != nil {
+		return fmt.Errorf("failed to write %s: %w", path, err)
 	}
 
 	return nil
