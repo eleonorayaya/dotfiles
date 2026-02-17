@@ -1,0 +1,159 @@
+package claude
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
+	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
+	"github.com/eleonorayaya/shizuku/internal/util"
+)
+
+var desiredPlugins = []string{
+	"lua-lsp@claude-plugins-official",
+	"typescript-lsp@claude-plugins-official",
+	"gopls-lsp@claude-plugins-official",
+	"superpowers@superpowers-marketplace",
+	"charm-dev@charm-dev-skills",
+	"rust-analyzer-lsp@claude-plugins-official",
+}
+
+var desiredEnv = map[string]string{
+	"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+}
+
+var desiredAllowedCommands = []string{
+	"Bash(grep:*)",
+	"Bash(find:*)",
+	"Bash(ls:*)",
+	"Bash(tree:*)",
+	"Bash(cat:*)",
+	"Bash(wc:*)",
+	"Bash(xargs:*)",
+	"Bash(bash:*)",
+	"Bash(task:*)",
+	"Bash(git add:*)",
+	"Bash(git commit:*)",
+	"Bash(git --version:*)",
+	"Bash(brew --prefix:*)",
+	"Skill(task)",
+}
+
+type App struct{}
+
+func New() *App {
+	return &App{}
+}
+
+func (a *App) Name() string {
+	return "claude"
+}
+
+func (a *App) Enabled(config *shizukuconfig.Config) bool {
+	return config.GetAppConfigBool(a.Name(), "enabled", true)
+}
+
+func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp.GenerateResult, error) {
+	fileMap, err := shizukuapp.GenerateAppFiles("claude", nil, outDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate app files: %w", err)
+	}
+
+	mergedPath, err := mergeSettings(outDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to merge settings: %w", err)
+	}
+	fileMap["settings.json"] = mergedPath
+
+	return &shizukuapp.GenerateResult{
+		FileMap: fileMap,
+		DestDir: "~/.claude/",
+	}, nil
+}
+
+func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+	result, err := a.Generate(outDir, config)
+	if err != nil {
+		return err
+	}
+
+	if err := shizukuapp.SyncAppFiles(result.FileMap, result.DestDir); err != nil {
+		return fmt.Errorf("failed to sync app files: %w", err)
+	}
+
+	return nil
+}
+
+func mergeSettings(outDir string) (string, error) {
+	settingsPath, err := util.NormalizeFilePath("~/.claude/settings.json")
+	if err != nil {
+		return "", fmt.Errorf("failed to normalize settings path: %w", err)
+	}
+
+	settings := map[string]any{}
+
+	data, err := os.ReadFile(settingsPath)
+	if err == nil {
+		if err := json.Unmarshal(data, &settings); err != nil {
+			return "", fmt.Errorf("failed to parse settings.json: %w", err)
+		}
+	} else if !os.IsNotExist(err) {
+		return "", fmt.Errorf("failed to read settings.json: %w", err)
+	}
+
+	plugins, _ := settings["enabledPlugins"].(map[string]any)
+	if plugins == nil {
+		plugins = map[string]any{}
+	}
+
+	for _, plugin := range desiredPlugins {
+		plugins[plugin] = true
+	}
+	settings["enabledPlugins"] = plugins
+
+	permissions, _ := settings["permissions"].(map[string]any)
+	if permissions == nil {
+		permissions = map[string]any{}
+	}
+
+	allowRaw, _ := permissions["allow"].([]any)
+	existing := map[string]bool{}
+	for _, entry := range allowRaw {
+		if s, ok := entry.(string); ok {
+			existing[s] = true
+		}
+	}
+	for _, cmd := range desiredAllowedCommands {
+		if !existing[cmd] {
+			allowRaw = append(allowRaw, cmd)
+		}
+	}
+	permissions["allow"] = allowRaw
+	settings["permissions"] = permissions
+
+	if len(desiredEnv) > 0 {
+		env, _ := settings["env"].(map[string]any)
+		if env == nil {
+			env = map[string]any{}
+		}
+		for k, v := range desiredEnv {
+			env[k] = v
+		}
+		settings["env"] = env
+	}
+
+	merged, err := json.MarshalIndent(settings, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal settings: %w", err)
+	}
+	merged = append(merged, '\n')
+
+	outPath := filepath.Join(outDir, "claude", "settings.json")
+	if err := os.WriteFile(outPath, merged, os.ModePerm); err != nil {
+		return "", fmt.Errorf("failed to write merged settings: %w", err)
+	}
+
+	return outPath, nil
+}
