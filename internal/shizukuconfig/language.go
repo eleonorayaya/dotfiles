@@ -9,11 +9,17 @@ import (
 type Language string
 
 const (
-	LanguageRust Language = "rust"
+	LanguageGo         Language = "go"
+	LanguageLua        Language = "lua"
+	LanguageRust       Language = "rust"
+	LanguageTypescript Language = "typescript"
 )
 
 var languages []Language = []Language{
+	LanguageGo,
+	LanguageLua,
 	LanguageRust,
+	LanguageTypescript,
 }
 
 type LanguageConfig struct {
