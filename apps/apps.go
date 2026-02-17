@@ -3,6 +3,7 @@ package apps
 import (
 	"github.com/eleonorayaya/shizuku/apps/aerospace"
 	"github.com/eleonorayaya/shizuku/apps/bat"
+	"github.com/eleonorayaya/shizuku/apps/claude"
 	"github.com/eleonorayaya/shizuku/apps/desktoppr"
 	"github.com/eleonorayaya/shizuku/apps/fastfetch"
 	"github.com/eleonorayaya/shizuku/apps/git"
@@ -44,5 +45,6 @@ func GetApps() []shizukuapp.App {
 		terminal.New(),
 		terraform.New(),
 		desktoppr.New(),
+		claude.New(),
 	}
 }

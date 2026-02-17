@@ -37,6 +37,12 @@ This ensures consistent build processes and proper dependency management.
 # Sync all application configurations
 /task run sync
 
+# Preview what would change on next sync
+/task run diff
+
+# Preview with full diff output
+/task run diff -p
+
 # Enable verbose logging
 /task run sync --verbose
 ```
@@ -51,15 +57,19 @@ This ensures consistent build processes and proper dependency management.
    - `main.go`: Root command with `--verbose` flag
    - `init/`: Creates default config file
    - `sync/`: Orchestrates all app syncing
+   - `diff/`: Previews what would change on next sync
 
 2. **apps/** - Application-specific handlers
-   - Each app exports `Sync(outDir string, config *shizukuconfig.Config) error`
-   - Must be manually registered in `cmd/sync/sync.go`
+   - Each app implements `Generate(outDir, config) (*GenerateResult, error)` and `Sync(outDir, config) error`
+   - `Generate()` returns a `GenerateResult` containing the `FileMap` and `DestDir`
+   - `Sync()` calls `Generate()` then `SyncAppFiles()` (plus any side effects like remote fetches or exec commands)
+   - Must be manually registered in `apps/apps.go`
 
 3. **internal/** - Shared utilities
-   - `generate.go`: Template processing and file generation
-   - `apps.go`: File syncing and remote resource fetching
-   - `util/`: File operations (copy, path normalization, directory creation)
+   - `shizukuapp/files.go`: File generation, syncing, diffing, and remote resource fetching
+   - `shizukuapp/app.go`: `App`, `FileGenerator`, `FileSyncer` interfaces
+   - `shizukuapp/env.go`: Environment file generation
+   - `util/`: File operations (copy, path normalization, directory creation, templates)
    - `shizukuconfig/`: Config loading, validation, and defaults
 
 ### Data Flow
@@ -81,39 +91,40 @@ For each registered app:
 
 ### App Implementation Pattern
 
-Each app follows this standard structure:
+Each app implements `FileGenerator` (for generation/diffing) and `FileSyncer` (for syncing). `Sync()` calls `Generate()` then syncs:
 
 ```go
-func Sync(outDir string, config *shizukuconfig.Config) error {
-    // 1. Create template data
+func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp.GenerateResult, error) {
     data := map[string]any{
         "key": "value",
     }
 
-    // 2. Generate files from contents/
     fileMap, err := shizukuapp.GenerateAppFiles("appName", data, outDir)
     if err != nil {
-        return fmt.Errorf("failed to generate app files: %w", err)
+        return nil, fmt.Errorf("failed to generate app files: %w", err)
     }
 
-    // 3. (Optional) Download remote resources
-    remoteFiles := map[string]string{
-        "plugins/file.wasm": "https://example.com/file.wasm",
-    }
-    pluginMap, err := internal.FetchRemoteAppFiles(outDir, "appName", remoteFiles)
+    return &shizukuapp.GenerateResult{
+        FileMap: fileMap,
+        DestDir: "~/.config/appName/",
+    }, nil
+}
+
+func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+    result, err := a.Generate(outDir, config)
     if err != nil {
-        return fmt.Errorf("failed to fetch remote files: %w", err)
+        return err
     }
-    maps.Copy(fileMap, pluginMap)
 
-    // 4. Sync all files to destination
-    if err := shizukuapp.SyncAppFiles(fileMap, "~/.config/appName/"); err != nil {
+    if err := shizukuapp.SyncAppFiles(result.FileMap, result.DestDir); err != nil {
         return fmt.Errorf("failed to sync app files: %w", err)
     }
 
     return nil
 }
 ```
+
+Side effects like remote resource fetching or exec commands belong in `Sync()` only, not in `Generate()`.
 
 ### Configuration System
 
@@ -156,16 +167,15 @@ out/{unix_timestamp}/
 ## Adding a New App
 
 1. Create directory: `apps/{appName}/`
-2. Create `{appName}.go` with `Sync(outDir string, config *shizukuconfig.Config) error` function
+2. Create `{appName}.go` implementing `Generate()` and `Sync()` (see App Implementation Pattern above)
 3. Add source files to `contents/` directory (if needed)
-4. Import and register the app in `cmd/sync/sync.go`:
+4. Import and register the app in `apps/apps.go`:
    ```go
-   apps := []struct {
-       name string
-       fn   func(string, *shizukuconfig.Config) error
-   }{
-       // ... existing apps
-       {"{appName}", appName.Sync},
+   func GetApps() []shizukuapp.App {
+       return []shizukuapp.App{
+           // ... existing apps
+           appName.New(),
+       }
    }
    ```
 
@@ -188,6 +198,10 @@ out/{unix_timestamp}/
    ```
 
 The validation and default config creation will automatically include the new language.
+
+## Managing Shared Claude Code Settings
+
+The `claude` shizuku app manages `~/.claude/settings.json` with additive merges for `enabledPlugins` and `permissions.allow`. To add allowed commands, plugins, or other managed fields, use the `/claude-config` skill.
 
 ## Coding Style
 
