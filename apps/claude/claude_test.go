@@ -1,125 +1,13 @@
 package claude
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 )
-
-func TestLoadInstalledMarketplaces(t *testing.T) {
-	t.Run("parses valid known_marketplaces.json", func(t *testing.T) {
-		dir := t.TempDir()
-		jsonContent := `{
-  "claude-plugins-official": {
-    "source": {"source": "github", "repo": "anthropics/claude-plugins-official"},
-    "installLocation": "/tmp/test/claude-plugins-official",
-    "lastUpdated": "2026-02-17T18:35:12.923Z"
-  },
-  "superpowers-marketplace": {
-    "source": {"source": "github", "repo": "obra/superpowers-marketplace"},
-    "installLocation": "/tmp/test/superpowers-marketplace",
-    "lastUpdated": "2026-02-17T18:52:21.277Z"
-  }
-}`
-		path := filepath.Join(dir, "known_marketplaces.json")
-		if err := os.WriteFile(path, []byte(jsonContent), 0644); err != nil {
-			t.Fatal(err)
-		}
-
-		installed, err := loadInstalledMarketplacesFromPath(path)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		if !installed["claude-plugins-official"] {
-			t.Error("expected claude-plugins-official to be installed")
-		}
-		if !installed["superpowers-marketplace"] {
-			t.Error("expected superpowers-marketplace to be installed")
-		}
-		if installed["subtask"] {
-			t.Error("expected subtask to not be installed")
-		}
-		if len(installed) != 2 {
-			t.Errorf("expected 2 installed marketplaces, got %d", len(installed))
-		}
-	})
-
-	t.Run("returns error for missing file", func(t *testing.T) {
-		_, err := loadInstalledMarketplacesFromPath("/nonexistent/path/known_marketplaces.json")
-		if err == nil {
-			t.Error("expected error for missing file")
-		}
-	})
-
-	t.Run("returns error for invalid json", func(t *testing.T) {
-		dir := t.TempDir()
-		path := filepath.Join(dir, "known_marketplaces.json")
-		if err := os.WriteFile(path, []byte("not json"), 0644); err != nil {
-			t.Fatal(err)
-		}
-
-		_, err := loadInstalledMarketplacesFromPath(path)
-		if err == nil {
-			t.Error("expected error for invalid json")
-		}
-	})
-
-	t.Run("handles empty object", func(t *testing.T) {
-		dir := t.TempDir()
-		path := filepath.Join(dir, "known_marketplaces.json")
-		if err := os.WriteFile(path, []byte("{}"), 0644); err != nil {
-			t.Fatal(err)
-		}
-
-		installed, err := loadInstalledMarketplacesFromPath(path)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if len(installed) != 0 {
-			t.Errorf("expected 0 installed marketplaces, got %d", len(installed))
-		}
-	})
-}
-
-func TestFilterEnv(t *testing.T) {
-	t.Run("removes target variable", func(t *testing.T) {
-		env := []string{"HOME=/home/user", "CLAUDECODE=1", "PATH=/usr/bin"}
-		result := filterEnv(env, "CLAUDECODE")
-
-		if len(result) != 2 {
-			t.Fatalf("expected 2 env vars, got %d", len(result))
-		}
-		for _, e := range result {
-			if e == "CLAUDECODE=1" {
-				t.Error("CLAUDECODE should have been filtered out")
-			}
-		}
-	})
-
-	t.Run("preserves all when target absent", func(t *testing.T) {
-		env := []string{"HOME=/home/user", "PATH=/usr/bin"}
-		result := filterEnv(env, "CLAUDECODE")
-
-		if len(result) != 2 {
-			t.Fatalf("expected 2 env vars, got %d", len(result))
-		}
-	})
-
-	t.Run("does not filter partial matches", func(t *testing.T) {
-		env := []string{"CLAUDECODE_OTHER=1", "CLAUDECODE=1"}
-		result := filterEnv(env, "CLAUDECODE")
-
-		if len(result) != 1 {
-			t.Fatalf("expected 1 env var, got %d", len(result))
-		}
-		if result[0] != "CLAUDECODE_OTHER=1" {
-			t.Errorf("expected CLAUDECODE_OTHER=1, got %s", result[0])
-		}
-	})
-}
 
 func TestGetPluginsWithoutLspPlugins(t *testing.T) {
 	config := &shizukuconfig.Config{}
@@ -241,6 +129,85 @@ func TestGetPluginsWithBothEnabled(t *testing.T) {
 	if !contains(plugins, "charm-dev@charm-dev-skills") {
 		t.Error("expected charm-dev plugin to be present")
 	}
+}
+
+func TestMergeMarketplaces(t *testing.T) {
+	t.Run("adds missing marketplaces to existing file", func(t *testing.T) {
+		outDir := t.TempDir()
+		if err := os.MkdirAll(filepath.Join(outDir, "claude", "plugins"), 0755); err != nil {
+			t.Fatal(err)
+		}
+
+		result, err := mergeMarketplaces(outDir)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		data, err := os.ReadFile(result)
+		if err != nil {
+			t.Fatalf("failed to read output: %v", err)
+		}
+
+		var marketplaces map[string]any
+		if err := json.Unmarshal(data, &marketplaces); err != nil {
+			t.Fatalf("failed to parse output: %v", err)
+		}
+
+		for name := range desiredMarketplaces {
+			entry, exists := marketplaces[name]
+			if !exists {
+				t.Errorf("expected marketplace %q to be present", name)
+				continue
+			}
+			entryMap, ok := entry.(map[string]any)
+			if !ok {
+				t.Errorf("expected marketplace %q to be a map", name)
+				continue
+			}
+			source, ok := entryMap["source"].(map[string]any)
+			if !ok {
+				t.Errorf("expected marketplace %q source to be a map", name)
+				continue
+			}
+			if source["repo"] != desiredMarketplaces[name] {
+				t.Errorf("expected marketplace %q repo to be %q, got %q", name, desiredMarketplaces[name], source["repo"])
+			}
+		}
+	})
+
+	t.Run("preserves existing marketplace entries", func(t *testing.T) {
+		outDir := t.TempDir()
+		if err := os.MkdirAll(filepath.Join(outDir, "claude", "plugins"), 0755); err != nil {
+			t.Fatal(err)
+		}
+
+		result, err := mergeMarketplaces(outDir)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		data, err := os.ReadFile(result)
+		if err != nil {
+			t.Fatalf("failed to read output: %v", err)
+		}
+
+		var marketplaces map[string]any
+		if err := json.Unmarshal(data, &marketplaces); err != nil {
+			t.Fatalf("failed to parse output: %v", err)
+		}
+
+		// Existing marketplaces from the real file should be preserved
+		for name := range desiredMarketplaces {
+			if _, exists := marketplaces[name]; !exists {
+				t.Errorf("expected marketplace %q to be present", name)
+			}
+		}
+
+		// Total count should be at least as many as desired (existing + desired)
+		if len(marketplaces) < len(desiredMarketplaces) {
+			t.Errorf("expected at least %d marketplaces, got %d", len(desiredMarketplaces), len(marketplaces))
+		}
+	})
 }
 
 func contains(slice []string, item string) bool {

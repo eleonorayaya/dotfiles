@@ -1,33 +1,24 @@
 package claude
 
 import (
-	"encoding/json"
 	"fmt"
-	"log/slog"
-	"os"
-	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 	"github.com/eleonorayaya/shizuku/internal/util"
 )
 
-type marketplace struct {
-	Name string
-	Repo string
-}
-
-var desiredMarketplaces = []marketplace{
-	{Name: "claude-plugins-official", Repo: "anthropics/claude-plugins-official"},
-	{Name: "superpowers-marketplace", Repo: "obra/superpowers-marketplace"},
-	{Name: "subtask", Repo: "zippoxer/subtask"},
-	{Name: "charm-dev-skills", Repo: "williavs/charm-dev-skill-marketplace"},
+var desiredMarketplaces = map[string]string{
+	"claude-plugins-official": "anthropics/claude-plugins-official",
+	"superpowers-marketplace": "obra/superpowers-marketplace",
+	"subtask":                 "zippoxer/subtask",
+	"charm-dev-skills":        "williavs/charm-dev-skill-marketplace",
 }
 
 var alwaysOnPlugins = []string{
 	"superpowers@superpowers-marketplace",
+	"subtask@subtask",
 }
 
 var optionalPlugins = []string{
@@ -89,6 +80,12 @@ func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp
 	}
 	fileMap["settings.json"] = mergedPath
 
+	marketplacesPath, err := mergeMarketplaces(outDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to merge marketplaces: %w", err)
+	}
+	fileMap["plugins/known_marketplaces.json"] = marketplacesPath
+
 	return &shizukuapp.GenerateResult{
 		FileMap: fileMap,
 		DestDir: "~/.claude/",
@@ -96,10 +93,6 @@ func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp
 }
 
 func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
-	if err := ensureMarketplaces(); err != nil {
-		slog.Warn("failed to ensure marketplaces", "error", err)
-	}
-
 	result, err := a.Generate(outDir, config)
 	if err != nil {
 		return err
@@ -110,73 +103,6 @@ func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 	}
 
 	return nil
-}
-
-func ensureMarketplaces() error {
-	if !util.BinaryExists("claude") {
-		return fmt.Errorf("claude CLI not found on PATH")
-	}
-
-	installed, err := loadInstalledMarketplaces()
-	if err != nil {
-		installed = map[string]bool{}
-	}
-
-	for _, m := range desiredMarketplaces {
-		if installed[m.Name] {
-			slog.Debug("marketplace already installed", "name", m.Name)
-			continue
-		}
-
-		slog.Info("installing marketplace", "name", m.Name, "repo", m.Repo)
-		cmd := exec.Command("claude", "plugin", "marketplace", "add", m.Repo)
-		cmd.Env = filterEnv(os.Environ(), "CLAUDECODE")
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			return fmt.Errorf("failed to install marketplace %s: %w\nOutput: %s", m.Name, err, output)
-		}
-	}
-
-	return nil
-}
-
-func loadInstalledMarketplaces() (map[string]bool, error) {
-	marketplacesPath, err := util.NormalizeFilePath("~/.claude/plugins/known_marketplaces.json")
-	if err != nil {
-		return nil, fmt.Errorf("failed to normalize marketplaces path: %w", err)
-	}
-
-	return loadInstalledMarketplacesFromPath(marketplacesPath)
-}
-
-func loadInstalledMarketplacesFromPath(path string) (map[string]bool, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read known_marketplaces.json: %w", err)
-	}
-
-	var marketplaces map[string]json.RawMessage
-	if err := json.Unmarshal(data, &marketplaces); err != nil {
-		return nil, fmt.Errorf("failed to parse known_marketplaces.json: %w", err)
-	}
-
-	installed := make(map[string]bool, len(marketplaces))
-	for name := range marketplaces {
-		installed[name] = true
-	}
-
-	return installed, nil
-}
-
-func filterEnv(env []string, exclude string) []string {
-	prefix := exclude + "="
-	filtered := make([]string, 0, len(env))
-	for _, e := range env {
-		if !strings.HasPrefix(e, prefix) {
-			filtered = append(filtered, e)
-		}
-	}
-	return filtered
 }
 
 func getPlugins(config *shizukuconfig.Config) []string {
@@ -191,20 +117,41 @@ func getPlugins(config *shizukuconfig.Config) []string {
 	return plugins
 }
 
-func mergeSettings(outDir string, config *shizukuconfig.Config) (string, error) {
-	settingsPath, err := util.NormalizeFilePath("~/.claude/settings.json")
+func mergeMarketplaces(outDir string) (string, error) {
+	marketplaces, err := util.ReadJSONMap("~/.claude/plugins/known_marketplaces.json")
 	if err != nil {
-		return "", fmt.Errorf("failed to normalize settings path: %w", err)
+		return "", fmt.Errorf("failed to read known_marketplaces.json: %w", err)
 	}
 
-	settings := map[string]any{}
+	installBase, err := util.NormalizeFilePath("~/.claude/plugins/marketplaces")
+	if err != nil {
+		return "", fmt.Errorf("failed to normalize install base path: %w", err)
+	}
 
-	data, err := os.ReadFile(settingsPath)
-	if err == nil {
-		if err := json.Unmarshal(data, &settings); err != nil {
-			return "", fmt.Errorf("failed to parse settings.json: %w", err)
+	for name, repo := range desiredMarketplaces {
+		if _, exists := marketplaces[name]; exists {
+			continue
 		}
-	} else if !os.IsNotExist(err) {
+		marketplaces[name] = map[string]any{
+			"source": map[string]any{
+				"source": "github",
+				"repo":   repo,
+			},
+			"installLocation": filepath.Join(installBase, name),
+		}
+	}
+
+	outPath := filepath.Join(outDir, "claude", "plugins", "known_marketplaces.json")
+	if err := util.WriteJSONMap(outPath, marketplaces); err != nil {
+		return "", fmt.Errorf("failed to write merged marketplaces: %w", err)
+	}
+
+	return outPath, nil
+}
+
+func mergeSettings(outDir string, config *shizukuconfig.Config) (string, error) {
+	settings, err := util.ReadJSONMap("~/.claude/settings.json")
+	if err != nil {
 		return "", fmt.Errorf("failed to read settings.json: %w", err)
 	}
 
@@ -251,14 +198,8 @@ func mergeSettings(outDir string, config *shizukuconfig.Config) (string, error) 
 
 	settings["statusLine"] = desiredStatusLine
 
-	merged, err := json.MarshalIndent(settings, "", "  ")
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal settings: %w", err)
-	}
-	merged = append(merged, '\n')
-
 	outPath := filepath.Join(outDir, "claude", "settings.json")
-	if err := os.WriteFile(outPath, merged, os.ModePerm); err != nil {
+	if err := util.WriteJSONMap(outPath, settings); err != nil {
 		return "", fmt.Errorf("failed to write merged settings: %w", err)
 	}
 
