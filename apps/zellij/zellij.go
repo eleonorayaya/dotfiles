@@ -45,7 +45,7 @@ func hexToRGB(hex string) string {
 	return fmt.Sprintf("%d %d %d", r, g, b)
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp.GenerateResult, error) {
 	data := map[string]any{
 		"ThemeName":             config.Styles.Theme.Name,
 		"Surface":               hexToRGB(config.Styles.Theme.Colors.Surface),
@@ -73,7 +73,19 @@ func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 
 	fileMap, err := shizukuapp.GenerateAppFiles("zellij", data, outDir)
 	if err != nil {
-		return fmt.Errorf("failed to generate app files: %w", err)
+		return nil, fmt.Errorf("failed to generate app files: %w", err)
+	}
+
+	return &shizukuapp.GenerateResult{
+		FileMap: fileMap,
+		DestDir: "~/.config/zellij/",
+	}, nil
+}
+
+func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+	result, err := a.Generate(outDir, config)
+	if err != nil {
+		return err
 	}
 
 	pluginMap, err := shizukuapp.FetchRemoteAppFiles(outDir, "zellij", remotePlugins)
@@ -81,9 +93,9 @@ func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 		return fmt.Errorf("failed to fetch remote plugins: %w", err)
 	}
 
-	maps.Copy(fileMap, pluginMap)
+	maps.Copy(result.FileMap, pluginMap)
 
-	if err := shizukuapp.SyncAppFiles(fileMap, "~/.config/zellij/"); err != nil {
+	if err := shizukuapp.SyncAppFiles(result.FileMap, result.DestDir); err != nil {
 		return fmt.Errorf("failed to sync app files: %w", err)
 	}
 

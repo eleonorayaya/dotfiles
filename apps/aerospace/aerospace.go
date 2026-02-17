@@ -34,15 +34,27 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 	return nil
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp.GenerateResult, error) {
 	data := map[string]any{}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("aerospace", data, outDir)
 	if err != nil {
-		return fmt.Errorf("failed to generate app files: %w", err)
+		return nil, fmt.Errorf("failed to generate app files: %w", err)
 	}
 
-	if err := shizukuapp.SyncAppFiles(fileMap, "~/.config/aerospace/"); err != nil {
+	return &shizukuapp.GenerateResult{
+		FileMap: fileMap,
+		DestDir: "~/.config/aerospace/",
+	}, nil
+}
+
+func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+	result, err := a.Generate(outDir, config)
+	if err != nil {
+		return err
+	}
+
+	if err := shizukuapp.SyncAppFiles(result.FileMap, result.DestDir); err != nil {
 		return fmt.Errorf("failed to sync app files: %w", err)
 	}
 

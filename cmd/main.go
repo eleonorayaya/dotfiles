@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	diffcmd "github.com/eleonorayaya/shizuku/cmd/diff"
 	initcmd "github.com/eleonorayaya/shizuku/cmd/init"
 	installcmd "github.com/eleonorayaya/shizuku/cmd/install"
 	listcmd "github.com/eleonorayaya/shizuku/cmd/list"
@@ -28,6 +29,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	rootCmd.AddCommand(diffcmd.DiffCommand)
 	rootCmd.AddCommand(initcmd.InitCommand)
 	rootCmd.AddCommand(installcmd.InstallCommand)
 	rootCmd.AddCommand(listcmd.ListCommand)

@@ -30,7 +30,7 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 	return nil
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp.GenerateResult, error) {
 	data := map[string]any{
 		"ThemeName": config.Styles.Theme.Name,
 		"ThemeType": config.Styles.Theme.Type,
@@ -39,10 +39,22 @@ func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 
 	fileMap, err := shizukuapp.GenerateAppFiles("nvim", data, outDir)
 	if err != nil {
-		return fmt.Errorf("failed to generate app files: %w", err)
+		return nil, fmt.Errorf("failed to generate app files: %w", err)
 	}
 
-	if err := shizukuapp.SyncAppFiles(fileMap, "~/.config/nvim/"); err != nil {
+	return &shizukuapp.GenerateResult{
+		FileMap: fileMap,
+		DestDir: "~/.config/nvim/",
+	}, nil
+}
+
+func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+	result, err := a.Generate(outDir, config)
+	if err != nil {
+		return err
+	}
+
+	if err := shizukuapp.SyncAppFiles(result.FileMap, result.DestDir); err != nil {
 		return fmt.Errorf("failed to sync app files: %w", err)
 	}
 

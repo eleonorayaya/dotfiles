@@ -33,13 +33,25 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 	return nil
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp.GenerateResult, error) {
 	fileMap, err := shizukuapp.GenerateAppFiles("desktoppr", nil, outDir)
 	if err != nil {
-		return fmt.Errorf("failed to generate desktoppr files: %w", err)
+		return nil, fmt.Errorf("failed to generate desktoppr files: %w", err)
 	}
 
-	if err := shizukuapp.SyncAppFiles(fileMap, "~/.config/desktoppr/"); err != nil {
+	return &shizukuapp.GenerateResult{
+		FileMap: fileMap,
+		DestDir: "~/.config/desktoppr/",
+	}, nil
+}
+
+func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+	result, err := a.Generate(outDir, config)
+	if err != nil {
+		return err
+	}
+
+	if err := shizukuapp.SyncAppFiles(result.FileMap, result.DestDir); err != nil {
 		return fmt.Errorf("failed to sync desktoppr files: %w", err)
 	}
 

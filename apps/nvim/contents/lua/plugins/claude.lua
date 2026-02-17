@@ -5,9 +5,13 @@ return {
     opts = function()
       local options = {}
 
-      -- if nvim_config.claude.command ~= "" then
-      --   options.terminal_cmd = nvim_config.claude.command
-      -- end
+      local cwd_full = vim.loop.cwd()
+      local dirname = string.match(cwd_full, "([^/]+)$")
+
+      local cmd = "CLAUDE_CODE_TASK_LIST_ID=" .. dirname .. " claude"
+      options = {
+        terminal_cmd = cmd
+      }
 
       return options
     end,
