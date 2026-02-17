@@ -24,6 +24,11 @@ var desiredEnv = map[string]string{
 	"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
 }
 
+var desiredStatusLine = map[string]any{
+	"type":    "command",
+	"command": "~/.local/bin/starship-claude",
+}
+
 var desiredAllowedCommands = []string{
 	"Bash(grep:*)",
 	"Bash(find:*)",
@@ -143,6 +148,8 @@ func mergeSettings(outDir string) (string, error) {
 		}
 		settings["env"] = env
 	}
+
+	settings["statusLine"] = desiredStatusLine
 
 	merged, err := json.MarshalIndent(settings, "", "  ")
 	if err != nil {

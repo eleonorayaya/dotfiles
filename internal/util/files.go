@@ -21,6 +21,13 @@ func CopyFile(inFile, outFile string) error {
 		return fmt.Errorf("failed to normalize out file path: %w", err)
 	}
 
+	if _, err := os.Lstat(normalizedOutFile); err == nil {
+		backupPath := normalizedOutFile + ".bak"
+		if err := os.Rename(normalizedOutFile, backupPath); err != nil {
+			return fmt.Errorf("failed to back up existing destination file: %w", err)
+		}
+	}
+
 	sourceFile, err := os.Open(normalizedInFile)
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
