@@ -9,31 +9,9 @@ import (
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 )
 
-func TestGetPluginsWithoutLspPlugins(t *testing.T) {
-	config := &shizukuconfig.Config{}
-
-	plugins := getPlugins(config)
-
-	for _, p := range alwaysOnPlugins {
-		if !contains(plugins, p) {
-			t.Errorf("expected always-on plugin %q to be present", p)
-		}
-	}
-
-	for _, p := range optionalPlugins {
-		if contains(plugins, p) {
-			t.Errorf("expected optional plugin %q to be absent when lsp_plugins is not set", p)
-		}
-	}
-}
-
-func TestGetPluginsWithLspPluginsEnabled(t *testing.T) {
+func TestGetPluginsNoLanguagesEnabled(t *testing.T) {
 	config := &shizukuconfig.Config{
-		Apps: map[string]any{
-			"claude": map[string]any{
-				"lsp_plugins": true,
-			},
-		},
+		Languages: shizukuconfig.LanguageConfigs{},
 	}
 
 	plugins := getPlugins(config)
@@ -44,90 +22,75 @@ func TestGetPluginsWithLspPluginsEnabled(t *testing.T) {
 		}
 	}
 
-	for _, p := range optionalPlugins {
-		if !contains(plugins, p) {
-			t.Errorf("expected optional plugin %q to be present when lsp_plugins is true", p)
+	for _, langPlugins := range languagePlugins {
+		for _, plugin := range langPlugins {
+			if contains(plugins, plugin) {
+				t.Errorf("expected language plugin %q to be absent when no languages enabled", plugin)
+			}
 		}
 	}
 }
 
-func TestGetPluginsWithLspPluginsExplicitlyDisabled(t *testing.T) {
+func TestGetPluginsWithRustEnabled(t *testing.T) {
 	config := &shizukuconfig.Config{
-		Apps: map[string]any{
-			"claude": map[string]any{
-				"lsp_plugins": false,
-			},
+		Languages: shizukuconfig.LanguageConfigs{
+			"rust": {Enabled: true},
 		},
 	}
 
 	plugins := getPlugins(config)
 
-	if len(plugins) != len(alwaysOnPlugins) {
-		t.Errorf("expected %d plugins, got %d", len(alwaysOnPlugins), len(plugins))
+	if !contains(plugins, "rust-analyzer-lsp@claude-plugins-official") {
+		t.Error("expected rust-analyzer-lsp to be present when rust is enabled")
 	}
-
-	for _, p := range optionalPlugins {
-		if contains(plugins, p) {
-			t.Errorf("expected optional plugin %q to be absent when lsp_plugins is false", p)
-		}
+	if contains(plugins, "gopls-lsp@claude-plugins-official") {
+		t.Error("expected gopls-lsp to be absent when go is not enabled")
 	}
 }
 
-func TestGetPluginsWithCharmDevDisabled(t *testing.T) {
-	config := &shizukuconfig.Config{}
-
-	plugins := getPlugins(config)
-
-	if contains(plugins, "charm-dev@charm-dev-skills") {
-		t.Error("charm-dev plugin should not be included when charm_dev is false")
-	}
-}
-
-func TestGetPluginsWithCharmDevEnabled(t *testing.T) {
+func TestGetPluginsWithGoEnabled(t *testing.T) {
 	config := &shizukuconfig.Config{
-		Apps: map[string]any{
-			"claude": map[string]any{
-				"charm_dev": true,
-			},
+		Languages: shizukuconfig.LanguageConfigs{
+			"go": {Enabled: true},
 		},
 	}
 
 	plugins := getPlugins(config)
 
-	if !contains(plugins, "charm-dev@charm-dev-skills") {
-		t.Error("charm-dev plugin should be included when charm_dev is true")
-	}
-}
-
-func TestGetPluginsWithBothEnabled(t *testing.T) {
-	config := &shizukuconfig.Config{
-		Apps: map[string]any{
-			"claude": map[string]any{
-				"lsp_plugins": true,
-				"charm_dev":   true,
-			},
-		},
-	}
-
-	plugins := getPlugins(config)
-
-	expected := len(alwaysOnPlugins) + len(optionalPlugins) + 1
-	if len(plugins) != expected {
-		t.Errorf("expected %d plugins, got %d", expected, len(plugins))
-	}
-
-	for _, p := range alwaysOnPlugins {
-		if !contains(plugins, p) {
-			t.Errorf("expected always-on plugin %q to be present", p)
-		}
-	}
-	for _, p := range optionalPlugins {
-		if !contains(plugins, p) {
-			t.Errorf("expected optional plugin %q to be present", p)
-		}
+	if !contains(plugins, "gopls-lsp@claude-plugins-official") {
+		t.Error("expected gopls-lsp to be present when go is enabled")
 	}
 	if !contains(plugins, "charm-dev@charm-dev-skills") {
-		t.Error("expected charm-dev plugin to be present")
+		t.Error("expected charm-dev to be present when go is enabled")
+	}
+}
+
+func TestGetPluginsWithAllLanguagesEnabled(t *testing.T) {
+	config := &shizukuconfig.Config{
+		Languages: shizukuconfig.LanguageConfigs{
+			"go":         {Enabled: true},
+			"lua":        {Enabled: true},
+			"rust":       {Enabled: true},
+			"typescript": {Enabled: true},
+		},
+	}
+
+	plugins := getPlugins(config)
+
+	for _, langPlugins := range languagePlugins {
+		for _, plugin := range langPlugins {
+			if !contains(plugins, plugin) {
+				t.Errorf("expected language plugin %q to be present when all languages enabled", plugin)
+			}
+		}
+	}
+
+	expectedCount := len(alwaysOnPlugins)
+	for _, langPlugins := range languagePlugins {
+		expectedCount += len(langPlugins)
+	}
+	if len(plugins) != expectedCount {
+		t.Errorf("expected %d plugins, got %d", expectedCount, len(plugins))
 	}
 }
 
@@ -196,14 +159,12 @@ func TestMergeMarketplaces(t *testing.T) {
 			t.Fatalf("failed to parse output: %v", err)
 		}
 
-		// Existing marketplaces from the real file should be preserved
 		for name := range desiredMarketplaces {
 			if _, exists := marketplaces[name]; !exists {
 				t.Errorf("expected marketplace %q to be present", name)
 			}
 		}
 
-		// Total count should be at least as many as desired (existing + desired)
 		if len(marketplaces) < len(desiredMarketplaces) {
 			t.Errorf("expected at least %d marketplaces, got %d", len(desiredMarketplaces), len(marketplaces))
 		}

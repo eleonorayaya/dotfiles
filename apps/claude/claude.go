@@ -21,11 +21,11 @@ var alwaysOnPlugins = []string{
 	"subtask@subtask",
 }
 
-var optionalPlugins = []string{
-	"lua-lsp@claude-plugins-official",
-	"typescript-lsp@claude-plugins-official",
-	"gopls-lsp@claude-plugins-official",
-	"rust-analyzer-lsp@claude-plugins-official",
+var languagePlugins = map[shizukuconfig.Language][]string{
+	shizukuconfig.LanguageGo:         {"gopls-lsp@claude-plugins-official", "charm-dev@charm-dev-skills"},
+	shizukuconfig.LanguageLua:        {"lua-lsp@claude-plugins-official"},
+	shizukuconfig.LanguageRust:       {"rust-analyzer-lsp@claude-plugins-official"},
+	shizukuconfig.LanguageTypescript: {"typescript-lsp@claude-plugins-official"},
 }
 
 var desiredEnv = map[string]string{
@@ -108,11 +108,10 @@ func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 func getPlugins(config *shizukuconfig.Config) []string {
 	plugins := make([]string, len(alwaysOnPlugins))
 	copy(plugins, alwaysOnPlugins)
-	if config.GetAppConfigBool("claude", "lsp_plugins", false) {
-		plugins = append(plugins, optionalPlugins...)
-	}
-	if config.GetAppConfigBool("claude", "charm_dev", false) {
-		plugins = append(plugins, "charm-dev@charm-dev-skills")
+	for lang, langPlugins := range languagePlugins {
+		if config.Languages[string(lang)].Enabled {
+			plugins = append(plugins, langPlugins...)
+		}
 	}
 	return plugins
 }
