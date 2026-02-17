@@ -11,12 +11,14 @@ import (
 	"github.com/eleonorayaya/shizuku/internal/util"
 )
 
-var desiredPlugins = []string{
+var alwaysOnPlugins = []string{
+	"superpowers@superpowers-marketplace",
+}
+
+var optionalPlugins = []string{
 	"lua-lsp@claude-plugins-official",
 	"typescript-lsp@claude-plugins-official",
 	"gopls-lsp@claude-plugins-official",
-	"superpowers@superpowers-marketplace",
-	"charm-dev@charm-dev-skills",
 	"rust-analyzer-lsp@claude-plugins-official",
 }
 
@@ -66,7 +68,7 @@ func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp
 		return nil, fmt.Errorf("failed to generate app files: %w", err)
 	}
 
-	mergedPath, err := mergeSettings(outDir)
+	mergedPath, err := mergeSettings(outDir, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge settings: %w", err)
 	}
@@ -91,7 +93,16 @@ func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 	return nil
 }
 
-func mergeSettings(outDir string) (string, error) {
+func getPlugins(config *shizukuconfig.Config) []string {
+	plugins := make([]string, len(alwaysOnPlugins))
+	copy(plugins, alwaysOnPlugins)
+	if config.GetAppConfigBool("claude", "lsp_plugins", false) {
+		plugins = append(plugins, optionalPlugins...)
+	}
+	return plugins
+}
+
+func mergeSettings(outDir string, config *shizukuconfig.Config) (string, error) {
 	settingsPath, err := util.NormalizeFilePath("~/.claude/settings.json")
 	if err != nil {
 		return "", fmt.Errorf("failed to normalize settings path: %w", err)
@@ -113,7 +124,7 @@ func mergeSettings(outDir string) (string, error) {
 		plugins = map[string]any{}
 	}
 
-	for _, plugin := range desiredPlugins {
+	for _, plugin := range getPlugins(config) {
 		plugins[plugin] = true
 	}
 	settings["enabledPlugins"] = plugins
