@@ -39,7 +39,8 @@ keybinds clear-defaults=true {
 
   pane {
     bind "a" { ToggleFocusFullscreen; SwitchToMode "normal"; }
-    bind "d" { NewPane; SwitchToMode "normal"; }
+    bind "h" { NewPane; SwitchToMode "normal"; }
+    bind "v" { NewPane "right"; SwitchToMode "normal"; }
     bind "x" { CloseFocus; SwitchToMode "normal"; }
   }
 
@@ -55,12 +56,11 @@ keybinds clear-defaults=true {
     bind "x" { CloseTab; SwitchToMode "normal"; }
 
     bind "p" {
-      LaunchOrFocusPlugin "zellij-workspaces" {
-            floating true
-            move_to_focused_tab true
-            cwd "/"
-        }
-        SwitchToMode "Normal"
+      MessagePlugin "file:~/.config/zellij/plugins/utena.wasm" {
+        name "utena-commands"
+        payload "{ \"command\": \"open_picker\" }"
+      }
+      SwitchToMode "normal"
     }
   }
 
@@ -135,14 +135,14 @@ plugins {
     welcome_screen true
   }
 
+  utena location="file:~/.config/zellij/plugins/utena.wasm"
   vim-zellij-navigator location="file:~/.config/zellij/plugins/vim-zellij-navigator.wasm"
-  zellij-workspaces location="file:~/.config/zellij/plugins/zellij-workspaces.wasm"
   zjstatus location="file:~/.config/zellij/plugins/zjstatus.wasm"
 }
 
 load_plugins {
   vim-zellij-navigator
-  zellij-workspaces
+  utena
   zjstatus
 }
 

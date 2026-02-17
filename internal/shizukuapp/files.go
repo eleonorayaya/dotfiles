@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 
@@ -14,6 +15,73 @@ import (
 
 type FileSyncer interface {
 	Sync(outDir string, config *shizukuconfig.Config) error
+}
+
+type GenerateResult struct {
+	FileMap map[string]string
+	DestDir string
+}
+
+type FileGenerator interface {
+	Generate(outDir string, config *shizukuconfig.Config) (*GenerateResult, error)
+}
+
+var binaryExtensions = map[string]bool{
+	".wasm": true,
+	".png":  true,
+	".jpg":  true,
+	".jpeg": true,
+	".gif":  true,
+	".ico":  true,
+	".webp": true,
+	".pdf":  true,
+	".zip":  true,
+	".tar":  true,
+	".gz":   true,
+}
+
+func isBinaryFile(fileName string) bool {
+	return binaryExtensions[path.Ext(fileName)]
+}
+
+func DiffAppFiles(result *GenerateResult) ([]string, error) {
+	var changed []string
+
+	for fileName, generatedPath := range result.FileMap {
+		if isBinaryFile(fileName) {
+			continue
+		}
+
+		destPath, err := util.NormalizeFilePath(path.Join(result.DestDir, fileName))
+		if err != nil {
+			return nil, fmt.Errorf("failed to normalize dest path for %s: %w", fileName, err)
+		}
+
+		diffSrc := destPath
+		if _, err := os.Stat(destPath); os.IsNotExist(err) {
+			diffSrc = "/dev/null"
+		}
+
+		cmd := exec.Command("diff", "-u", "-b", "-I", "# Generated at:", diffSrc, generatedPath)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
+				// exit code 1 means files differ, which is expected
+			} else {
+				return nil, fmt.Errorf("failed to diff %s: %w", fileName, err)
+			}
+		}
+
+		if len(output) > 0 {
+			diffPath := generatedPath + ".diff"
+			if err := os.WriteFile(diffPath, output, 0644); err != nil {
+				return nil, fmt.Errorf("failed to write diff for %s: %w", fileName, err)
+			}
+			changed = append(changed, fileName)
+		}
+	}
+
+	return changed, nil
 }
 
 func listAppFiles(appDir string, relativePath string) ([]string, error) {

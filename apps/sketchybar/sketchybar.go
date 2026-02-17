@@ -34,7 +34,7 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 	return nil
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp.GenerateResult, error) {
 	data := map[string]any{
 		"BarColor":                util.HexToARGB(config.Styles.Theme.Colors.Surface, config.Styles.WindowOpacity),
 		"BarBorderColor":          util.HexToARGB(config.Styles.Theme.Colors.SurfaceBorder, config.Styles.WindowOpacity),
@@ -51,10 +51,22 @@ func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 
 	fileMap, err := shizukuapp.GenerateAppFiles("sketchybar", data, outDir)
 	if err != nil {
-		return fmt.Errorf("failed to generate app files: %w", err)
+		return nil, fmt.Errorf("failed to generate app files: %w", err)
 	}
 
-	if err := shizukuapp.SyncAppFiles(fileMap, "~/.config/sketchybar/"); err != nil {
+	return &shizukuapp.GenerateResult{
+		FileMap: fileMap,
+		DestDir: "~/.config/sketchybar/",
+	}, nil
+}
+
+func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+	result, err := a.Generate(outDir, config)
+	if err != nil {
+		return err
+	}
+
+	if err := shizukuapp.SyncAppFiles(result.FileMap, result.DestDir); err != nil {
 		return fmt.Errorf("failed to sync app files: %w", err)
 	}
 
