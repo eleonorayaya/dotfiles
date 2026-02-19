@@ -84,12 +84,6 @@ func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp
 	}
 	fileMap["settings.json"] = mergedPath
 
-	marketplacesPath, err := mergeMarketplaces(outDir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to merge marketplaces: %w", err)
-	}
-	fileMap["plugins/known_marketplaces.json"] = marketplacesPath
-
 	return &shizukuapp.GenerateResult{
 		FileMap: fileMap,
 		DestDir: "~/.claude/",
@@ -118,42 +112,6 @@ func getPlugins(config *shizukuconfig.Config) []string {
 		}
 	}
 	return plugins
-}
-
-func mergeMarketplaces(outDir string) (string, error) {
-	marketplaces, err := util.ReadJSONMap("~/.claude/plugins/known_marketplaces.json")
-	if err != nil {
-		return "", fmt.Errorf("failed to read known_marketplaces.json: %w", err)
-	}
-
-	installBase, err := util.NormalizeFilePath("~/.claude/plugins/marketplaces")
-	if err != nil {
-		return "", fmt.Errorf("failed to normalize install base path: %w", err)
-	}
-
-	for name, src := range desiredMarketplaces {
-		if _, exists := marketplaces[name]; exists {
-			continue
-		}
-		source := map[string]any{
-			"source": "github",
-			"repo":   src.repo,
-		}
-		if src.path != "" {
-			source["path"] = src.path
-		}
-		marketplaces[name] = map[string]any{
-			"source":          source,
-			"installLocation": filepath.Join(installBase, name),
-		}
-	}
-
-	outPath := filepath.Join(outDir, "claude", "plugins", "known_marketplaces.json")
-	if err := util.WriteJSONMap(outPath, marketplaces); err != nil {
-		return "", fmt.Errorf("failed to write merged marketplaces: %w", err)
-	}
-
-	return outPath, nil
 }
 
 func mergeSettings(outDir string, config *shizukuconfig.Config) (string, error) {
@@ -204,6 +162,27 @@ func mergeSettings(outDir string, config *shizukuconfig.Config) (string, error) 
 	}
 
 	settings["statusLine"] = desiredStatusLine
+
+	knownMarketplaces, _ := settings["extraKnownMarketplaces"].(map[string]any)
+	if knownMarketplaces == nil {
+		knownMarketplaces = map[string]any{}
+	}
+	for name, src := range desiredMarketplaces {
+		if _, exists := knownMarketplaces[name]; exists {
+			continue
+		}
+		source := map[string]any{
+			"source": "github",
+			"repo":   src.repo,
+		}
+		if src.path != "" {
+			source["path"] = src.path
+		}
+		knownMarketplaces[name] = map[string]any{
+			"source": source,
+		}
+	}
+	settings["extraKnownMarketplaces"] = knownMarketplaces
 
 	outPath := filepath.Join(outDir, "claude", "settings.json")
 	if err := util.WriteJSONMap(outPath, settings); err != nil {
