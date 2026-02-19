@@ -3,7 +3,6 @@ package claude
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
@@ -94,14 +93,15 @@ func TestGetPluginsWithAllLanguagesEnabled(t *testing.T) {
 	}
 }
 
-func TestMergeMarketplaces(t *testing.T) {
-	t.Run("adds missing marketplaces to existing file", func(t *testing.T) {
-		outDir := t.TempDir()
-		if err := os.MkdirAll(filepath.Join(outDir, "claude", "plugins"), 0755); err != nil {
-			t.Fatal(err)
-		}
+func TestMergeSettingsMarketplaces(t *testing.T) {
+	config := &shizukuconfig.Config{
+		Languages: shizukuconfig.LanguageConfigs{},
+	}
 
-		result, err := mergeMarketplaces(outDir)
+	t.Run("adds all desired marketplaces", func(t *testing.T) {
+		outDir := t.TempDir()
+
+		result, err := mergeSettings(outDir, config)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -111,12 +111,17 @@ func TestMergeMarketplaces(t *testing.T) {
 			t.Fatalf("failed to read output: %v", err)
 		}
 
-		var marketplaces map[string]any
-		if err := json.Unmarshal(data, &marketplaces); err != nil {
+		var settings map[string]any
+		if err := json.Unmarshal(data, &settings); err != nil {
 			t.Fatalf("failed to parse output: %v", err)
 		}
 
-		for name := range desiredMarketplaces {
+		marketplaces, ok := settings["extraKnownMarketplaces"].(map[string]any)
+		if !ok {
+			t.Fatal("expected extraKnownMarketplaces to be a map")
+		}
+
+		for name, src := range desiredMarketplaces {
 			entry, exists := marketplaces[name]
 			if !exists {
 				t.Errorf("expected marketplace %q to be present", name)
@@ -132,19 +137,16 @@ func TestMergeMarketplaces(t *testing.T) {
 				t.Errorf("expected marketplace %q source to be a map", name)
 				continue
 			}
-			if source["repo"] != desiredMarketplaces[name] {
-				t.Errorf("expected marketplace %q repo to be %q, got %q", name, desiredMarketplaces[name], source["repo"])
+			if source["repo"] != src.repo {
+				t.Errorf("expected marketplace %q repo to be %q, got %q", name, src.repo, source["repo"])
 			}
 		}
 	})
 
-	t.Run("preserves existing marketplace entries", func(t *testing.T) {
+	t.Run("marketplace count matches desired", func(t *testing.T) {
 		outDir := t.TempDir()
-		if err := os.MkdirAll(filepath.Join(outDir, "claude", "plugins"), 0755); err != nil {
-			t.Fatal(err)
-		}
 
-		result, err := mergeMarketplaces(outDir)
+		result, err := mergeSettings(outDir, config)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -154,15 +156,14 @@ func TestMergeMarketplaces(t *testing.T) {
 			t.Fatalf("failed to read output: %v", err)
 		}
 
-		var marketplaces map[string]any
-		if err := json.Unmarshal(data, &marketplaces); err != nil {
+		var settings map[string]any
+		if err := json.Unmarshal(data, &settings); err != nil {
 			t.Fatalf("failed to parse output: %v", err)
 		}
 
-		for name := range desiredMarketplaces {
-			if _, exists := marketplaces[name]; !exists {
-				t.Errorf("expected marketplace %q to be present", name)
-			}
+		marketplaces, ok := settings["extraKnownMarketplaces"].(map[string]any)
+		if !ok {
+			t.Fatal("expected extraKnownMarketplaces to be a map")
 		}
 
 		if len(marketplaces) < len(desiredMarketplaces) {

@@ -19,6 +19,7 @@ var desiredMarketplaces = map[string]marketplaceSource{
 	"superpowers-marketplace":  {repo: "obra/superpowers-marketplace"},
 	"charm-dev-skills":         {repo: "williavs/charm-dev-skill-marketplace"},
 	"eleonorayaya-claude-code": {repo: "eleonorayaya/claude-plugins"},
+	"utena":                    {repo: "eleonorayaya/utena"},
 }
 
 var alwaysOnPlugins = []string{
@@ -70,6 +71,14 @@ func (a *App) Name() string {
 
 func (a *App) Enabled(config *shizukuconfig.Config) bool {
 	return config.GetAppConfigBool(a.Name(), "enabled", true)
+}
+
+const utenaShellInit = `eval "$(utena shell-init)"`
+
+func (a *App) Env() (*shizukuapp.EnvSetup, error) {
+	return &shizukuapp.EnvSetup{
+		InitScripts: []string{utenaShellInit},
+	}, nil
 }
 
 func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp.GenerateResult, error) {
