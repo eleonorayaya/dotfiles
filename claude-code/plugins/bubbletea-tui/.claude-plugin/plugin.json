@@ -1,0 +1,5 @@
+{
+  "name": "bubbletea-tui",
+  "description": "Bubbletea TUI patterns: key bindings, list views, view routing, window sizing",
+  "version": "1.0.0"
+}
