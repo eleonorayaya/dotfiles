@@ -18,7 +18,7 @@ var desiredMarketplaces = map[string]marketplaceSource{
 	"claude-plugins-official":  {repo: "anthropics/claude-plugins-official"},
 	"superpowers-marketplace":  {repo: "obra/superpowers-marketplace"},
 	"charm-dev-skills":         {repo: "williavs/charm-dev-skill-marketplace"},
-	"eleonorayaya-claude-code": {repo: "eleonorayaya/dotfiles", path: "claude-code"},
+	"eleonorayaya-claude-code": {repo: "eleonorayaya/claude-plugins"},
 }
 
 var alwaysOnPlugins = []string{

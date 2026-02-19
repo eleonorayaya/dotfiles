@@ -1,5 +1,0 @@
-{
-  "name": "go-patterns",
-  "description": "Layered Go architecture patterns: stores, handlers, services, errors, events, routing, testing",
-  "version": "1.0.0"
-}
