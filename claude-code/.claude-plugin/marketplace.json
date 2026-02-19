@@ -1,0 +1,11 @@
+{
+  "name": "eleonorayaya-claude-code",
+  "owner": {
+    "name": "eleonorayaya"
+  },
+  "metadata": {
+    "description": "eleonorayaya's personal Claude Code plugin marketplace",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": []
+}
