@@ -9,16 +9,20 @@ import (
 	"github.com/eleonorayaya/shizuku/internal/util"
 )
 
-var desiredMarketplaces = map[string]string{
-	"claude-plugins-official": "anthropics/claude-plugins-official",
-	"superpowers-marketplace": "obra/superpowers-marketplace",
-	"subtask":                 "zippoxer/subtask",
-	"charm-dev-skills":        "williavs/charm-dev-skill-marketplace",
+type marketplaceSource struct {
+	repo string
+	path string
+}
+
+var desiredMarketplaces = map[string]marketplaceSource{
+	"claude-plugins-official":  {repo: "anthropics/claude-plugins-official"},
+	"superpowers-marketplace":  {repo: "obra/superpowers-marketplace"},
+	"charm-dev-skills":         {repo: "williavs/charm-dev-skill-marketplace"},
+	"eleonorayaya-claude-code": {repo: "eleonorayaya/dotfiles", path: "claude-code"},
 }
 
 var alwaysOnPlugins = []string{
 	"superpowers@superpowers-marketplace",
-	"subtask@subtask",
 }
 
 var languagePlugins = map[shizukuconfig.Language][]string{
@@ -127,15 +131,19 @@ func mergeMarketplaces(outDir string) (string, error) {
 		return "", fmt.Errorf("failed to normalize install base path: %w", err)
 	}
 
-	for name, repo := range desiredMarketplaces {
+	for name, src := range desiredMarketplaces {
 		if _, exists := marketplaces[name]; exists {
 			continue
 		}
+		source := map[string]any{
+			"source": "github",
+			"repo":   src.repo,
+		}
+		if src.path != "" {
+			source["path"] = src.path
+		}
 		marketplaces[name] = map[string]any{
-			"source": map[string]any{
-				"source": "github",
-				"repo":   repo,
-			},
+			"source":          source,
 			"installLocation": filepath.Join(installBase, name),
 		}
 	}
