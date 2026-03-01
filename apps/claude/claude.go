@@ -39,7 +39,8 @@ var desiredEnv = map[string]string{
 
 var desiredStatusLine = map[string]any{
 	"type":    "command",
-	"command": "~/.local/bin/starship-claude",
+	"command": "npx -y ccstatusline@latest",
+	"padding": 0,
 }
 
 var desiredAllowedCommands = []string{
