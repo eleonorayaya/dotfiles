@@ -152,6 +152,15 @@ return {
         mode = { "n", "t" },
         desc = "Toggle explorer tree",
       },
+      {
+        "<M-b>",
+        function()
+          vim.cmd("Neotree toggle")
+          vim.cmd("wincmd p")
+        end,
+        mode = { "n", "t" },
+        desc = "Toggle explorer tree",
+      },
     },
   },
 }

@@ -20,6 +20,7 @@ import (
 	"github.com/eleonorayaya/shizuku/apps/sketchybar"
 	"github.com/eleonorayaya/shizuku/apps/terminal"
 	"github.com/eleonorayaya/shizuku/apps/terraform"
+	"github.com/eleonorayaya/shizuku/apps/tmux"
 	"github.com/eleonorayaya/shizuku/apps/zellij"
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 )
@@ -44,6 +45,7 @@ func GetApps() []shizukuapp.App {
 		sfsymbols.New(),
 		terminal.New(),
 		terraform.New(),
+		tmux.New(),
 		desktoppr.New(),
 		claude.New(),
 	}
