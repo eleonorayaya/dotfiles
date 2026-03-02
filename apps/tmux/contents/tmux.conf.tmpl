@@ -1,0 +1,63 @@
+set -g default-terminal "tmux-256color"
+set -ag terminal-overrides ",xterm-256color:RGB"
+set -s extended-keys on
+set -as terminal-features 'xterm-256color:extkeys'
+bind-key -n S-Enter send-keys Escape "[13;2u"
+
+set -g mouse on
+set -g history-limit 10000
+set -g base-index 1
+setw -g pane-base-index 1
+set -g renumber-windows on
+set -g set-clipboard on
+
+set -g status-keys vi
+setw -g mode-keys vi
+
+set -sg escape-time 0
+set -g focus-events on
+
+# status bar
+set -g status-position bottom
+set -g status-style "bg={{.Surface}},fg={{.TextOnSurface}}"
+set -g status-left "#[bg={{.Primary}},fg={{.TextOnPrimary}},bold] #S #[default] "
+set -g status-left-length 30
+set -g status-right "#[fg={{.TextOnSurfaceMuted}}]%H:%M #[bg={{.SurfaceVariant}},fg={{.TextOnSurfaceVariant}}] #h "
+set -g status-right-length 50
+
+# window status
+setw -g window-status-format "#[fg={{.TextOnSurfaceMuted}}] #I:#W "
+setw -g window-status-current-format "#[bg={{.SurfaceHighlight}},fg={{.Primary}},bold] #I:#W "
+setw -g window-status-separator ""
+
+# pane borders
+set -g pane-border-style "fg={{.SurfaceBorder}}"
+set -g pane-active-border-style "fg={{.Primary}}"
+
+# message style
+set -g message-style "bg={{.SurfaceVariant}},fg={{.TextOnSurface}}"
+
+# window navigation
+unbind n
+unbind p
+bind h previous-window
+bind l next-window
+
+# pane splitting
+bind v split-window -h -c "#{pane_current_path}"
+bind s split-window -v -c "#{pane_current_path}"
+
+# new window in current path
+unbind c
+bind n new-window -c "#{pane_current_path}"
+
+# reload config
+bind r source-file ~/.config/tmux/tmux.conf \; display "Config reloaded"
+
+# plugins
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'christoomey/vim-tmux-navigator'
+set -g @plugin 'eleonorayaya/utena/plugins/utena-tmux'
+
+# TPM (keep at bottom)
+run '~/.config/tmux/plugins/tpm/tpm'
