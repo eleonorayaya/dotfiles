@@ -283,6 +283,16 @@ return {
           desc = "Files",
         },
         {
+          "<M-p>",
+          function()
+            Snacks.picker.files({
+              hidden = true,
+              ignored = false,
+            })
+          end,
+          desc = "Files",
+        },
+        {
           "<leader>fj",
           function()
             Snacks.picker.jumps({ layout = "ivy" })
