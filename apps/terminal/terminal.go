@@ -77,6 +77,9 @@ func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 
 func (a *App) Env() (*shizukuapp.EnvSetup, error) {
 	return &shizukuapp.EnvSetup{
+		PathDirs: []shizukuapp.PathDir{
+			{Path: "$HOME/.local/bin", Priority: 5},
+		},
 		InitScripts: []string{antigenInit, ohmyposhInit},
 		Aliases: []shizukuapp.Alias{
 			{Name: "c", Command: "clear"},

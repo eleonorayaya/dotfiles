@@ -58,13 +58,13 @@ func sync(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	shizukuShPath := path.Join(outDir, "shizuku.sh")
-	if err := shizukuapp.GenerateEnvFile(envSetups, shizukuShPath); err != nil {
-		return fmt.Errorf("failed to generate env file: %w", err)
+	envFileMap, err := shizukuapp.GenerateEnvFiles(envSetups, outDir)
+	if err != nil {
+		return fmt.Errorf("failed to generate env files: %w", err)
 	}
 
-	if err := shizukuapp.SyncAppFile("shizuku.sh", shizukuShPath, "~/.config/shizuku/"); err != nil {
-		return fmt.Errorf("failed to sync env file: %w", err)
+	if err := shizukuapp.SyncAppFiles(envFileMap, "~/.config/shizuku/"); err != nil {
+		return fmt.Errorf("failed to sync env files: %w", err)
 	}
 
 	return nil
