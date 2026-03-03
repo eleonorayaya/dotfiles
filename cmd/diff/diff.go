@@ -87,13 +87,13 @@ func runDiff(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	shizukuShPath := path.Join(outDir, "shizuku.sh")
-	if err := shizukuapp.GenerateEnvFile(envSetups, shizukuShPath); err != nil {
-		return fmt.Errorf("failed to generate env file: %w", err)
+	envFileMap, err := shizukuapp.GenerateEnvFiles(envSetups, outDir)
+	if err != nil {
+		return fmt.Errorf("failed to generate env files: %w", err)
 	}
 
 	envResult := &shizukuapp.GenerateResult{
-		FileMap: map[string]string{"shizuku.sh": shizukuShPath},
+		FileMap: envFileMap,
 		DestDir: "~/.config/shizuku/",
 	}
 	envChanged, err := shizukuapp.DiffAppFiles(envResult)
