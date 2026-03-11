@@ -1,0 +1,129 @@
+{
+  "document": {
+    "block_prefix": "\n",
+    "block_suffix": "\n",
+    "color": "{{ .Styles.Theme.Colors.TextOnSurface }}"
+  },
+  "block_quote": {
+    "indent": 1,
+    "indent_token": "│ ",
+    "color": "{{ .Styles.Theme.Colors.TextOnSurfaceMuted }}",
+    "prefix": " ",
+    "style_primitive": {
+      "color": "{{ .Styles.Theme.Colors.AccentLavender }}",
+      "italic": true
+    }
+  },
+  "paragraph": {
+    "block_suffix": "\n"
+  },
+  "list": {
+    "level_indent": 2
+  },
+  "heading": {
+    "block_suffix": "\n",
+    "color": "{{ .Styles.Theme.Colors.Primary }}",
+    "bold": true
+  },
+  "h1": {
+    "prefix": "# ",
+    "color": "{{ .Styles.Theme.Colors.Primary }}",
+    "bold": true,
+    "upper": true
+  },
+  "h2": {
+    "prefix": "## ",
+    "color": "{{ .Styles.Theme.Colors.Tertiary }}",
+    "bold": true
+  },
+  "h3": {
+    "prefix": "### ",
+    "color": "{{ .Styles.Theme.Colors.AccentPeach }}",
+    "bold": true
+  },
+  "h4": {
+    "prefix": "#### ",
+    "color": "{{ .Styles.Theme.Colors.AccentGold }}",
+    "bold": true
+  },
+  "h5": {
+    "prefix": "##### ",
+    "color": "{{ .Styles.Theme.Colors.AccentMint }}",
+    "bold": true
+  },
+  "h6": {
+    "prefix": "###### ",
+    "color": "{{ .Styles.Theme.Colors.AccentBlue }}",
+    "bold": true
+  },
+  "text": {},
+  "strikethrough": {
+    "crossed_out": true
+  },
+  "emph": {
+    "color": "{{ .Styles.Theme.Colors.AccentSalmon }}",
+    "italic": true
+  },
+  "strong": {
+    "color": "{{ .Styles.Theme.Colors.TextOnSurfaceEmphasis }}",
+    "bold": true
+  },
+  "hr": {
+    "color": "{{ .Styles.Theme.Colors.SurfaceBorder }}",
+    "format": "\n--------\n"
+  },
+  "item": {
+    "block_prefix": "• "
+  },
+  "enumeration": {
+    "block_prefix": ". "
+  },
+  "task": {
+    "ticked": "[✓] ",
+    "unticked": "[ ] "
+  },
+  "link": {
+    "color": "{{ .Styles.Theme.Colors.Link }}",
+    "underline": true
+  },
+  "link_text": {
+    "color": "{{ .Styles.Theme.Colors.Link }}",
+    "bold": true
+  },
+  "image": {
+    "color": "{{ .Styles.Theme.Colors.Link }}",
+    "underline": true
+  },
+  "image_text": {
+    "color": "{{ .Styles.Theme.Colors.Link }}",
+    "format": "Image: {{`{{.text}}`}} →"
+  },
+  "code": {
+    "color": "{{ .Styles.Theme.Colors.AccentPurple }}"
+  },
+  "code_block": {
+    "color": "{{ .Styles.Theme.Colors.TextOnSurface }}",
+    "background_color": "{{ .Styles.Theme.Colors.SurfaceVariant }}",
+    "margin": 2,
+    "chroma": {
+      "theme": "solarized-light"
+    }
+  },
+  "table": {
+    "center_separator": "┼",
+    "column_separator": "│",
+    "row_separator": "─",
+    "color": "{{ .Styles.Theme.Colors.TextOnSurfaceVariant }}"
+  },
+  "definition_list": {},
+  "definition_term": {
+    "block_suffix": "\n",
+    "color": "{{ .Styles.Theme.Colors.Primary }}",
+    "bold": true
+  },
+  "definition_description": {
+    "block_prefix": "\n"
+  },
+  "html_block": {},
+  "html_span": {}
+}

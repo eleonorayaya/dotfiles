@@ -7,6 +7,7 @@ import (
 	"github.com/eleonorayaya/shizuku/apps/desktoppr"
 	"github.com/eleonorayaya/shizuku/apps/fastfetch"
 	"github.com/eleonorayaya/shizuku/apps/git"
+	"github.com/eleonorayaya/shizuku/apps/glow"
 	"github.com/eleonorayaya/shizuku/apps/golang"
 	"github.com/eleonorayaya/shizuku/apps/jankyborders"
 	"github.com/eleonorayaya/shizuku/apps/kitty"
@@ -48,5 +49,6 @@ func GetApps() []shizukuapp.App {
 		tmux.New(),
 		desktoppr.New(),
 		claude.New(),
+		glow.New(),
 	}
 }
