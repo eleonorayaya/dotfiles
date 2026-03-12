@@ -45,7 +45,8 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 
 func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp.GenerateResult, error) {
 	data := map[string]any{
-		"Styles": config.Styles,
+		"Styles":          config.Styles,
+		"BackgroundAlpha": float64(config.Styles.WindowOpacity) / 100.0,
 	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("kitty", data, outDir)
