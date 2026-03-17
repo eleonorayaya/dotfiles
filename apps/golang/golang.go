@@ -2,6 +2,10 @@ package golang
 
 import (
 	"fmt"
+	"log/slog"
+	"os/exec"
+	"path"
+	"strings"
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
@@ -19,7 +23,7 @@ func (a *App) Name() string {
 }
 
 func (a *App) Enabled(config *shizukuconfig.Config) bool {
-	return config.GetAppConfigBool(a.Name(), "enabled", false)
+	return config.GetLanguageEnabled(shizukuconfig.LanguageGo)
 }
 
 func (a *App) Install(config *shizukuconfig.Config) error {
@@ -27,13 +31,33 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 		return fmt.Errorf("failed to install go-task: %w", err)
 	}
 
+	if !util.BinaryExists("gopls") {
+		slog.Debug("installing gopls via go install")
+
+		cmd := exec.Command("go", "install", "golang.org/x/tools/gopls@latest")
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("failed to install gopls: %w\nOutput: %s", err, string(output))
+		}
+
+		slog.Debug("gopls installed successfully")
+	}
+
 	return nil
 }
 
 func (a *App) Env() (*shizukuapp.EnvSetup, error) {
+	cmd := exec.Command("go", "env", "GOPATH")
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get GOPATH: %w", err)
+	}
+
+	gopath := strings.TrimSpace(string(output))
+
 	return &shizukuapp.EnvSetup{
 		PathDirs: []shizukuapp.PathDir{
-			{Path: "$HOME/go/bin", Priority: 20},
+			{Path: path.Join(gopath, "bin"), Priority: 20},
 		},
 	}, nil
 }
