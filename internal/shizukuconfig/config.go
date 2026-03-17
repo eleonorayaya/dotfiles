@@ -102,6 +102,14 @@ func (c *Config) GetAppConfigBool(appName string, configKey string, defaultValue
 	return boolValue
 }
 
+func (c *Config) GetLanguageEnabled(language Language) bool {
+	lang, ok := c.Languages[string(language)]
+	if !ok {
+		return false
+	}
+	return lang.Enabled
+}
+
 func (c *Config) save(configPath string) error {
 	yamlData, err := yaml.Marshal(c)
 	if err != nil {
