@@ -51,13 +51,19 @@ var desiredAllowedCommands = []string{
 	"Bash(cat:*)",
 	"Bash(wc:*)",
 	"Bash(xargs:*)",
-	"Bash(bash:*)",
 	"Bash(task:*)",
 	"Bash(git add:*)",
 	"Bash(git commit:*)",
 	"Bash(git --version:*)",
 	"Bash(brew --prefix:*)",
 	"Skill(task)",
+
+	"Bash(npx nx test:*)",
+	"Bash(npx nx sync:*)",
+	"Bash(gh run list:*)",
+	"Bash(gh run watch:*)",
+
+	"Bash(npm install)",
 }
 
 type App struct{}
@@ -171,6 +177,7 @@ func mergeSettings(outDir string, config *shizukuconfig.Config) (string, error) 
 		settings["env"] = env
 	}
 
+	settings["defaultMode"] = "plan"
 	settings["statusLine"] = desiredStatusLine
 
 	knownMarketplaces, _ := settings["extraKnownMarketplaces"].(map[string]any)
