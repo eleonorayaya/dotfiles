@@ -32,7 +32,7 @@ func (s *Styles) UnmarshalYAML(node *yaml.Node) error {
 
 var (
 	defaultThemeName     = "monade"
-	defaultWindowOpacity = 85
+	defaultWindowOpacity = 65
 )
 
 func createDefaultStyles() Styles {
