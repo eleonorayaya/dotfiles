@@ -150,22 +150,15 @@ func TestMergeStringAnyMap(t *testing.T) {
 }
 
 func TestConfigMergeWithDefaults(t *testing.T) {
+	defaults := newConfig()
+
 	t.Run("preserves existing theme", func(t *testing.T) {
-		customTheme, _ := loadThemeFromRegistry("monade")
-		defaultTheme, _ := loadThemeFromRegistry("monade")
+		customTheme, _ := loadThemeFromRegistry(defaultThemeName)
 		existing := &Config{
 			Styles: Styles{
 				ThemeName:     "custom-theme",
 				WindowOpacity: 85,
 				Theme:         customTheme,
-			},
-			Languages: make(LanguageConfigs),
-		}
-		defaults := &Config{
-			Styles: Styles{
-				ThemeName:     "monade",
-				WindowOpacity: 100,
-				Theme:         defaultTheme,
 			},
 			Languages: make(LanguageConfigs),
 		}
@@ -181,7 +174,6 @@ func TestConfigMergeWithDefaults(t *testing.T) {
 	})
 
 	t.Run("uses default theme when empty", func(t *testing.T) {
-		defaultTheme, _ := loadThemeFromRegistry("monade")
 		existing := &Config{
 			Styles: Styles{
 				ThemeName:     "",
@@ -189,19 +181,11 @@ func TestConfigMergeWithDefaults(t *testing.T) {
 			},
 			Languages: make(LanguageConfigs),
 		}
-		defaults := &Config{
-			Styles: Styles{
-				ThemeName:     "monade",
-				WindowOpacity: 100,
-				Theme:         defaultTheme,
-			},
-			Languages: make(LanguageConfigs),
-		}
 
 		existing.mergeWithDefaults(defaults)
 
-		if existing.Styles.ThemeName != "monade" {
-			t.Error("Expected default theme when existing is empty")
+		if existing.Styles.ThemeName != defaultThemeName {
+			t.Errorf("Expected default theme %q, got %q", defaultThemeName, existing.Styles.ThemeName)
 		}
 		if existing.Styles.WindowOpacity != 85 {
 			t.Error("Expected existing windowOpacity to be preserved")
@@ -221,12 +205,10 @@ languages:
 			t.Fatalf("Failed to unmarshal YAML: %v", err)
 		}
 
-		defaults := newConfig()
-
 		existing.mergeWithDefaults(defaults)
 
-		if existing.Styles.WindowOpacity != 100 {
-			t.Errorf("Expected windowOpacity to be added from defaults (100), got %d", existing.Styles.WindowOpacity)
+		if existing.Styles.WindowOpacity != defaultWindowOpacity {
+			t.Errorf("Expected default windowOpacity %d, got %d", defaultWindowOpacity, existing.Styles.WindowOpacity)
 		}
 		if !existing.Languages["rust"].Enabled {
 			t.Error("Expected Rust to remain enabled from existing config")
@@ -234,25 +216,10 @@ languages:
 	})
 
 	t.Run("merges languages", func(t *testing.T) {
-		theme, _ := loadThemeFromRegistry("monade")
 		existing := &Config{
-			Styles: Styles{
-				ThemeName:     "monade",
-				WindowOpacity: 100,
-				Theme:         theme,
-			},
+			Styles:    createDefaultStyles(),
 			Languages: LanguageConfigs{
 				"rust": {Enabled: true, Config: make(map[string]any)},
-			},
-		}
-		defaults := &Config{
-			Styles: Styles{
-				ThemeName:     "monade",
-				WindowOpacity: 100,
-				Theme:         theme,
-			},
-			Languages: LanguageConfigs{
-				"rust": {Enabled: false, Config: make(map[string]any)},
 			},
 		}
 
@@ -264,13 +231,8 @@ languages:
 	})
 
 	t.Run("merges apps", func(t *testing.T) {
-		theme, _ := loadThemeFromRegistry("monade")
 		existing := &Config{
-			Styles: Styles{
-				ThemeName:     "monade",
-				WindowOpacity: 100,
-				Theme:         theme,
-			},
+			Styles:    createDefaultStyles(),
 			Languages: make(LanguageConfigs),
 			Apps: map[string]any{
 				"nvim": map[string]any{
@@ -278,12 +240,8 @@ languages:
 				},
 			},
 		}
-		defaults := &Config{
-			Styles: Styles{
-				ThemeName:     "monade",
-				WindowOpacity: 100,
-				Theme:         theme,
-			},
+		appDefaults := &Config{
+			Styles:    createDefaultStyles(),
 			Languages: make(LanguageConfigs),
 			Apps: map[string]any{
 				"nvim": map[string]any{
@@ -296,7 +254,7 @@ languages:
 			},
 		}
 
-		existing.mergeWithDefaults(defaults)
+		existing.mergeWithDefaults(appDefaults)
 
 		nvimConfig := existing.Apps["nvim"].(map[string]any)
 		if nvimConfig["enabled"] != true {
@@ -311,50 +269,23 @@ languages:
 	})
 
 	t.Run("handles nil languages", func(t *testing.T) {
-		theme, _ := loadThemeFromRegistry("monade")
 		existing := &Config{
-			Styles: Styles{
-				ThemeName:     "monade",
-				WindowOpacity: 100,
-				Theme:         theme,
-			},
+			Styles:    createDefaultStyles(),
 			Languages: nil,
-		}
-		defaults := &Config{
-			Styles: Styles{
-				ThemeName:     "monade",
-				WindowOpacity: 100,
-				Theme:         theme,
-			},
-			Languages: LanguageConfigs{
-				"rust": {Enabled: false, Config: make(map[string]any)},
-			},
 		}
 
 		existing.mergeWithDefaults(defaults)
 
-		if existing.Languages["rust"].Enabled != false {
-			t.Error("Expected default languages to be used when existing is nil")
+		for lang := range defaults.Languages {
+			if _, exists := existing.Languages[lang]; !exists {
+				t.Errorf("Expected default language %q to be added", lang)
+			}
 		}
 	})
 
 	t.Run("handles nil apps", func(t *testing.T) {
-		theme, _ := loadThemeFromRegistry("monade")
-		existing := &Config{
-			Styles: Styles{
-				ThemeName:     "monade",
-				WindowOpacity: 100,
-				Theme:         theme,
-			},
-			Languages: make(LanguageConfigs),
-			Apps:      nil,
-		}
-		defaults := &Config{
-			Styles: Styles{
-				ThemeName:     "monade",
-				WindowOpacity: 100,
-				Theme:         theme,
-			},
+		appDefaults := &Config{
+			Styles:    createDefaultStyles(),
 			Languages: make(LanguageConfigs),
 			Apps: map[string]any{
 				"nvim": map[string]any{
@@ -362,8 +293,13 @@ languages:
 				},
 			},
 		}
+		existing := &Config{
+			Styles:    createDefaultStyles(),
+			Languages: make(LanguageConfigs),
+			Apps:      nil,
+		}
 
-		existing.mergeWithDefaults(defaults)
+		existing.mergeWithDefaults(appDefaults)
 
 		if existing.Apps["nvim"] == nil {
 			t.Error("Expected default apps to be used when existing is nil")

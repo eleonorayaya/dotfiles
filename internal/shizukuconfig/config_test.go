@@ -141,8 +141,8 @@ languages:
 		defaults := newConfig()
 		config.mergeWithDefaults(defaults)
 
-		if config.Styles.WindowOpacity != 100 {
-			t.Errorf("Expected default windowOpacity 100, got %d", config.Styles.WindowOpacity)
+		if config.Styles.WindowOpacity != defaultWindowOpacity {
+			t.Errorf("Expected default windowOpacity %d, got %d", defaultWindowOpacity, config.Styles.WindowOpacity)
 		}
 	})
 
@@ -216,16 +216,9 @@ func TestConfigValidate(t *testing.T) {
 	})
 
 	t.Run("rejects invalid language", func(t *testing.T) {
-		theme, _ := loadThemeFromRegistry("monade")
-		config := &Config{
-			Styles: Styles{
-				ThemeName:     "monade",
-				WindowOpacity: 100,
-				Theme:         theme,
-			},
-			Languages: LanguageConfigs{
-				"invalid-lang": {Enabled: true},
-			},
+		config := newConfig()
+		config.Languages = LanguageConfigs{
+			"invalid-lang": {Enabled: true},
 		}
 
 		if err := config.validate(); err == nil {

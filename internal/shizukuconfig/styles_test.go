@@ -9,12 +9,12 @@ import (
 func TestCreateDefaultStyles(t *testing.T) {
 	styles := createDefaultStyles()
 
-	if styles.ThemeName != "monade" {
-		t.Errorf("Expected default theme 'monade', got %q", styles.ThemeName)
+	if styles.ThemeName != defaultThemeName {
+		t.Errorf("Expected default theme %q, got %q", defaultThemeName, styles.ThemeName)
 	}
 
-	if styles.WindowOpacity != 100 {
-		t.Errorf("Expected default windowOpacity 100, got %d", styles.WindowOpacity)
+	if styles.WindowOpacity != defaultWindowOpacity {
+		t.Errorf("Expected default windowOpacity %d, got %d", defaultWindowOpacity, styles.WindowOpacity)
 	}
 
 	if styles.Theme == nil {
@@ -165,7 +165,7 @@ func TestMergeStyles(t *testing.T) {
 
 	t.Run("uses default for missing windowOpacity", func(t *testing.T) {
 		existing := Styles{
-			ThemeName:     "monade",
+			ThemeName:     defaultThemeName,
 			WindowOpacity: 0,
 			Theme:         defaultTheme,
 		}
@@ -173,8 +173,8 @@ func TestMergeStyles(t *testing.T) {
 
 		existing.merge(defaults)
 
-		if existing.WindowOpacity != 100 {
-			t.Errorf("Expected default windowOpacity 100, got %d", existing.WindowOpacity)
+		if existing.WindowOpacity != defaultWindowOpacity {
+			t.Errorf("Expected default windowOpacity %d, got %d", defaultWindowOpacity, existing.WindowOpacity)
 		}
 	})
 
@@ -187,8 +187,8 @@ func TestMergeStyles(t *testing.T) {
 
 		existing.merge(defaults)
 
-		if existing.ThemeName != "monade" {
-			t.Errorf("Expected default theme 'monade', got %q", existing.ThemeName)
+		if existing.ThemeName != defaultThemeName {
+			t.Errorf("Expected default theme %q, got %q", defaultThemeName, existing.ThemeName)
 		}
 		if existing.Theme == nil {
 			t.Error("Expected theme to be set from defaults")

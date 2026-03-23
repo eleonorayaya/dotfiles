@@ -31,8 +31,12 @@ setw -g window-status-current-format "#[bg={{.SurfaceHighlight}},fg={{.Primary}}
 setw -g window-status-separator ""
 
 # pane borders
-set -g pane-border-style "fg={{.SurfaceBorder}}"
-set -g pane-active-border-style "fg={{.Primary}}"
+set -g pane-border-style "fg={{.Surface}}"
+set -g pane-active-border-style "fg={{.SurfaceVariant}}"
+
+# dim inactive panes
+set -g window-style "bg=terminal"
+set -g window-active-style "bg={{.SurfaceVariant}}"
 
 # message style
 set -g message-style "bg={{.SurfaceVariant}},fg={{.TextOnSurface}}"
