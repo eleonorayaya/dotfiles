@@ -17,7 +17,14 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("failed to normalize config path: %w", err)
 	}
 
-	return newConfigFromPath(configPath)
+	config, err := newConfigFromPath(configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	config.mergeWithDefaults(newConfig())
+
+	return config, nil
 }
 
 func InitConfig() (bool, string, error) {

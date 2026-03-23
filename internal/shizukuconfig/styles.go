@@ -30,11 +30,16 @@ func (s *Styles) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
+var (
+	defaultThemeName     = "monade"
+	defaultWindowOpacity = 85
+)
+
 func createDefaultStyles() Styles {
-	theme, _ := loadThemeFromRegistry("monade")
+	theme, _ := loadThemeFromRegistry(defaultThemeName)
 	return Styles{
-		ThemeName:     "monade",
-		WindowOpacity: 100,
+		ThemeName:     defaultThemeName,
+		WindowOpacity: defaultWindowOpacity,
 		Theme:         theme,
 	}
 }
