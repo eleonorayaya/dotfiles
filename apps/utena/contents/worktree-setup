@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+
+MAIN_SETTINGS="${UTENA_WORKSPACE_PATH}/.claude/settings.local.json"
+WORKTREE_SETTINGS="${UTENA_WORKTREE_PATH}/.claude/settings.local.json"
+
+if [ ! -f "$MAIN_SETTINGS" ]; then
+    mkdir -p "$(dirname "$MAIN_SETTINGS")"
+    echo '{}' > "$MAIN_SETTINGS"
+fi
+
+if [ -L "$WORKTREE_SETTINGS" ]; then
+    exit 0
+fi
+
+mkdir -p "$(dirname "$WORKTREE_SETTINGS")"
+rm -f "$WORKTREE_SETTINGS"
+ln -s "$MAIN_SETTINGS" "$WORKTREE_SETTINGS"
