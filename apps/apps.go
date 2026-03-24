@@ -22,6 +22,7 @@ import (
 	"github.com/eleonorayaya/shizuku/apps/terminal"
 	"github.com/eleonorayaya/shizuku/apps/terraform"
 	"github.com/eleonorayaya/shizuku/apps/tmux"
+	"github.com/eleonorayaya/shizuku/apps/utena"
 	"github.com/eleonorayaya/shizuku/apps/zellij"
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 )
@@ -50,5 +51,6 @@ func GetApps() []shizukuapp.App {
 		desktoppr.New(),
 		claude.New(),
 		glow.New(),
+		utena.New(),
 	}
 }
