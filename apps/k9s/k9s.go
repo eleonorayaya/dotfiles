@@ -54,7 +54,7 @@ func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp
 
 	return &shizukuapp.GenerateResult{
 		FileMap: fileMap,
-		DestDir: "~/.config/k9s/",
+		DestDir: "~/Library/Application Support/k9s/",
 	}, nil
 }
 
