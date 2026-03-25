@@ -9,6 +9,7 @@ import (
 
 const (
 	ConfigFilePath = "~/.config/shizuku/shizuku.yml"
+	SourceDir      = "~/.local/src/shizuku"
 )
 
 func LoadConfig() (*Config, error) {
