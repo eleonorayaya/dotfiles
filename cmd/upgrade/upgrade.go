@@ -5,8 +5,6 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"strings"
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 	"github.com/eleonorayaya/shizuku/internal/util"
@@ -17,7 +15,7 @@ var branch string
 
 var UpgradeCommand = &cobra.Command{
 	Use:   "upgrade",
-	Short: "Pull latest changes, rebuild, install, and sync",
+	Short: "Pull latest changes and rebuild the shizuku binary",
 	RunE:  upgrade,
 }
 
@@ -51,31 +49,9 @@ func upgrade(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to build and install: %w", err)
 	}
 
-	shizukuBin, err := shizukuBinPath()
-	if err != nil {
-		return fmt.Errorf("failed to resolve shizuku binary path: %w", err)
-	}
-
-	slog.Info("running shizuku install")
-	if err := run(repoDir, shizukuBin, "install"); err != nil {
-		return fmt.Errorf("failed to run shizuku install: %w", err)
-	}
-
-	slog.Info("running shizuku sync")
-	if err := run(repoDir, shizukuBin, "sync"); err != nil {
-		return fmt.Errorf("failed to run shizuku sync: %w", err)
-	}
+	slog.Info("upgrade complete, run 'shizuku install' and 'shizuku sync' to apply changes")
 
 	return nil
-}
-
-func shizukuBinPath() (string, error) {
-	out, err := exec.Command("go", "env", "GOPATH").Output()
-	if err != nil {
-		return "", fmt.Errorf("failed to get GOPATH: %w", err)
-	}
-	gopath := strings.TrimSpace(string(out))
-	return filepath.Join(gopath, "bin", "shizuku"), nil
 }
 
 func run(dir string, name string, args ...string) error {
