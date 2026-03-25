@@ -28,13 +28,15 @@ var rootCmd = &cobra.Command{
 			slog.SetLogLoggerLevel(slog.LevelDebug)
 		}
 
-		sourceDir, err := util.NormalizeFilePath(shizukuconfig.SourceDir)
-		if err != nil {
-			return fmt.Errorf("failed to resolve source directory: %w", err)
-		}
+		if _, err := os.Stat("apps"); os.IsNotExist(err) {
+			sourceDir, err := util.NormalizeFilePath(shizukuconfig.SourceDir)
+			if err != nil {
+				return fmt.Errorf("failed to resolve source directory: %w", err)
+			}
 
-		if err := os.Chdir(sourceDir); err != nil {
-			return fmt.Errorf("failed to change to source directory %s: %w", sourceDir, err)
+			if err := os.Chdir(sourceDir); err != nil {
+				return fmt.Errorf("failed to change to source directory %s: %w", sourceDir, err)
+			}
 		}
 
 		return nil
