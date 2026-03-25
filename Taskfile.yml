@@ -7,6 +7,8 @@ tasks:
   build:
     sources:
       - "{{.GO_SOURCES}}"
+    generates:
+      - out/shizuku
     cmds:
       - go build -o out/shizuku cmd/main.go
   configmax:
@@ -32,5 +34,5 @@ tasks:
     deps:
       - build
     cmds:
-      - mv out/shizuku "$(go env GOPATH)/bin/"
+      - cp out/shizuku "$(go env GOPATH)/bin/"
 
