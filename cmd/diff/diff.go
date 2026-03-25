@@ -27,6 +27,9 @@ func init() {
 }
 
 func runDiff(cmd *cobra.Command, args []string) error {
+	cwd, _ := os.Getwd()
+	slog.Debug("using source directory", "cwd", cwd)
+
 	appConfig, err := shizukuconfig.LoadConfig()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)

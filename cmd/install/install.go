@@ -3,6 +3,7 @@ package install
 import (
 	"fmt"
 	"log/slog"
+	"os"
 
 	"github.com/eleonorayaya/shizuku/apps"
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
@@ -17,6 +18,9 @@ var InstallCommand = &cobra.Command{
 }
 
 func install(cmd *cobra.Command, args []string) error {
+	cwd, _ := os.Getwd()
+	slog.Debug("using source directory", "cwd", cwd)
+
 	appConfig, err := shizukuconfig.LoadConfig()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
