@@ -3,6 +3,7 @@ package apps
 import (
 	"github.com/eleonorayaya/shizuku/apps/aerospace"
 	"github.com/eleonorayaya/shizuku/apps/bat"
+	"github.com/eleonorayaya/shizuku/apps/buildkite"
 	"github.com/eleonorayaya/shizuku/apps/claude"
 	"github.com/eleonorayaya/shizuku/apps/desktoppr"
 	"github.com/eleonorayaya/shizuku/apps/fastfetch"
@@ -54,5 +55,6 @@ func GetApps() []shizukuapp.App {
 		glow.New(),
 		utena.New(),
 		k9s.New(),
+		buildkite.New(),
 	}
 }
