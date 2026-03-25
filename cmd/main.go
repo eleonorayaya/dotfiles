@@ -10,6 +10,7 @@ import (
 	installcmd "github.com/eleonorayaya/shizuku/cmd/install"
 	listcmd "github.com/eleonorayaya/shizuku/cmd/list"
 	"github.com/eleonorayaya/shizuku/cmd/sync"
+	upgradecmd "github.com/eleonorayaya/shizuku/cmd/upgrade"
 	"github.com/spf13/cobra"
 )
 
@@ -34,6 +35,7 @@ func init() {
 	rootCmd.AddCommand(installcmd.InstallCommand)
 	rootCmd.AddCommand(listcmd.ListCommand)
 	rootCmd.AddCommand(sync.SyncCommand)
+	rootCmd.AddCommand(upgradecmd.UpgradeCommand)
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 }
 
