@@ -10,6 +10,7 @@ import (
 	"github.com/eleonorayaya/shizuku/apps/glow"
 	"github.com/eleonorayaya/shizuku/apps/golang"
 	"github.com/eleonorayaya/shizuku/apps/jankyborders"
+	"github.com/eleonorayaya/shizuku/apps/k9s"
 	"github.com/eleonorayaya/shizuku/apps/kitty"
 	"github.com/eleonorayaya/shizuku/apps/lsd"
 	"github.com/eleonorayaya/shizuku/apps/nvim"
@@ -52,5 +53,6 @@ func GetApps() []shizukuapp.App {
 		claude.New(),
 		glow.New(),
 		utena.New(),
+		k9s.New(),
 	}
 }
