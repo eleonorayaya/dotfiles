@@ -11,15 +11,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	repoURL  = "https://github.com/eleonorayaya/dotfiles"
-	cloneDir = ".local/src/shizuku"
-)
+const cloneDir = ".local/src/shizuku"
+
+var branch string
 
 var UpgradeCommand = &cobra.Command{
 	Use:   "upgrade",
 	Short: "Pull latest changes, rebuild, install, and sync",
 	RunE:  upgrade,
+}
+
+func init() {
+	UpgradeCommand.Flags().StringVarP(&branch, "branch", "b", "main", "Branch to pull from")
 }
 
 func upgrade(cmd *cobra.Command, args []string) error {
@@ -31,18 +34,18 @@ func upgrade(cmd *cobra.Command, args []string) error {
 	repoDir := filepath.Join(homeDir, cloneDir)
 
 	if _, err := os.Stat(repoDir); os.IsNotExist(err) {
-		slog.Info("cloning shizuku repo")
-		if err := os.MkdirAll(filepath.Dir(repoDir), 0755); err != nil {
-			return fmt.Errorf("failed to create parent directory: %w", err)
-		}
-		if err := run("", "git", "clone", repoURL, repoDir); err != nil {
-			return fmt.Errorf("failed to clone repo: %w", err)
-		}
-	} else {
-		slog.Info("pulling latest changes")
-		if err := run(repoDir, "git", "pull", "origin", "main"); err != nil {
-			return fmt.Errorf("failed to pull latest changes: %w", err)
-		}
+		return fmt.Errorf("shizuku repo not found at %s, run 'shizuku install' first", repoDir)
+	}
+
+	slog.Info("pulling latest changes", "branch", branch)
+	if err := run(repoDir, "git", "fetch", "origin", branch); err != nil {
+		return fmt.Errorf("failed to fetch: %w", err)
+	}
+	if err := run(repoDir, "git", "checkout", branch); err != nil {
+		return fmt.Errorf("failed to checkout branch: %w", err)
+	}
+	if err := run(repoDir, "git", "pull", "origin", branch); err != nil {
+		return fmt.Errorf("failed to pull latest changes: %w", err)
 	}
 
 	slog.Info("building and installing shizuku")
