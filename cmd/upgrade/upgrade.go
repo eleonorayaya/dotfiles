@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
+	"github.com/eleonorayaya/shizuku/internal/util"
 	"github.com/spf13/cobra"
 )
-
-const cloneDir = ".local/src/shizuku"
 
 var branch string
 
@@ -26,12 +26,10 @@ func init() {
 }
 
 func upgrade(cmd *cobra.Command, args []string) error {
-	homeDir, err := os.UserHomeDir()
+	repoDir, err := util.NormalizeFilePath(shizukuconfig.SourceDir)
 	if err != nil {
-		return fmt.Errorf("failed to get home directory: %w", err)
+		return fmt.Errorf("failed to resolve source directory: %w", err)
 	}
-
-	repoDir := filepath.Join(homeDir, cloneDir)
 
 	if _, err := os.Stat(repoDir); os.IsNotExist(err) {
 		return fmt.Errorf("shizuku repo not found at %s, run 'shizuku install' first", repoDir)

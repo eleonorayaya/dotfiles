@@ -11,6 +11,8 @@ import (
 	listcmd "github.com/eleonorayaya/shizuku/cmd/list"
 	"github.com/eleonorayaya/shizuku/cmd/sync"
 	upgradecmd "github.com/eleonorayaya/shizuku/cmd/upgrade"
+	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
+	"github.com/eleonorayaya/shizuku/internal/util"
 	"github.com/spf13/cobra"
 )
 
@@ -21,10 +23,21 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "shizuku",
 	Short: "",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if verbose {
 			slog.SetLogLoggerLevel(slog.LevelDebug)
 		}
+
+		sourceDir, err := util.NormalizeFilePath(shizukuconfig.SourceDir)
+		if err != nil {
+			return fmt.Errorf("failed to resolve source directory: %w", err)
+		}
+
+		if err := os.Chdir(sourceDir); err != nil {
+			return fmt.Errorf("failed to change to source directory %s: %w", sourceDir, err)
+		}
+
+		return nil
 	},
 	Long: ``,
 }

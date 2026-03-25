@@ -217,7 +217,7 @@ languages:
 
 	t.Run("merges languages", func(t *testing.T) {
 		existing := &Config{
-			Styles:    createDefaultStyles(),
+			Styles: createDefaultStyles(),
 			Languages: LanguageConfigs{
 				"rust": {Enabled: true, Config: make(map[string]any)},
 			},
