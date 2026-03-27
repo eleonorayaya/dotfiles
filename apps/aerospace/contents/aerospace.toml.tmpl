@@ -13,12 +13,12 @@ exec-on-workspace-change = [
 ]
 
 [gaps]
-inner.horizontal = 16
-inner.vertical = 16
-outer.left = 64
-outer.bottom = 128
-outer.top = 64
-outer.right = 64
+inner.horizontal = {{ .Gaps.InnerHorizontal }}
+inner.vertical = {{ .Gaps.InnerVertical }}
+outer.left = {{ .Gaps.OuterLeft }}
+outer.bottom = {{ .Gaps.OuterBottom }}
+outer.top = {{ .Gaps.OuterTop }}
+outer.right = {{ .Gaps.OuterRight }}
 
 
 [mode.main.binding]
