@@ -35,7 +35,9 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 }
 
 func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp.GenerateResult, error) {
-	data := map[string]any{}
+	data := map[string]any{
+		"Laptop": config.GetAppConfigBool(a.Name(), "laptop", false),
+	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("aerospace", data, outDir)
 	if err != nil {

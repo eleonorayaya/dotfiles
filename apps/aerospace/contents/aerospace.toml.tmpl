@@ -13,12 +13,21 @@ exec-on-workspace-change = [
 ]
 
 [gaps]
+{{- if .Laptop }}
+inner.horizontal = 8
+inner.vertical = 8
+outer.left = 8
+outer.bottom = 8
+outer.top = 8
+outer.right = 8
+{{- else }}
 inner.horizontal = 16
 inner.vertical = 16
 outer.left = 64
 outer.bottom = 128
 outer.top = 64
 outer.right = 64
+{{- end }}
 
 
 [mode.main.binding]
