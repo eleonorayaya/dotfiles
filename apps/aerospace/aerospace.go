@@ -35,8 +35,11 @@ func (a *App) Install(config *shizukuconfig.Config) error {
 }
 
 func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp.GenerateResult, error) {
+	laptop := config.GetAppConfigBool(a.Name(), "laptop", false)
+	gaps := shizukuconfig.DefaultGapsForLaptop(laptop)
+
 	data := map[string]any{
-		"Laptop": config.GetAppConfigBool(a.Name(), "laptop", false),
+		"Gaps": gaps,
 	}
 
 	fileMap, err := shizukuapp.GenerateAppFiles("aerospace", data, outDir)

@@ -6,9 +6,19 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type Gaps struct {
+	InnerHorizontal int `yaml:"innerHorizontal"`
+	InnerVertical   int `yaml:"innerVertical"`
+	OuterLeft       int `yaml:"outerLeft"`
+	OuterBottom     int `yaml:"outerBottom"`
+	OuterTop        int `yaml:"outerTop"`
+	OuterRight      int `yaml:"outerRight"`
+}
+
 type Styles struct {
 	ThemeName     string `yaml:"theme"`
 	WindowOpacity int    `yaml:"windowOpacity"`
+	Gaps          Gaps   `yaml:"gaps"`
 	Theme         *Theme `yaml:"-"`
 }
 
@@ -33,6 +43,22 @@ func (s *Styles) UnmarshalYAML(node *yaml.Node) error {
 var (
 	defaultThemeName     = "monade"
 	defaultWindowOpacity = 85
+	defaultGapsDesktop   = Gaps{
+		InnerHorizontal: 16,
+		InnerVertical:   16,
+		OuterLeft:       64,
+		OuterBottom:     128,
+		OuterTop:        64,
+		OuterRight:      64,
+	}
+	defaultGapsLaptop = Gaps{
+		InnerHorizontal: 8,
+		InnerVertical:   8,
+		OuterLeft:       8,
+		OuterBottom:     8,
+		OuterTop:        8,
+		OuterRight:      8,
+	}
 )
 
 func createDefaultStyles() Styles {
@@ -40,8 +66,16 @@ func createDefaultStyles() Styles {
 	return Styles{
 		ThemeName:     defaultThemeName,
 		WindowOpacity: defaultWindowOpacity,
+		Gaps:          defaultGapsDesktop,
 		Theme:         theme,
 	}
+}
+
+func DefaultGapsForLaptop(laptop bool) Gaps {
+	if laptop {
+		return defaultGapsLaptop
+	}
+	return defaultGapsDesktop
 }
 
 func (s *Styles) validate() error {
@@ -68,5 +102,9 @@ func (s *Styles) merge(defaults Styles) {
 
 	if s.WindowOpacity == 0 {
 		s.WindowOpacity = defaults.WindowOpacity
+	}
+
+	if s.Gaps == (Gaps{}) {
+		s.Gaps = defaults.Gaps
 	}
 }
