@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig/themes/monade"
+	monade_dark "github.com/eleonorayaya/shizuku/internal/shizukuconfig/themes/monade_dark"
 )
 
 type ThemeProvider interface {
@@ -13,7 +14,8 @@ type ThemeProvider interface {
 }
 
 var providers = map[string]ThemeProvider{
-	"monade": monade.Provider,
+	"monade":      monade.Provider,
+	"monade-dark": monade_dark.Provider,
 }
 
 func loadThemeFromRegistry(themeName string) (*Theme, error) {
