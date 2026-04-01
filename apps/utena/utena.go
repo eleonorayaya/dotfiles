@@ -80,7 +80,27 @@ func updateClaudePlugin() error {
 }
 
 func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp.GenerateResult, error) {
-	fileMap, err := shizukuapp.GenerateAppFiles("utena", nil, outDir)
+	colors := config.Styles.Theme.Colors
+	data := map[string]any{
+		"Primary":               colors.Primary,
+		"PrimaryVariant":        colors.PrimaryVariant,
+		"Secondary":             colors.Secondary,
+		"Tertiary":              colors.Tertiary,
+		"SurfaceVariant":        colors.SurfaceVariant,
+		"SurfaceHighlight":      colors.SurfaceHighlight,
+		"Selection":             colors.Selection,
+		"TextOnSurface":         colors.TextOnSurface,
+		"TextOnSurfaceEmphasis": colors.TextOnSurfaceEmphasis,
+		"TextOnSurfaceMuted":    colors.TextOnSurfaceMuted,
+		"TextOnPrimary":         colors.TextOnPrimary,
+		"AccentBlue":            colors.AccentBlue,
+		"AccentLavender":        colors.AccentLavender,
+		"AccentMint":            colors.AccentMint,
+		"AccentGold":            colors.AccentGold,
+		"Error":                 colors.Error,
+	}
+
+	fileMap, err := shizukuapp.GenerateAppFiles("utena", data, outDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate utena files: %w", err)
 	}
