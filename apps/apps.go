@@ -26,6 +26,7 @@ import (
 	"github.com/eleonorayaya/shizuku/apps/tmux"
 	"github.com/eleonorayaya/shizuku/apps/utena"
 	"github.com/eleonorayaya/shizuku/apps/zellij"
+	"github.com/eleonorayaya/shizuku/apps/zig"
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 )
 
@@ -56,5 +57,6 @@ func GetApps() []shizukuapp.App {
 		utena.New(),
 		k9s.New(),
 		buildkite.New(),
+		zig.New(),
 	}
 }
