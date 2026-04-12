@@ -13,6 +13,7 @@ const (
 	LanguageLua        Language = "lua"
 	LanguageRust       Language = "rust"
 	LanguageTypescript Language = "typescript"
+	LanguageZig        Language = "zig"
 )
 
 var languages []Language = []Language{
@@ -20,6 +21,7 @@ var languages []Language = []Language{
 	LanguageLua,
 	LanguageRust,
 	LanguageTypescript,
+	LanguageZig,
 }
 
 type LanguageConfig struct {
