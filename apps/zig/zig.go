@@ -23,25 +23,13 @@ func (a *App) Enabled(config *shizukuconfig.Config) bool {
 }
 
 func (a *App) Install(config *shizukuconfig.Config) error {
-	if err := util.AddTap("tristanisham/zvm"); err != nil {
-		return fmt.Errorf("failed to add zvm tap: %w", err)
-	}
-
-	if err := util.InstallBrewPackage("zvm", false); err != nil {
-		return fmt.Errorf("failed to install zvm: %w", err)
+	if err := util.InstallBrewPackage("zig", false); err != nil {
+		return fmt.Errorf("failed to install zig: %w", err)
 	}
 
 	return nil
 }
 
 func (a *App) Env() (*shizukuapp.EnvSetup, error) {
-	return &shizukuapp.EnvSetup{
-		Variables: []shizukuapp.EnvVar{
-			{Key: "ZVM_INSTALL", Value: "$HOME/.zvm/self"},
-		},
-		PathDirs: []shizukuapp.PathDir{
-			{Path: "$HOME/.zvm/bin", Priority: 20},
-			{Path: "$HOME/.zvm/self", Priority: 20},
-		},
-	}, nil
+	return &shizukuapp.EnvSetup{}, nil
 }
