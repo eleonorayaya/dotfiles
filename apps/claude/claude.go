@@ -51,19 +51,42 @@ var desiredAllowedCommands = []string{
 	"Bash(cat:*)",
 	"Bash(wc:*)",
 	"Bash(xargs:*)",
-	"Bash(task:*)",
+	"Bash(echo:*)",
+
+	"Bash(brew --prefix:*)",
+
+	"Bash(npm install)",
+	"Bash(npx nx test:*)",
+	"Bash(npx nx sync:*)",
+
+	"Write(/tmp/*)",
+
 	"Bash(git add:*)",
 	"Bash(git commit:*)",
 	"Bash(git --version:*)",
-	"Bash(brew --prefix:*)",
-	"Skill(task)",
+	"Bash(git status:*)",
+	"Bash(git diff:*)",
+	"Bash(git log:*)",
+	"Bash(git fetch:*)",
+	"Bash(git push:*)",
+	"Bash(git rebase:*)",
+	"Bash(git stash:*)",
+	"Bash(git grep:*)",
 
-	"Bash(npx nx test:*)",
-	"Bash(npx nx sync:*)",
+	"Bash(gh pr view:*)",
+	"Bash(gh pr list:*)",
+	"Bash(gh pr checks:*)",
+	"Bash(gh run view:*)",
 	"Bash(gh run list:*)",
 	"Bash(gh run watch:*)",
 
-	"Bash(npm install)",
+	"Bash(go build:*)",
+	"Bash(go vet:*)",
+	"Bash(go mod tidy:*)",
+	"Skill(task)",
+	"Bash(task:*)",
+
+	"mcp__ide__getDiagnostics",
 }
 
 type App struct{}
