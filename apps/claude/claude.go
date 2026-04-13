@@ -59,8 +59,8 @@ var desiredAllowedCommands = []string{
 	"Bash(npx nx test:*)",
 	"Bash(npx nx sync:*)",
 
-	"Write(/tmp/*)",
-
+	"Edit(/tmp/**)",
+	"Write(/tmp/**)",
 	"Bash(git add:*)",
 	"Bash(git commit:*)",
 	"Bash(git --version:*)",
