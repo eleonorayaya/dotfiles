@@ -34,7 +34,8 @@ var languagePlugins = map[shizukuconfig.Language][]string{
 }
 
 var desiredEnv = map[string]string{
-	"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+	"CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
+	"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS":  "1",
 }
 
 var desiredStatusLine = map[string]any{
