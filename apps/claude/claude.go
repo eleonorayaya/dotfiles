@@ -44,6 +44,13 @@ var desiredStatusLine = map[string]any{
 	"padding": 0,
 }
 
+var desiredSandbox = map[string]any{
+	"enabled": true,
+	"filesystem": map[string]any{
+		"allowWrite": []any{"~/Library/Caches/"},
+	},
+}
+
 var desiredAllowedCommands = []string{
 	"Bash(grep:*)",
 	"Bash(find:*)",
@@ -60,8 +67,8 @@ var desiredAllowedCommands = []string{
 	"Bash(npx nx test:*)",
 	"Bash(npx nx sync:*)",
 
-	"Edit(/tmp/**)",
-	"Write(/tmp/**)",
+	"Edit(//tmp/**)",
+	"Write(//tmp/**)",
 	"Bash(git add:*)",
 	"Bash(git commit:*)",
 	"Bash(git --version:*)",
@@ -203,6 +210,7 @@ func mergeSettings(outDir string, config *shizukuconfig.Config) (string, error) 
 
 	settings["defaultMode"] = "plan"
 	settings["statusLine"] = desiredStatusLine
+	settings["sandbox"] = desiredSandbox
 
 	knownMarketplaces, _ := settings["extraKnownMarketplaces"].(map[string]any)
 	if knownMarketplaces == nil {
