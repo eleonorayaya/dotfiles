@@ -29,6 +29,7 @@ var alwaysOnPlugins = []string{
 var languagePlugins = map[shizukuconfig.Language][]string{
 	shizukuconfig.LanguageGo:         {"gopls-lsp@claude-plugins-official", "charm-dev@charm-dev-skills"},
 	shizukuconfig.LanguageLua:        {"lua-lsp@claude-plugins-official"},
+	shizukuconfig.LanguageRuby:       {"ruby-lsp@claude-plugins-official"},
 	shizukuconfig.LanguageRust:       {"rust-analyzer-lsp@claude-plugins-official"},
 	shizukuconfig.LanguageTypescript: {"typescript-lsp@claude-plugins-official"},
 }
@@ -44,10 +45,100 @@ var desiredStatusLine = map[string]any{
 	"padding": 0,
 }
 
-var desiredSandbox = map[string]any{
-	"enabled": true,
-	"filesystem": map[string]any{
-		"allowWrite": []any{"~/Library/Caches/"},
+var desiredSandboxAllowedHosts = []string{
+	"api.anthropic.com",
+	"code.claude.com",
+	"api.github.com",
+	"docs.github.com",
+	"github.com",
+	"raw.githubusercontent.com",
+	"formulae.brew.sh",
+	"api.buildkite.com",
+	"buildkite.com",
+	"mise.jdx.dev",
+	"mise-versions.jdx.dev",
+	"hk.jdx.dev",
+}
+
+var languageSandboxAllowedHosts = map[shizukuconfig.Language][]string{
+	shizukuconfig.LanguageTypescript: {"registry.npmjs.org"},
+	shizukuconfig.LanguageRust:       {"index.crates.io", "static.crates.io", "static.rust-lang.org", "crates.io", "docs.rs"},
+}
+
+var desiredSandboxAllowWrite = []string{
+	"/dev/ptmx",
+	"/dev/ttys*",
+	"~/.claude/plugins/cache",
+
+	"~/.cache/mise",
+	"~/.config/mise",
+	"~/.local/share/mise",
+	"~/.local/state/mise",
+	"~/Library/Caches/mise",
+
+	"~/.docker",
+	"~/.colima",
+	"~/.config/gh",
+	"~/.cache/gh",
+	"~/.local/share/gh",
+	"~/.local/state/gh",
+	"~/.cache/pre-commit",
+	"~/.cache/nvim/",
+	"~/.task",
+	"~/Library/Caches/dotslash",
+}
+
+var languageSandboxAllowWrite = map[shizukuconfig.Language][]string{
+	shizukuconfig.LanguageRuby: {
+		"~/.bundle",
+		"~/.gem",
+		"~/.rbenv",
+		"~/.cache/bundler",
+		"~/.cache/rubygems",
+		"~/Library/Caches/bundle",
+	},
+	shizukuconfig.LanguageGo: {
+		"~/.cache/go-build",
+		"~/.config/go",
+		"~/.local/share/go",
+		"~/go",
+		"~/.cache/golangci-lint",
+		"~/Library/Caches/go-build",
+		"~/Library/Caches/golangci-lint",
+	},
+	shizukuconfig.LanguageRust: {
+		"~/.cargo",
+		"~/.rustup",
+		"~/Library/Caches/cargo",
+	},
+	shizukuconfig.LanguageTypescript: {
+		"~/.npm",
+		"~/.node-gyp",
+		"~/.cache/node-gyp",
+		"~/.cache/npm",
+		"~/.cache/node",
+		"~/.cache/yarn",
+		"~/.cache/node/corepack",
+		"~/.config/npm",
+		"~/.config/configstore",
+		"~/.config/yarn",
+		"~/.config/pnpm",
+		"~/.pnpm-state",
+		"~/.pnpm-store",
+		"~/.yarn",
+		"~/.yarnrc",
+		"~/.yarnrc.yml",
+		"~/.local/share/pnpm",
+		"~/.local/state/pnpm",
+		"~/Library/Caches/npm",
+		"~/Library/Caches/Yarn",
+		"~/Library/Caches/node/corepack",
+		"~/Library/Caches/pnpm",
+		"~/Library/Preferences/pnpm",
+		"~/Library/pnpm",
+		"~/Library/Caches/ms-playwright",
+		"~/Library/Caches/Cypress",
+		"~/.cache/puppeteer",
 	},
 }
 
@@ -161,6 +252,28 @@ func getPlugins(config *shizukuconfig.Config) []string {
 	return plugins
 }
 
+func getSandboxAllowWrite(config *shizukuconfig.Config) []string {
+	paths := make([]string, len(desiredSandboxAllowWrite))
+	copy(paths, desiredSandboxAllowWrite)
+	for lang, langPaths := range languageSandboxAllowWrite {
+		if config.Languages[string(lang)].Enabled {
+			paths = append(paths, langPaths...)
+		}
+	}
+	return paths
+}
+
+func getSandboxAllowedHosts(config *shizukuconfig.Config) []string {
+	hosts := make([]string, len(desiredSandboxAllowedHosts))
+	copy(hosts, desiredSandboxAllowedHosts)
+	for lang, langHosts := range languageSandboxAllowedHosts {
+		if config.Languages[string(lang)].Enabled {
+			hosts = append(hosts, langHosts...)
+		}
+	}
+	return hosts
+}
+
 func mergeSettings(outDir string, config *shizukuconfig.Config) (string, error) {
 	settings, err := util.ReadJSONMap("~/.claude/settings.json")
 	if err != nil {
@@ -210,7 +323,6 @@ func mergeSettings(outDir string, config *shizukuconfig.Config) (string, error) 
 
 	settings["defaultMode"] = "plan"
 	settings["statusLine"] = desiredStatusLine
-	settings["sandbox"] = desiredSandbox
 
 	knownMarketplaces, _ := settings["extraKnownMarketplaces"].(map[string]any)
 	if knownMarketplaces == nil {
@@ -232,6 +344,56 @@ func mergeSettings(outDir string, config *shizukuconfig.Config) (string, error) 
 		}
 	}
 	settings["extraKnownMarketplaces"] = knownMarketplaces
+
+	sandbox, _ := settings["sandbox"].(map[string]any)
+	if sandbox == nil {
+		sandbox = map[string]any{}
+	}
+	sandbox["enabled"] = true
+	sandbox["autoAllowBashIfSandboxed"] = true
+	sandbox["enableWeakerNetworkIsolation"] = true
+
+	network, _ := sandbox["network"].(map[string]any)
+	if network == nil {
+		network = map[string]any{}
+	}
+	network["allowAllUnixSockets"] = true
+	network["allowLocalBinding"] = true
+
+	allowedHostsRaw, _ := network["allowedHosts"].([]any)
+	existingHosts := map[string]bool{}
+	for _, entry := range allowedHostsRaw {
+		if s, ok := entry.(string); ok {
+			existingHosts[s] = true
+		}
+	}
+	for _, host := range getSandboxAllowedHosts(config) {
+		if !existingHosts[host] {
+			allowedHostsRaw = append(allowedHostsRaw, host)
+		}
+	}
+	network["allowedHosts"] = allowedHostsRaw
+	sandbox["network"] = network
+
+	filesystem, _ := sandbox["filesystem"].(map[string]any)
+	if filesystem == nil {
+		filesystem = map[string]any{}
+	}
+	allowWriteRaw, _ := filesystem["allowWrite"].([]any)
+	existingPaths := map[string]bool{}
+	for _, entry := range allowWriteRaw {
+		if s, ok := entry.(string); ok {
+			existingPaths[s] = true
+		}
+	}
+	for _, path := range getSandboxAllowWrite(config) {
+		if !existingPaths[path] {
+			allowWriteRaw = append(allowWriteRaw, path)
+		}
+	}
+	filesystem["allowWrite"] = allowWriteRaw
+	sandbox["filesystem"] = filesystem
+	settings["sandbox"] = sandbox
 
 	outPath := filepath.Join(outDir, "claude", "settings.json")
 	if err := util.WriteJSONMap(outPath, settings); err != nil {
