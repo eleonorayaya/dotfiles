@@ -15,11 +15,12 @@ type marketplaceSource struct {
 }
 
 var desiredMarketplaces = map[string]marketplaceSource{
-	"claude-plugins-official":  {repo: "anthropics/claude-plugins-official"},
-	"superpowers-marketplace":  {repo: "obra/superpowers-marketplace"},
-	"charm-dev-skills":         {repo: "williavs/charm-dev-skill-marketplace"},
-	"eleonorayaya-claude-code": {repo: "eleonorayaya/claude-plugins"},
-	"utena":                    {repo: "eleonorayaya/utena"},
+	"claude-plugins-official":   {repo: "anthropics/claude-plugins-official"},
+	"superpowers-marketplace":   {repo: "obra/superpowers-marketplace"},
+	"charm-dev-skills":          {repo: "williavs/charm-dev-skill-marketplace"},
+	"claude-code-notion-plugin": {repo: "makenotion/claude-code-notion-plugin"},
+	"eleonorayaya-claude-code":  {repo: "eleonorayaya/claude-plugins"},
+	"utena":                     {repo: "eleonorayaya/utena"},
 }
 
 var alwaysOnPlugins = []string{
