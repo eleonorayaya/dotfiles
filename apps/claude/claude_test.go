@@ -69,6 +69,7 @@ func TestGetPluginsWithAllLanguagesEnabled(t *testing.T) {
 		Languages: shizukuconfig.LanguageConfigs{
 			"go":         {Enabled: true},
 			"lua":        {Enabled: true},
+			"ruby":       {Enabled: true},
 			"rust":       {Enabled: true},
 			"typescript": {Enabled: true},
 		},
