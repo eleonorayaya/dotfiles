@@ -13,6 +13,7 @@ const (
 	LanguageLua        Language = "lua"
 	LanguageRuby       Language = "ruby"
 	LanguageRust       Language = "rust"
+	LanguageTerraform  Language = "terraform"
 	LanguageTypescript Language = "typescript"
 	LanguageZig        Language = "zig"
 )
@@ -22,6 +23,7 @@ var languages []Language = []Language{
 	LanguageLua,
 	LanguageRuby,
 	LanguageRust,
+	LanguageTerraform,
 	LanguageTypescript,
 	LanguageZig,
 }
