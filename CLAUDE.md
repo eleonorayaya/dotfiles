@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Shizuku is a Go-based configuration management tool for dotfiles. It generates files from templates, downloads remote resources, and syncs everything to the appropriate destinations. Apps are organized into three categories — `languages/` (toolchains), `programs/` (regular programs), and `agents/` (agentic coding tools) — and synced in that order so later categories can consume outputs from earlier ones.
+Shizuku is a Go library for managing dotfiles. It generates files from templates, downloads remote resources, and syncs everything to the appropriate destinations. Consumers compose their own personal binary by instantiating a `shizuku.Builder`, registering apps from the shared library (or their own), and supplying their own user data.
+
+Apps are organized into three categories — `apps/languages/` (toolchains), `apps/programs/` (regular programs), and `apps/agents/` (agentic coding tools) — and synced in that order so later categories can consume outputs from earlier ones.
+
+The canonical consumer lives at `examples/eleonora/` and compiles to the `shizuku` binary. Other users can `go get github.com/eleonorayaya/shizuku` and build their own entry point.
 
 ## Development Commands
 
@@ -53,46 +57,47 @@ This ensures consistent build processes and proper dependency management.
 
 ### Top-Level Structure
 
-1. **cmd/** - CLI commands (Cobra-based)
-   - `main.go`: Root command with `--verbose` flag
-   - `init/`: Creates default config file
-   - `sync/`: Orchestrates all app syncing in phase order (languages → programs → agents)
-   - `diff/`: Previews what would change on next sync
+1. **shizuku.go** (root, `package shizuku`) - The `Builder` entry point. Consumers call `shizuku.New(Options{...}).AddLanguages(...).AddPrograms(...).AddAgent(...)` and then `Init()` / `Sync(ctx)` / `Diff(ctx)` / `Install(ctx)` / `List()`. The builder owns phase ordering (languages → programs → agents) and `SyncContext` assembly.
 
-2. **languages/** - Language toolchains (e.g. `golang`, `rust`, `typescript`)
-3. **programs/** - Regular programs (e.g. `nvim`, `kitty`, `git`)
-4. **agents/** - Agentic coding tools (e.g. `claude`)
+2. **app/** - Core types
+   - `app.go`: `App`, `FileGenerator`, `FileSyncer` interfaces
+   - `context.go`: `AgentConfig`, `AgentConfigProvider`, `SyncContext`, `ContextualSyncer`, `ContextualGenerator`
+   - `files.go`: `GenerateAppFiles`, `SyncAppFiles`, diff helpers, remote resource fetching
+   - `env.go`: Environment file generation
 
-   Each app implements `Generate(outDir, config) (*GenerateResult, error)` and `Sync(outDir, config) error` (or the contextual variants — see below). Apps must be manually registered in the root `apps.go` under the matching `GetLanguages()` / `GetPrograms()` / `GetAgents()` function.
+3. **config/** - `Config` struct, loading, validation, defaults, and the `Language` enum.
 
-5. **apps.go** (root) - Category-aware registry: `GetLanguages()`, `GetPrograms()`, `GetAgents()`, `GetApps()`.
+4. **util/** - File operations (copy, path normalization, directory creation, templates, homebrew helpers).
 
-6. **internal/** - Shared utilities
-   - `shizukuapp/files.go`: File generation, syncing, diffing, and remote resource fetching
-   - `shizukuapp/app.go`: `App`, `FileGenerator`, `FileSyncer` interfaces
-   - `shizukuapp/context.go`: `AgentConfig`, `AgentConfigProvider`, `SyncContext`, `ContextualSyncer`, `ContextualGenerator`
-   - `shizukuapp/env.go`: Environment file generation
-   - `util/`: File operations (copy, path normalization, directory creation, templates)
-   - `shizukuconfig/`: Config loading, validation, and defaults
+5. **apps/** - Pre-built library of apps
+   - `apps/languages/` — language toolchains (e.g. `golang`, `rust`, `typescript`)
+   - `apps/programs/` — regular programs (e.g. `nvim`, `kitty`, `git`)
+   - `apps/agents/` — agentic coding tools (e.g. `claude`)
+
+   Each app implements `Generate(outDir, cfg) (*app.GenerateResult, error)` and `Sync(outDir, cfg) error` (or the contextual variants — see below). Apps embed their `contents/` directory with `//go:embed all:contents` so the library is consumable without vendoring template files.
+
+6. **examples/eleonora/** - The canonical consumer binary.
+   - `main.go`: Cobra CLI (`init`, `sync`, `diff`, `install`, `list`, `upgrade`) that wires up the builder.
+   - `data/`: Personal user data (marketplaces, allowed commands, sandbox paths, etc.).
 
 ### Data Flow
 
 ```
-CLI (sync command)
+Consumer binary calls Builder.Sync(ctx)
   ↓
 Load config from ~/.config/shizuku/shizuku.yml
   ↓
 Create build directory: out/{timestamp}/
   ↓
-Phase 1: Sync enabled languages (languages/{name}/)
-Phase 2: Sync enabled programs (programs/{name}/)
+Phase 1: Sync enabled languages (apps/languages/{name}/)
+Phase 2: Sync enabled programs (apps/programs/{name}/)
 Phase 3: Build SyncContext from all enabled languages + programs that
          implement AgentConfigProvider
-Phase 4: Sync enabled agents (agents/{name}/) — agents implementing
+Phase 4: Sync enabled agents (apps/agents/{name}/) — agents implementing
          ContextualSyncer receive the SyncContext
   ↓
 For each app in a phase:
-  ├─ Generate files from {category}/{appName}/contents/
+  ├─ Generate files from the app's embedded contents/ FS
   │  ├─ .tmpl files → Go template expansion
   │  └─ Regular files → Direct copy
   ├─ Download remote resources (if needed)
@@ -104,29 +109,32 @@ For each app in a phase:
 Each app implements `FileGenerator` (for generation/diffing) and `FileSyncer` (for syncing). `Sync()` calls `Generate()` then syncs:
 
 ```go
-func (a *App) Generate(outDir string, config *shizukuconfig.Config) (*shizukuapp.GenerateResult, error) {
+//go:embed all:contents
+var contents embed.FS
+
+func (a *App) Generate(outDir string, cfg *config.Config) (*app.GenerateResult, error) {
     data := map[string]any{
         "key": "value",
     }
 
-    fileMap, err := shizukuapp.GenerateAppFiles("programs/appName", data, outDir)
+    fileMap, err := app.GenerateAppFiles("appName", contents, data, outDir)
     if err != nil {
         return nil, fmt.Errorf("failed to generate app files: %w", err)
     }
 
-    return &shizukuapp.GenerateResult{
+    return &app.GenerateResult{
         FileMap: fileMap,
         DestDir: "~/.config/appName/",
     }, nil
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
-    result, err := a.Generate(outDir, config)
+func (a *App) Sync(outDir string, cfg *config.Config) error {
+    result, err := a.Generate(outDir, cfg)
     if err != nil {
         return err
     }
 
-    if err := shizukuapp.SyncAppFiles(result.FileMap, result.DestDir); err != nil {
+    if err := app.SyncAppFiles(result.FileMap, result.DestDir); err != nil {
         return fmt.Errorf("failed to sync app files: %w", err)
     }
 
@@ -141,8 +149,8 @@ Side effects like remote resource fetching or exec commands belong in `Sync()` o
 Any app — language, program, or otherwise — may declare what agentic coding tools need to support it by implementing `AgentConfigProvider`:
 
 ```go
-func (a *App) AgentConfig() shizukuapp.AgentConfig {
-    return shizukuapp.AgentConfig{
+func (a *App) AgentConfig() app.AgentConfig {
+    return app.AgentConfig{
         Plugins:             []string{"rust-analyzer-lsp@claude-plugins-official"},
         SandboxAllowedHosts: []string{"crates.io", "docs.rs"},
         SandboxAllowWrite:   []string{"~/.cargo", "~/.rustup"},
@@ -150,7 +158,7 @@ func (a *App) AgentConfig() shizukuapp.AgentConfig {
 }
 ```
 
-The sync orchestrator collects every enabled app's `AgentConfig()` into a `SyncContext` before agents run. Agents that need this data implement `ContextualSyncer` / `ContextualGenerator` and receive the context as a parameter — see `agents/claude/claude.go` for an example. This keeps language- and tool-specific data out of agent code.
+The builder collects every enabled app's `AgentConfig()` into a `SyncContext` before agents run. Agents that need this data implement `ContextualSyncer` / `ContextualGenerator` and receive the context as a parameter — see `apps/agents/claude/claude.go` for an example. This keeps language- and tool-specific data out of agent code.
 
 ### Configuration System
 
@@ -165,8 +173,8 @@ languages:
 ```
 
 **Implementation details:**
-- `Config` struct in `internal/shizukuconfig/config.go`
-- Language validation ensures only registered languages (defined in `language.go`) are allowed
+- `Config` struct in `config/config.go`
+- Language validation ensures only registered languages (defined in `config/language.go`) are allowed
 - `CreateDefaultConfig()` generates a starter config with all languages disabled
 - Config is loaded once and passed to each app's `Sync()` function
 
@@ -193,26 +201,25 @@ out/{unix_timestamp}/
 ## Adding a New App
 
 1. Pick a category for the new app:
-   - `languages/` — language toolchains
-   - `programs/` — regular programs
-   - `agents/` — agentic coding tools
-2. Create directory: `{category}/{appName}/`
-3. Create `{appName}.go` implementing `Generate()` and `Sync()` (see App Implementation Pattern above). Pass `"{category}/{appName}"` as the first argument to `GenerateAppFiles`.
+   - `apps/languages/` — language toolchains
+   - `apps/programs/` — regular programs
+   - `apps/agents/` — agentic coding tools
+2. Create directory: `apps/{category}/{appName}/`
+3. Create `{appName}.go` implementing `Generate()` and `Sync()` (see App Implementation Pattern above). Embed the contents directory with `//go:embed all:contents` and pass the embedded FS to `app.GenerateAppFiles`.
 4. Add source files to `contents/` directory (if needed).
 5. Optionally implement `AgentConfig()` to declare LSP plugins, sandbox hosts, or sandbox write paths that agents should pick up.
-6. Import and register the app in the root `apps.go` under the matching category function:
+6. Register the app in the consumer binary (`examples/eleonora/main.go`) via the builder:
    ```go
-   func GetPrograms() []shizukuapp.App {
-       return []shizukuapp.App{
+   shizuku.New(shizuku.Options{...}).
+       AddPrograms(
            // ... existing programs
            appName.New(),
-       }
-   }
+       )
    ```
 
 ## Adding a New Language
 
-1. Add language constant to `internal/shizukuconfig/language.go`:
+1. Add language constant to `config/language.go`:
    ```go
    const (
        LanguageRust Language = "rust"
@@ -240,7 +247,7 @@ The `claude` shizuku app manages `~/.claude/settings.json` with additive merges 
 Do not add comments unless explicitly asked. The code should be self-explanatory through clear naming and structure. Avoid obvious comments that simply restate what the code does.
 
 ### Use Existing Utilities
-Always check for and use existing utility functions instead of reimplementing functionality. Before writing file operations or other common tasks, explore the `internal/util` package to see if a utility function already exists that handles the task.
+Always check for and use existing utility functions instead of reimplementing functionality. Before writing file operations or other common tasks, explore the `util` package to see if a utility function already exists that handles the task.
 
 ### Error Handling Pattern
 
