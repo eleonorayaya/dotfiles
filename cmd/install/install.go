@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/eleonorayaya/shizuku/apps"
+	shizuku "github.com/eleonorayaya/shizuku"
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 	"github.com/spf13/cobra"
@@ -26,7 +26,7 @@ func install(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	allApps := apps.GetApps()
+	allApps := shizuku.GetApps()
 	enabledApps := shizukuapp.FilterEnabledApps(allApps, appConfig)
 
 	for _, app := range enabledApps {

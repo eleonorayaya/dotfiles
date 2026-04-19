@@ -3,7 +3,7 @@ package list
 import (
 	"fmt"
 
-	"github.com/eleonorayaya/shizuku/apps"
+	shizuku "github.com/eleonorayaya/shizuku"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +20,7 @@ func list(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	allApps := apps.GetApps()
+	allApps := shizuku.GetApps()
 
 	fmt.Println("Available apps:")
 	fmt.Println()

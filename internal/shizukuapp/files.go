@@ -112,8 +112,9 @@ func listAppFiles(appDir string, relativePath string) ([]string, error) {
 	return appFiles, nil
 }
 
-func GenerateAppFiles(appName string, data map[string]any, outDir string) (map[string]string, error) {
-	appFileDir := path.Join("apps", appName, "contents")
+func GenerateAppFiles(appDir string, data map[string]any, outDir string) (map[string]string, error) {
+	appName := path.Base(appDir)
+	appFileDir := path.Join(appDir, "contents")
 
 	appOutDir := path.Join(outDir, appName)
 	if err := os.Mkdir(appOutDir, os.ModePerm); err != nil {

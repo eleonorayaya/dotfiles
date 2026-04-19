@@ -8,7 +8,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/eleonorayaya/shizuku/apps"
+	shizuku "github.com/eleonorayaya/shizuku"
 	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
 	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
 	"github.com/spf13/cobra"
@@ -24,6 +24,12 @@ var DiffCommand = &cobra.Command{
 
 func init() {
 	DiffCommand.Flags().BoolVarP(&showContent, "print", "p", false, "Print diff contents to stdout")
+}
+
+type diffResult struct {
+	name    string
+	changed []string
+	fileMap map[string]string
 }
 
 func runDiff(cmd *cobra.Command, args []string) error {
@@ -42,27 +48,39 @@ func runDiff(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error creating output dir: %w", err)
 	}
 
-	allApps := apps.GetApps()
-	enabledApps := shizukuapp.FilterEnabledApps(allApps, appConfig)
+	enabledLanguages := shizukuapp.FilterEnabledApps(shizuku.GetLanguages(), appConfig)
+	enabledPrograms := shizukuapp.FilterEnabledApps(shizuku.GetPrograms(), appConfig)
+	enabledAgents := shizukuapp.FilterEnabledApps(shizuku.GetAgents(), appConfig)
 
-	type diffResult struct {
-		name    string
-		changed []string
-		fileMap map[string]string
-	}
-
-	totalChanged := 0
 	var results []diffResult
+	totalChanged := 0
 
-	for _, app := range enabledApps {
-		generator, ok := app.(shizukuapp.FileGenerator)
-		if !ok {
+	languageResults, err := diffApps(enabledLanguages, outDir, appConfig)
+	if err != nil {
+		return err
+	}
+	results = append(results, languageResults...)
+
+	programResults, err := diffApps(enabledPrograms, outDir, appConfig)
+	if err != nil {
+		return err
+	}
+	results = append(results, programResults...)
+
+	ctx := shizukuapp.CollectAgentConfigs(append(enabledLanguages, enabledPrograms...))
+
+	for _, app := range enabledAgents {
+		slog.Debug("generating files for diff", "appName", app.Name())
+
+		var result *shizukuapp.GenerateResult
+		if generator, ok := app.(shizukuapp.ContextualGenerator); ok {
+			result, err = generator.GenerateWithContext(outDir, appConfig, ctx)
+		} else if generator, ok := app.(shizukuapp.FileGenerator); ok {
+			result, err = generator.Generate(outDir, appConfig)
+		} else {
 			continue
 		}
 
-		slog.Debug("generating files for diff", "appName", app.Name())
-
-		result, err := generator.Generate(outDir, appConfig)
 		if err != nil {
 			return fmt.Errorf("could not generate %s: %w", app.Name(), err)
 		}
@@ -75,12 +93,17 @@ func runDiff(cmd *cobra.Command, args []string) error {
 		if len(changed) > 0 {
 			sort.Strings(changed)
 			results = append(results, diffResult{name: app.Name(), changed: changed, fileMap: result.FileMap})
-			totalChanged += len(changed)
 		}
 	}
 
+	for _, r := range results {
+		totalChanged += len(r.changed)
+	}
+
+	allEnabled := append(append(enabledLanguages, enabledPrograms...), enabledAgents...)
+
 	envSetups := []*shizukuapp.EnvSetup{}
-	for _, app := range enabledApps {
+	for _, app := range allEnabled {
 		if provider, ok := app.(shizukuapp.EnvProvider); ok {
 			envSetup, err := provider.Env()
 			if err != nil {
@@ -137,4 +160,34 @@ func runDiff(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func diffApps(apps []shizukuapp.App, outDir string, config *shizukuconfig.Config) ([]diffResult, error) {
+	var results []diffResult
+
+	for _, app := range apps {
+		generator, ok := app.(shizukuapp.FileGenerator)
+		if !ok {
+			continue
+		}
+
+		slog.Debug("generating files for diff", "appName", app.Name())
+
+		result, err := generator.Generate(outDir, config)
+		if err != nil {
+			return nil, fmt.Errorf("could not generate %s: %w", app.Name(), err)
+		}
+
+		changed, err := shizukuapp.DiffAppFiles(result)
+		if err != nil {
+			return nil, fmt.Errorf("could not diff %s: %w", app.Name(), err)
+		}
+
+		if len(changed) > 0 {
+			sort.Strings(changed)
+			results = append(results, diffResult{name: app.Name(), changed: changed, fileMap: result.FileMap})
+		}
+	}
+
+	return results, nil
 }
