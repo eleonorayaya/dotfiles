@@ -13,16 +13,6 @@ import (
 	"github.com/eleonorayaya/shizuku/config"
 )
 
-type Action string
-
-const (
-	ActionSync    Action = "sync"
-	ActionDiff    Action = "diff"
-	ActionInit    Action = "init"
-	ActionInstall Action = "install"
-	ActionList    Action = "list"
-)
-
 type Options struct {
 	OutDir  string
 	Verbose bool
@@ -77,12 +67,6 @@ func (b *Builder) AllApps() []app.App {
 	return all
 }
 
-func (b *Builder) applyVerbose() {
-	if b.opts.Verbose {
-		slog.SetLogLoggerLevel(slog.LevelDebug)
-	}
-}
-
 func (b *Builder) resolveOutDir() (string, error) {
 	outDir := b.opts.OutDir
 	if outDir == "" {
@@ -92,27 +76,6 @@ func (b *Builder) resolveOutDir() (string, error) {
 		return "", fmt.Errorf("error creating output dir: %w", err)
 	}
 	return outDir, nil
-}
-
-func (b *Builder) Execute(ctx context.Context, action Action) error {
-	b.applyVerbose()
-
-	switch action {
-	case ActionSync:
-		return b.Sync(ctx)
-	case ActionDiff:
-		_, err := b.Diff(ctx)
-		return err
-	case ActionInit:
-		return b.Init()
-	case ActionInstall:
-		return b.Install(ctx)
-	case ActionList:
-		_, err := b.List()
-		return err
-	default:
-		return fmt.Errorf("unknown action: %s", action)
-	}
 }
 
 func (b *Builder) Init() error {

@@ -20,7 +20,7 @@ func (a *App) Name() string {
 }
 
 func (a *App) Enabled(cfg *config.Config) bool {
-	return cfg.GetAppConfigBool(a.Name(), "enabled", false)
+	return cfg.GetLanguageEnabled(config.LanguageRust)
 }
 
 func (a *App) Install(cfg *config.Config) error {
@@ -35,6 +35,9 @@ func (a *App) AgentConfig() app.AgentConfig {
 	return app.AgentConfig{
 		Plugins: []string{
 			"rust-analyzer-lsp@claude-plugins-official",
+		},
+		Marketplaces: map[string]app.Marketplace{
+			"claude-plugins-official": {Repo: "anthropics/claude-plugins-official"},
 		},
 		SandboxAllowedHosts: []string{
 			"index.crates.io",

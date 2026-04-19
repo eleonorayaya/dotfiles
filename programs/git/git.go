@@ -38,6 +38,24 @@ func (a *App) Enabled(cfg *config.Config) bool {
 	return cfg.GetAppConfigBool(a.Name(), "enabled", true)
 }
 
+func (a *App) AgentConfig() app.AgentConfig {
+	return app.AgentConfig{
+		AllowedCommands: []string{
+			"Bash(git add:*)",
+			"Bash(git commit:*)",
+			"Bash(git --version:*)",
+			"Bash(git status:*)",
+			"Bash(git diff:*)",
+			"Bash(git log:*)",
+			"Bash(git fetch:*)",
+			"Bash(git push:*)",
+			"Bash(git rebase:*)",
+			"Bash(git stash:*)",
+			"Bash(git grep:*)",
+		},
+	}
+}
+
 func (a *App) Generate(outDir string, cfg *config.Config) (*app.GenerateResult, error) {
 	fileMap, err := app.GenerateAppFiles("git", contents, nil, outDir)
 	if err != nil {

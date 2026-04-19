@@ -2,8 +2,15 @@ package app
 
 import "github.com/eleonorayaya/shizuku/config"
 
+type Marketplace struct {
+	Repo string
+	Path string
+}
+
 type AgentConfig struct {
 	Plugins             []string
+	Marketplaces        map[string]Marketplace
+	AllowedCommands     []string
 	SandboxAllowedHosts []string
 	SandboxAllowWrite   []string
 }

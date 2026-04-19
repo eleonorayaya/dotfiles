@@ -24,5 +24,8 @@ func (a *App) AgentConfig() app.AgentConfig {
 		Plugins: []string{
 			"lua-lsp@claude-plugins-official",
 		},
+		Marketplaces: map[string]app.Marketplace{
+			"claude-plugins-official": {Repo: "anthropics/claude-plugins-official"},
+		},
 	}
 }

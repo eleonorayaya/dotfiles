@@ -55,7 +55,7 @@ languages:
 styles:
   theme: monade
 languages:
-  python:
+  kotlin:
     enabled: true
 `,
 			shouldErr: true,
@@ -111,7 +111,7 @@ func TestValidateLanguageConfigDirect(t *testing.T) {
 
 	t.Run("rejects invalid languages", func(t *testing.T) {
 		langConfig := LanguageConfigs{
-			"python": {Enabled: true},
+			"kotlin": {Enabled: true},
 		}
 
 		if err := langConfig.validate(); err == nil {

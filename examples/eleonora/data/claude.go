@@ -1,13 +1,14 @@
 package data
 
-import "github.com/eleonorayaya/shizuku/apps/agents/claude"
+import (
+	"github.com/eleonorayaya/shizuku/agents/claude"
+	"github.com/eleonorayaya/shizuku/app"
+)
 
 func ClaudeOptions() claude.Options {
 	return claude.Options{
-		Marketplaces: map[string]claude.Marketplace{
-			"claude-plugins-official":   {Repo: "anthropics/claude-plugins-official"},
+		Marketplaces: map[string]app.Marketplace{
 			"superpowers-marketplace":   {Repo: "obra/superpowers-marketplace"},
-			"charm-dev-skills":          {Repo: "williavs/charm-dev-skill-marketplace"},
 			"claude-code-notion-plugin": {Repo: "makenotion/claude-code-notion-plugin"},
 			"eleonorayaya-claude-code":  {Repo: "eleonorayaya/claude-plugins"},
 			"utena":                     {Repo: "eleonorayaya/utena"},
@@ -32,8 +33,6 @@ func ClaudeOptions() claude.Options {
 			"github.com",
 			"raw.githubusercontent.com",
 			"formulae.brew.sh",
-			"api.buildkite.com",
-			"buildkite.com",
 			"mise.jdx.dev",
 			"mise-versions.jdx.dev",
 			"hk.jdx.dev",
@@ -69,26 +68,13 @@ func ClaudeOptions() claude.Options {
 			"Bash(wc:*)",
 			"Bash(xargs:*)",
 			"Bash(echo:*)",
+			"Bash(head:*)",
+			"Bash(tail:*)",
 
 			"Bash(brew --prefix:*)",
 
-			"Bash(npm install)",
-			"Bash(npx nx test:*)",
-			"Bash(npx nx sync:*)",
-
 			"Edit(//tmp/**)",
 			"Write(//tmp/**)",
-			"Bash(git add:*)",
-			"Bash(git commit:*)",
-			"Bash(git --version:*)",
-			"Bash(git status:*)",
-			"Bash(git diff:*)",
-			"Bash(git log:*)",
-			"Bash(git fetch:*)",
-			"Bash(git push:*)",
-			"Bash(git rebase:*)",
-			"Bash(git stash:*)",
-			"Bash(git grep:*)",
 
 			"Bash(gh pr view:*)",
 			"Bash(gh pr list:*)",
@@ -97,9 +83,6 @@ func ClaudeOptions() claude.Options {
 			"Bash(gh run list:*)",
 			"Bash(gh run watch:*)",
 
-			"Bash(go build:*)",
-			"Bash(go vet:*)",
-			"Bash(go mod tidy:*)",
 			"Skill(task)",
 			"Bash(task:*)",
 

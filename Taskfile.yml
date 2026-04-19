@@ -1,7 +1,7 @@
 version: '3'
 
 vars:
-  GO_SOURCES: '{apps,examples,app,config,util}/**/*.go'
+  GO_SOURCES: '{agents,programs,languages,examples,app,config,util}/**/*.go'
   MAIN: examples/eleonora/main.go
 
 tasks:
@@ -16,7 +16,7 @@ tasks:
   configmax:
     watch: true
     sources:
-      - "apps/**/*"
+      - "{agents,programs,languages}/**/*"
     cmds:
       - go run {{.MAIN}} sync
   run:

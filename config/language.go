@@ -11,6 +11,7 @@ type Language string
 const (
 	LanguageGo         Language = "go"
 	LanguageLua        Language = "lua"
+	LanguagePython     Language = "python"
 	LanguageRuby       Language = "ruby"
 	LanguageRust       Language = "rust"
 	LanguageTerraform  Language = "terraform"
@@ -21,6 +22,7 @@ const (
 var languages []Language = []Language{
 	LanguageGo,
 	LanguageLua,
+	LanguagePython,
 	LanguageRuby,
 	LanguageRust,
 	LanguageTerraform,

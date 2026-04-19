@@ -24,6 +24,14 @@ func (a *App) AgentConfig() app.AgentConfig {
 		Plugins: []string{
 			"typescript-lsp@claude-plugins-official",
 		},
+		Marketplaces: map[string]app.Marketplace{
+			"claude-plugins-official": {Repo: "anthropics/claude-plugins-official"},
+		},
+		AllowedCommands: []string{
+			"Bash(npm install)",
+			"Bash(npx nx test:*)",
+			"Bash(npx nx sync:*)",
+		},
 		SandboxAllowedHosts: []string{
 			"registry.npmjs.org",
 		},

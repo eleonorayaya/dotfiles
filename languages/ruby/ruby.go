@@ -24,6 +24,9 @@ func (a *App) AgentConfig() app.AgentConfig {
 		Plugins: []string{
 			"ruby-lsp@claude-plugins-official",
 		},
+		Marketplaces: map[string]app.Marketplace{
+			"claude-plugins-official": {Repo: "anthropics/claude-plugins-official"},
+		},
 		SandboxAllowWrite: []string{
 			"~/.bundle",
 			"~/.gem",

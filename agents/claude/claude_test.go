@@ -11,7 +11,7 @@ import (
 
 func testOptions() Options {
 	return Options{
-		Marketplaces: map[string]Marketplace{
+		Marketplaces: map[string]app.Marketplace{
 			"test-marketplace": {Repo: "example/test-marketplace"},
 		},
 		AlwaysOnPlugins:     []string{"always-on@test-marketplace"},

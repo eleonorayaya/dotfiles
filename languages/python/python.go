@@ -16,7 +16,7 @@ func (a *App) Name() string {
 }
 
 func (a *App) Enabled(cfg *config.Config) bool {
-	return cfg.GetAppConfigBool(a.Name(), "enabled", true)
+	return cfg.GetLanguageEnabled(config.LanguagePython)
 }
 
 func (a *App) Env() (*app.EnvSetup, error) {

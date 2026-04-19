@@ -13,13 +13,8 @@ import (
 //go:embed all:contents
 var contents embed.FS
 
-type Marketplace struct {
-	Repo string
-	Path string
-}
-
 type Options struct {
-	Marketplaces        map[string]Marketplace
+	Marketplaces        map[string]app.Marketplace
 	AlwaysOnPlugins     []string
 	Env                 map[string]string
 	StatusLine          map[string]any
@@ -84,31 +79,67 @@ func (a *App) SyncWithContext(outDir string, cfg *config.Config, ctx app.SyncCon
 	return nil
 }
 
-func (a *App) collectPlugins(ctx app.SyncContext) []string {
-	plugins := make([]string, len(a.opts.AlwaysOnPlugins))
-	copy(plugins, a.opts.AlwaysOnPlugins)
-	for _, ac := range ctx.AgentConfigs {
-		plugins = append(plugins, ac.Plugins...)
+func dedupeStrings(sources ...[]string) []string {
+	seen := map[string]bool{}
+	out := []string{}
+	for _, src := range sources {
+		for _, s := range src {
+			if seen[s] {
+				continue
+			}
+			seen[s] = true
+			out = append(out, s)
+		}
 	}
-	return plugins
+	return out
+}
+
+func (a *App) collectPlugins(ctx app.SyncContext) []string {
+	sources := [][]string{a.opts.AlwaysOnPlugins}
+	for _, ac := range ctx.AgentConfigs {
+		sources = append(sources, ac.Plugins)
+	}
+	return dedupeStrings(sources...)
+}
+
+func (a *App) collectAllowedCommands(ctx app.SyncContext) []string {
+	sources := [][]string{a.opts.AllowedCommands}
+	for _, ac := range ctx.AgentConfigs {
+		sources = append(sources, ac.AllowedCommands)
+	}
+	return dedupeStrings(sources...)
+}
+
+func (a *App) collectMarketplaces(ctx app.SyncContext) map[string]app.Marketplace {
+	merged := make(map[string]app.Marketplace, len(a.opts.Marketplaces))
+	for name, m := range a.opts.Marketplaces {
+		merged[name] = m
+	}
+	for _, ac := range ctx.AgentConfigs {
+		for name, m := range ac.Marketplaces {
+			if _, exists := merged[name]; exists {
+				continue
+			}
+			merged[name] = m
+		}
+	}
+	return merged
 }
 
 func (a *App) collectSandboxHosts(ctx app.SyncContext) []string {
-	hosts := make([]string, len(a.opts.SandboxAllowedHosts))
-	copy(hosts, a.opts.SandboxAllowedHosts)
+	sources := [][]string{a.opts.SandboxAllowedHosts}
 	for _, ac := range ctx.AgentConfigs {
-		hosts = append(hosts, ac.SandboxAllowedHosts...)
+		sources = append(sources, ac.SandboxAllowedHosts)
 	}
-	return hosts
+	return dedupeStrings(sources...)
 }
 
 func (a *App) collectSandboxWrite(ctx app.SyncContext) []string {
-	paths := make([]string, len(a.opts.SandboxAllowWrite))
-	copy(paths, a.opts.SandboxAllowWrite)
+	sources := [][]string{a.opts.SandboxAllowWrite}
 	for _, ac := range ctx.AgentConfigs {
-		paths = append(paths, ac.SandboxAllowWrite...)
+		sources = append(sources, ac.SandboxAllowWrite)
 	}
-	return paths
+	return dedupeStrings(sources...)
 }
 
 func (a *App) mergeSettings(outDir string, ctx app.SyncContext) (string, error) {
@@ -139,9 +170,10 @@ func (a *App) mergeSettings(outDir string, ctx app.SyncContext) (string, error) 
 			existing[s] = true
 		}
 	}
-	for _, cmd := range a.opts.AllowedCommands {
+	for _, cmd := range a.collectAllowedCommands(ctx) {
 		if !existing[cmd] {
 			allowRaw = append(allowRaw, cmd)
+			existing[cmd] = true
 		}
 	}
 	permissions["allow"] = allowRaw
@@ -169,7 +201,7 @@ func (a *App) mergeSettings(outDir string, ctx app.SyncContext) (string, error) 
 	if knownMarketplaces == nil {
 		knownMarketplaces = map[string]any{}
 	}
-	for name, src := range a.opts.Marketplaces {
+	for name, src := range a.collectMarketplaces(ctx) {
 		if _, exists := knownMarketplaces[name]; exists {
 			continue
 		}

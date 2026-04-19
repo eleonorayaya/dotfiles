@@ -3,6 +3,7 @@ package buildkite
 import (
 	"fmt"
 
+	"github.com/eleonorayaya/shizuku/app"
 	"github.com/eleonorayaya/shizuku/config"
 	"github.com/eleonorayaya/shizuku/util"
 )
@@ -19,6 +20,15 @@ func (a *App) Name() string {
 
 func (a *App) Enabled(cfg *config.Config) bool {
 	return cfg.GetAppConfigBool(a.Name(), "enabled", false)
+}
+
+func (a *App) AgentConfig() app.AgentConfig {
+	return app.AgentConfig{
+		SandboxAllowedHosts: []string{
+			"api.buildkite.com",
+			"buildkite.com",
+		},
+	}
 }
 
 func (a *App) Install(cfg *config.Config) error {

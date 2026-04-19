@@ -52,6 +52,15 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"gopls-lsp@claude-plugins-official",
 			"charm-dev@charm-dev-skills",
 		},
+		Marketplaces: map[string]app.Marketplace{
+			"claude-plugins-official": {Repo: "anthropics/claude-plugins-official"},
+			"charm-dev-skills":        {Repo: "williavs/charm-dev-skill-marketplace"},
+		},
+		AllowedCommands: []string{
+			"Bash(go build:*)",
+			"Bash(go vet:*)",
+			"Bash(go mod tidy:*)",
+		},
 		SandboxAllowWrite: []string{
 			"~/.cache/go-build",
 			"~/.config/go",
