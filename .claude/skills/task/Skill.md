@@ -26,7 +26,7 @@ Compiles the shizuku binary to `out/shizuku`.
 task build
 ```
 
-**What it does:** Runs `go build -o out/shizuku cmd/main.go`
+**What it does:** Runs `go build -o out/shizuku examples/eleonora/main.go`
 
 ### Run
 Runs the application with arguments.
@@ -43,7 +43,7 @@ task run -- sync --verbose
 task run -- --help
 ```
 
-**What it does:** Runs `go run cmd/main.go` with the provided arguments
+**What it does:** Runs `go run examples/eleonora/main.go` with the provided arguments
 
 ### Lint
 Formats all Go code in the project.
@@ -62,10 +62,10 @@ Runs all tests or specific tests with optional arguments.
 task test
 
 # Run tests for a specific package
-task test -- ./internal/shizukuconfig
+task test -- ./config
 
 # Run a specific test
-task test -- -run TestLoadConfig ./internal/shizukuconfig
+task test -- -run TestLoadConfig ./config
 
 # Run tests with verbose output
 task test -- -v ./...
