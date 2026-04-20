@@ -50,6 +50,8 @@ func ClaudeOptions() claude.Options {
 
 			"Bash(brew --prefix:*)",
 
+			"Bash(npx nx:*)",
+
 			"Edit(//tmp/**)",
 			"Write(//tmp/**)",
 		},
