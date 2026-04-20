@@ -47,6 +47,8 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"Bash(git rebase:*)",
 			"Bash(git stash:*)",
 			"Bash(git grep:*)",
+			"Bash(git ls-remote:*)",
+			"Bash(git cherry-pick:*)",
 			"Bash(gh pr view:*)",
 			"Bash(gh pr list:*)",
 			"Bash(gh pr checks:*)",

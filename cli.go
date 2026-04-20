@@ -66,7 +66,6 @@ func (b *Builder) Command() *cobra.Command {
 					fmt.Println(string(content))
 				}
 			}
-
 			return nil
 		},
 	}

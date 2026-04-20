@@ -12,14 +12,6 @@ import (
 //go:embed all:contents
 var contents embed.FS
 
-var baselineAllowedCommands = []string{
-	"mcp__ide__getDiagnostics",
-}
-
-var baselineSandboxAllowWrite = []string{
-	"~/.claude/plugins/cache",
-}
-
 type Options struct {
 	Marketplaces        map[string]app.Marketplace
 	AlwaysOnPlugins     []string
@@ -97,6 +89,31 @@ func dedupeStrings(sources ...[]string) []string {
 	return out
 }
 
+func mergeStringsIntoAnySlice(existing []any, additions []string) []any {
+	seen := map[string]bool{}
+	for _, entry := range existing {
+		if s, ok := entry.(string); ok {
+			seen[s] = true
+		}
+	}
+	for _, s := range additions {
+		if seen[s] {
+			continue
+		}
+		seen[s] = true
+		existing = append(existing, s)
+	}
+	return existing
+}
+
+var baselineAllowedCommands = []string{
+	"mcp__ide__getDiagnostics",
+}
+
+var baselineSandboxAllowWrite = []string{
+	"~/.claude/plugins/cache",
+}
+
 func (a *App) collectPlugins(agents app.AgentContext) []string {
 	sources := [][]string{a.opts.AlwaysOnPlugins}
 	for _, ac := range agents.AgentConfigs {
@@ -167,19 +184,7 @@ func (a *App) mergeSettings(outDir string, agents app.AgentContext) (string, err
 	}
 
 	allowRaw, _ := permissions["allow"].([]any)
-	existing := map[string]bool{}
-	for _, entry := range allowRaw {
-		if s, ok := entry.(string); ok {
-			existing[s] = true
-		}
-	}
-	for _, cmd := range a.collectAllowedCommands(agents) {
-		if !existing[cmd] {
-			allowRaw = append(allowRaw, cmd)
-			existing[cmd] = true
-		}
-	}
-	permissions["allow"] = allowRaw
+	permissions["allow"] = mergeStringsIntoAnySlice(allowRaw, a.collectAllowedCommands(agents))
 	settings["permissions"] = permissions
 
 	if len(a.opts.Env) > 0 {
@@ -237,18 +242,7 @@ func (a *App) mergeSettings(outDir string, agents app.AgentContext) (string, err
 	network["allowLocalBinding"] = true
 
 	allowedHostsRaw, _ := network["allowedHosts"].([]any)
-	existingHosts := map[string]bool{}
-	for _, entry := range allowedHostsRaw {
-		if s, ok := entry.(string); ok {
-			existingHosts[s] = true
-		}
-	}
-	for _, host := range a.collectSandboxHosts(agents) {
-		if !existingHosts[host] {
-			allowedHostsRaw = append(allowedHostsRaw, host)
-		}
-	}
-	network["allowedHosts"] = allowedHostsRaw
+	network["allowedHosts"] = mergeStringsIntoAnySlice(allowedHostsRaw, a.collectSandboxHosts(agents))
 	sandbox["network"] = network
 
 	filesystem, _ := sandbox["filesystem"].(map[string]any)
@@ -256,18 +250,7 @@ func (a *App) mergeSettings(outDir string, agents app.AgentContext) (string, err
 		filesystem = map[string]any{}
 	}
 	allowWriteRaw, _ := filesystem["allowWrite"].([]any)
-	existingPaths := map[string]bool{}
-	for _, entry := range allowWriteRaw {
-		if s, ok := entry.(string); ok {
-			existingPaths[s] = true
-		}
-	}
-	for _, path := range a.collectSandboxWrite(agents) {
-		if !existingPaths[path] {
-			allowWriteRaw = append(allowWriteRaw, path)
-		}
-	}
-	filesystem["allowWrite"] = allowWriteRaw
+	filesystem["allowWrite"] = mergeStringsIntoAnySlice(allowWriteRaw, a.collectSandboxWrite(agents))
 	sandbox["filesystem"] = filesystem
 	settings["sandbox"] = sandbox
 
