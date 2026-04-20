@@ -27,6 +27,7 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/k9s"
 	"github.com/eleonorayaya/shizuku/programs/kitty"
 	"github.com/eleonorayaya/shizuku/programs/lsd"
+	"github.com/eleonorayaya/shizuku/programs/mise"
 	"github.com/eleonorayaya/shizuku/programs/nvim"
 	"github.com/eleonorayaya/shizuku/programs/protonpass"
 	"github.com/eleonorayaya/shizuku/programs/protonvpn"
@@ -57,23 +58,18 @@ func main() {
 			ruby.New(),
 			rust.New(),
 			typescript.New(),
-			zig.New(),
 		),
 		shizuku.WithPrograms(
 			aerospace.New(),
 			bat.New(),
-			buildkite.New(),
 			desktoppr.New(),
 			fastfetch.New(),
 			git.New(),
 			glow.New(),
 			jankyborders.New(),
-			k9s.New(),
 			kitty.New(),
 			lsd.New(),
 			nvim.New(),
-			protonpass.New(),
-			protonvpn.New(),
 			sfsymbols.New(),
 			sketchybar.New(),
 			terminal.New(),
@@ -83,6 +79,22 @@ func main() {
 		),
 		shizuku.WithAgents(
 			claude.New(data.ClaudeOptions()),
+		),
+		shizuku.WithProfile("work",
+			shizuku.WithPrograms(
+				buildkite.New(),
+				k9s.New(),
+				mise.New(),
+			),
+		),
+		shizuku.WithProfile("personal",
+			shizuku.WithLanguages(
+				zig.New(),
+			),
+			shizuku.WithPrograms(
+				protonpass.New(),
+				protonvpn.New(),
+			),
 		),
 	).Command()
 

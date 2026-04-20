@@ -10,8 +10,6 @@ import (
 )
 
 func (b *Builder) Command() *cobra.Command {
-	var showContent bool
-
 	root := &cobra.Command{
 		Use: "shizuku",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -56,26 +54,22 @@ func (b *Builder) Command() *cobra.Command {
 				}
 			}
 
-			fmt.Printf("\n%d file(s) with differences. Diff files written to %s/\n", report.TotalChanged, report.OutDir)
+			fmt.Printf("\n%d file(s) with differences. Diff files written to %s/\n\n", report.TotalChanged, report.OutDir)
 
-			if showContent {
-				fmt.Println()
-				for _, r := range report.Results {
-					for _, f := range r.Changed {
-						diffPath := r.FileMap[f] + ".diff"
-						content, err := os.ReadFile(diffPath)
-						if err != nil {
-							return fmt.Errorf("failed to read diff file %s: %w", diffPath, err)
-						}
-						fmt.Println(string(content))
+			for _, r := range report.Results {
+				for _, f := range r.Changed {
+					diffPath := r.FileMap[f] + ".diff"
+					content, err := os.ReadFile(diffPath)
+					if err != nil {
+						return fmt.Errorf("failed to read diff file %s: %w", diffPath, err)
 					}
+					fmt.Println(string(content))
 				}
 			}
 
 			return nil
 		},
 	}
-	diffCmd.Flags().BoolVar(&showContent, "print", false, "Print diff contents to stdout")
 
 	installCmd := &cobra.Command{
 		Use:   "install",

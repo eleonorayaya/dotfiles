@@ -55,6 +55,8 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"Bash(go build:*)",
 			"Bash(go vet:*)",
 			"Bash(go mod tidy:*)",
+			"Bash(task:*)",
+			"Skill(task)",
 		},
 		SandboxAllowWrite: []string{
 			"~/.cache/go-build",
@@ -64,6 +66,7 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"~/.cache/golangci-lint",
 			"~/Library/Caches/go-build",
 			"~/Library/Caches/golangci-lint",
+			"~/.task",
 		},
 	}
 }

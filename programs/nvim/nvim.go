@@ -29,6 +29,14 @@ func (a *App) Install(ctx *app.Context) error {
 	return nil
 }
 
+func (a *App) AgentConfig() app.AgentConfig {
+	return app.AgentConfig{
+		SandboxAllowWrite: []string{
+			"~/.cache/nvim/",
+		},
+	}
+}
+
 func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 	data := map[string]any{
 		"ThemeName": ctx.Styles.Theme.Name,

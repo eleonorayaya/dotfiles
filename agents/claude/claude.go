@@ -12,6 +12,14 @@ import (
 //go:embed all:contents
 var contents embed.FS
 
+var baselineAllowedCommands = []string{
+	"mcp__ide__getDiagnostics",
+}
+
+var baselineSandboxAllowWrite = []string{
+	"~/.claude/plugins/cache",
+}
+
 type Options struct {
 	Marketplaces        map[string]app.Marketplace
 	AlwaysOnPlugins     []string
@@ -98,7 +106,7 @@ func (a *App) collectPlugins(agents app.AgentContext) []string {
 }
 
 func (a *App) collectAllowedCommands(agents app.AgentContext) []string {
-	sources := [][]string{a.opts.AllowedCommands}
+	sources := [][]string{baselineAllowedCommands, a.opts.AllowedCommands}
 	for _, ac := range agents.AgentConfigs {
 		sources = append(sources, ac.AllowedCommands)
 	}
@@ -130,7 +138,7 @@ func (a *App) collectSandboxHosts(agents app.AgentContext) []string {
 }
 
 func (a *App) collectSandboxWrite(agents app.AgentContext) []string {
-	sources := [][]string{a.opts.SandboxAllowWrite}
+	sources := [][]string{baselineSandboxAllowWrite, a.opts.SandboxAllowWrite}
 	for _, ac := range agents.AgentConfigs {
 		sources = append(sources, ac.SandboxAllowWrite)
 	}

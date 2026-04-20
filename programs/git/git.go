@@ -47,6 +47,24 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"Bash(git rebase:*)",
 			"Bash(git stash:*)",
 			"Bash(git grep:*)",
+			"Bash(gh pr view:*)",
+			"Bash(gh pr list:*)",
+			"Bash(gh pr checks:*)",
+			"Bash(gh run view:*)",
+			"Bash(gh run list:*)",
+			"Bash(gh run watch:*)",
+		},
+		SandboxAllowedHosts: []string{
+			"api.github.com",
+			"docs.github.com",
+			"github.com",
+			"raw.githubusercontent.com",
+		},
+		SandboxAllowWrite: []string{
+			"~/.config/gh",
+			"~/.cache/gh",
+			"~/.local/share/gh",
+			"~/.local/state/gh",
 		},
 	}
 }
