@@ -17,12 +17,17 @@ When invoked, this skill helps you:
 
 ## App Structure Overview
 
+Apps live under `apps/` in one of three category directories:
+- `apps/languages/` — language toolchains (e.g. `golang`, `rust`)
+- `apps/programs/` — regular programs (e.g. `nvim`, `kitty`)
+- `apps/agents/` — agentic coding tools (e.g. `claude`)
+
 Each shizuku app follows this pattern:
 
 ```
-apps/{appName}/
+apps/{category}/{appName}/
 ├── {appName}.go           # App struct with methods
-└── contents/              # Template files and assets (optional)
+└── contents/              # Template files and assets (optional, embedded via //go:embed)
     ├── file.conf          # Regular files (copied as-is)
     └── file.tmpl          # Go templates (processed)
 ```
@@ -34,43 +39,52 @@ Apps use an **interface-based design** with optional capabilities:
 ### Core Interface (Required)
 All apps must implement the `App` interface:
 - `Name() string` - Returns the app name
-- `Enabled(config *shizukuconfig.Config) bool` - Checks if app is enabled
+- `Enabled(cfg *config.Config) bool` - Checks if app is enabled
 
 ### Optional Interfaces
 Apps can optionally implement:
 - `FileSyncer` - For apps that sync configuration files
-  - `Sync(outDir string, config *shizukuconfig.Config) error`
+  - `Sync(outDir string, cfg *config.Config) error`
+- `FileGenerator` - For diff support without syncing side effects
+  - `Generate(outDir string, cfg *config.Config) (*app.GenerateResult, error)`
 - `Installer` - For apps that need installation
-  - `Install(config *shizukuconfig.Config) error`
+  - `Install(cfg *config.Config) error`
 - `EnvProvider` - For apps that provide environment variables/aliases
-  - `Env() (*shizukuapp.EnvSetup, error)`
+  - `Env() (*app.EnvSetup, error)`
+- `AgentConfigProvider` - For apps that need agentic tools (LSP plugins, sandbox hosts/paths) to support them
+  - `AgentConfig() app.AgentConfig`
 
 ## Creating a New App
 
 ### Step 1: Gather Requirements
 
 Ask the user:
-1. **App name** - What is the name of the application? (e.g., "tmux", "alacritty")
-2. **Default enabled** - Should this app be enabled by default? (most apps: true, optional services: false)
-3. **Installation** - Does the app need installation via Homebrew? (y/n)
+1. **Category** - Which category does this app belong to?
+   - `languages/` - language toolchains (e.g. golang, rust)
+   - `programs/` - regular programs (e.g. nvim, kitty)
+   - `agents/` - agentic coding tools (e.g. claude)
+2. **App name** - What is the name of the application? (e.g., "tmux", "alacritty")
+3. **Default enabled** - Should this app be enabled by default? (most apps: true, optional services: false)
+4. **Installation** - Does the app need installation via Homebrew? (y/n)
    - If yes: package name, cask vs formula, any taps needed?
-4. **File syncing** - Does the app need to sync configuration files? (y/n)
+5. **File syncing** - Does the app need to sync configuration files? (y/n)
    - If yes: destination path (e.g., "~/.config/tmux/")
-5. **Template data** - Does the app need any template variables? (y/n)
-6. **Remote files** - Does the app need to download any remote resources like plugins? (y/n)
-7. **Environment** - Does the app need environment variables or aliases? (y/n)
+6. **Template data** - Does the app need any template variables? (y/n)
+7. **Remote files** - Does the app need to download any remote resources like plugins? (y/n)
+8. **Environment** - Does the app need environment variables or aliases? (y/n)
+9. **Agent config** - Does the app need agentic tools to install LSP plugins, allow specific sandbox hosts, or write to specific paths? (y/n)
 
 ### Step 2: Create Directory Structure
 
 ```bash
-mkdir -p apps/{appName}
+mkdir -p apps/{category}/{appName}
 # Only create contents/ if the app will sync files
-mkdir -p apps/{appName}/contents
+mkdir -p apps/{category}/{appName}/contents
 ```
 
 ### Step 3: Create the Go File
 
-Create `apps/{appName}/{appName}.go` with the appropriate template:
+Create `apps/{category}/{appName}/{appName}.go` with the appropriate template:
 
 #### Minimal App (No File Syncing)
 
@@ -78,7 +92,7 @@ Create `apps/{appName}/{appName}.go` with the appropriate template:
 package {appName}
 
 import (
-	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
+	"github.com/eleonorayaya/shizuku/config"
 )
 
 type App struct{}
@@ -91,8 +105,8 @@ func (a *App) Name() string {
 	return "{appName}"
 }
 
-func (a *App) Enabled(config *shizukuconfig.Config) bool {
-	return config.GetAppConfigBool(a.Name(), "enabled", {defaultEnabled})
+func (a *App) Enabled(cfg *config.Config) bool {
+	return cfg.GetAppConfigBool(a.Name(), "enabled", {defaultEnabled})
 }
 ```
 
@@ -104,8 +118,8 @@ package {appName}
 import (
 	"fmt"
 
-	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
-	"github.com/eleonorayaya/shizuku/internal/util"
+	"github.com/eleonorayaya/shizuku/config"
+	"github.com/eleonorayaya/shizuku/util"
 )
 
 type App struct{}
@@ -118,11 +132,11 @@ func (a *App) Name() string {
 	return "{appName}"
 }
 
-func (a *App) Enabled(config *shizukuconfig.Config) bool {
-	return config.GetAppConfigBool(a.Name(), "enabled", {defaultEnabled})
+func (a *App) Enabled(cfg *config.Config) bool {
+	return cfg.GetAppConfigBool(a.Name(), "enabled", {defaultEnabled})
 }
 
-func (a *App) Install(config *shizukuconfig.Config) error {
+func (a *App) Install(cfg *config.Config) error {
 	// For Homebrew formula
 	if err := util.InstallBrewPackage("{packageName}"); err != nil {
 		return fmt.Errorf("failed to install {packageName}: %w", err)
@@ -150,8 +164,8 @@ package {appName}
 import (
 	"fmt"
 
-	"github.com/eleonorayaya/shizuku/internal/shizukuapp"
-	"github.com/eleonorayaya/shizuku/internal/shizukuconfig"
+	"github.com/eleonorayaya/shizuku/app"
+	"github.com/eleonorayaya/shizuku/config"
 )
 
 type App struct{}
@@ -164,19 +178,22 @@ func (a *App) Name() string {
 	return "{appName}"
 }
 
-func (a *App) Enabled(config *shizukuconfig.Config) bool {
-	return config.GetAppConfigBool(a.Name(), "enabled", {defaultEnabled})
+func (a *App) Enabled(cfg *config.Config) bool {
+	return cfg.GetAppConfigBool(a.Name(), "enabled", {defaultEnabled})
 }
 
-func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+//go:embed all:contents
+var contents embed.FS
+
+func (a *App) Sync(outDir string, cfg *config.Config) error {
 	data := map[string]any{}
 
-	fileMap, err := shizukuapp.GenerateAppFiles("{appName}", data, outDir)
+	fileMap, err := app.GenerateAppFiles("{appName}", contents, data, outDir)
 	if err != nil {
 		return fmt.Errorf("failed to generate app files: %w", err)
 	}
 
-	if err := shizukuapp.SyncAppFiles(fileMap, "{destinationPath}"); err != nil {
+	if err := app.SyncAppFiles(fileMap, "{destinationPath}"); err != nil {
 		return fmt.Errorf("failed to sync app files: %w", err)
 	}
 
@@ -187,10 +204,10 @@ func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 #### App with Remote Files
 
 ```go
-func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
+func (a *App) Sync(outDir string, cfg *config.Config) error {
 	data := map[string]any{}
 
-	fileMap, err := shizukuapp.GenerateAppFiles("{appName}", data, outDir)
+	fileMap, err := app.GenerateAppFiles("{appName}", contents, data, outDir)
 	if err != nil {
 		return fmt.Errorf("failed to generate app files: %w", err)
 	}
@@ -198,13 +215,13 @@ func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 	remoteFiles := map[string]string{
 		"plugins/file.wasm": "https://example.com/file.wasm",
 	}
-	pluginMap, err := internal.FetchRemoteAppFiles(outDir, "{appName}", remoteFiles)
+	pluginMap, err := app.FetchRemoteAppFiles(outDir, "{appName}", remoteFiles)
 	if err != nil {
 		return fmt.Errorf("failed to fetch remote files: %w", err)
 	}
 	maps.Copy(fileMap, pluginMap)
 
-	if err := shizukuapp.SyncAppFiles(fileMap, "{destinationPath}"); err != nil {
+	if err := app.SyncAppFiles(fileMap, "{destinationPath}"); err != nil {
 		return fmt.Errorf("failed to sync app files: %w", err)
 	}
 
@@ -217,12 +234,12 @@ func (a *App) Sync(outDir string, config *shizukuconfig.Config) error {
 #### App with Environment Variables
 
 ```go
-func (a *App) Env() (*shizukuapp.EnvSetup, error) {
-	return &shizukuapp.EnvSetup{
-		Variables: []shizukuapp.EnvVar{
+func (a *App) Env() (*app.EnvSetup, error) {
+	return &app.EnvSetup{
+		Variables: []app.EnvVar{
 			{Key: "EDITOR", Value: "nvim"},
 		},
-		Aliases: []shizukuapp.Alias{
+		Aliases: []app.Alias{
 			{Name: "vim", Command: "nvim"},
 		},
 	}, nil
@@ -231,14 +248,30 @@ func (a *App) Env() (*shizukuapp.EnvSetup, error) {
 
 ### Step 4: Register the App
 
-1. Open `apps/app.go`
-2. Add import: `"github.com/eleonorayaya/shizuku/apps/{appName}"`
-3. Add to the return slice in `GetApps()`:
+1. Open the consumer binary at `examples/eleonora/main.go`
+2. Add import: `"github.com/eleonorayaya/shizuku/apps/{category}/{appName}"`
+3. Add the app to the matching `AddLanguages` / `AddPrograms` / `AddAgent` call in `newBuilder()`:
    ```go
    {appName}.New(),
    ```
 
-**IMPORTANT:** Apps are registered in `apps/app.go`, NOT in `cmd/sync/sync.go` or `cmd/install/install.go`. Those commands automatically load all apps via `apps.GetApps()`.
+**IMPORTANT:** Apps are registered in the consumer binary via the shizuku Builder — not in a central registry. The shizuku library itself does not know about any specific apps.
+
+### Step 4b: Add AgentConfig (optional)
+
+If the app needs agentic tools to install LSP plugins, allow specific sandbox hosts, or write to specific paths, implement `AgentConfigProvider`:
+
+```go
+func (a *App) AgentConfig() app.AgentConfig {
+    return app.AgentConfig{
+        Plugins:             []string{"my-lsp@claude-plugins-official"},
+        SandboxAllowedHosts: []string{"my-package-registry.example"},
+        SandboxAllowWrite:   []string{"~/.cache/my-tool"},
+    }
+}
+```
+
+The sync orchestrator collects this from every enabled app and passes it to agents (e.g. `claude`) via a `SyncContext`. No agent code needs to change when a new app declares its requirements.
 
 ### Step 5: Build and Test
 
@@ -256,8 +289,8 @@ task run -- sync        # Test file syncing (if implemented)
 All apps implement `Enabled()` which checks the config:
 
 ```go
-func (a *App) Enabled(config *shizukuconfig.Config) bool {
-	return config.GetAppConfigBool(a.Name(), "enabled", true)  // default: true
+func (a *App) Enabled(cfg *config.Config) bool {
+	return cfg.GetAppConfigBool(a.Name(), "enabled", true)  // default: true
 }
 ```
 
@@ -280,16 +313,16 @@ apps:
 
 ### Using Other Config Values
 
-Use `config.GetAppConfigBool()` for boolean values:
+Use `cfg.GetAppConfigBool()` for boolean values:
 
 ```go
-useNerdFont := config.GetAppConfigBool(a.Name(), "nerd_font", true)
+useNerdFont := cfg.GetAppConfigBool(a.Name(), "nerd_font", true)
 ```
 
-Use `config.GetAppConfig()` for other types:
+Use `cfg.GetAppConfig()` for other types:
 
 ```go
-theme, ok := config.GetAppConfig(a.Name(), "theme")
+theme, ok := cfg.GetAppConfig(a.Name(), "theme")
 if ok {
 	themeStr, ok := theme.(string)
 	if ok {
@@ -339,11 +372,11 @@ When modifying an app:
 - **File syncing** - `SyncAppFiles` handles directory creation and file copying
 - **App struct** - Always use `type App struct{}` with `New() *App` constructor
 - **Interface implementation** - Implement only the interfaces the app needs
-- **Registration** - Apps are registered in `apps/app.go`, not in command files
+- **Registration** - Apps are registered in the consumer binary (`examples/eleonora/main.go`) via `AddLanguages`/`AddPrograms`/`AddAgent` on the Builder, not in a central registry
 
 ## Installation Utilities
 
-Available Homebrew utilities in `internal/util/homebrew.go`:
+Available Homebrew utilities in `util/homebrew.go`:
 - `InstallBrewPackage(packageName string) error` - Install formula (auto-checks if exists)
 - `InstallCask(caskName string) error` - Install cask (auto-checks if exists)
 - `AddTap(tapName string) error` - Add Homebrew tap (auto-checks if exists)
@@ -354,9 +387,9 @@ All utilities are **idempotent** - safe to call multiple times.
 ## Workflow
 
 1. Use TodoWrite to track the scaffolding steps
-2. Ask clarifying questions using AskUserQuestion
-3. Create all necessary files
-4. Update `apps/app.go` registration
+2. Ask clarifying questions using AskUserQuestion (always ask the category first)
+3. Create all necessary files in `apps/{category}/{appName}/`
+4. Register the app in `examples/eleonora/main.go` under the matching Builder call
 5. Suggest running `task build` and `task run -- list` to verify
 
 ## Examples

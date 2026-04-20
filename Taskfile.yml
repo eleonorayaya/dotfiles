@@ -1,25 +1,27 @@
 version: '3'
 
 vars:
-  GO_SOURCES: '{apps,cmd,internal}/**/*.go'
+  GO_SOURCES: '{agents,programs,languages,examples,app,config,util}/**/*.go'
+  MAIN: examples/eleonora/main.go
 
 tasks:
   build:
     sources:
       - "{{.GO_SOURCES}}"
+      - shizuku.go
     generates:
       - out/shizuku
     cmds:
-      - go build -o out/shizuku cmd/main.go
+      - go build -o out/shizuku {{.MAIN}}
   configmax:
     watch: true
     sources:
-      - "apps/**/*"
+      - "{agents,programs,languages}/**/*"
     cmds:
-      - go run cmd/main.go sync
+      - go run {{.MAIN}} sync
   run:
     cmds:
-      - go run cmd/main.go {{.CLI_ARGS}}
+      - go run {{.MAIN}} {{.CLI_ARGS}}
   lint:
     sources:
       - "{{.GO_SOURCES}}"
@@ -35,4 +37,3 @@ tasks:
       - build
     cmds:
       - cp out/shizuku "$(go env GOPATH)/bin/"
-
