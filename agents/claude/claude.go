@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/eleonorayaya/shizuku/app"
-	"github.com/eleonorayaya/shizuku/config"
 	"github.com/eleonorayaya/shizuku/util"
 )
 
@@ -36,10 +35,6 @@ func (a *App) Name() string {
 	return "claude"
 }
 
-func (a *App) Enabled(cfg *config.Config) bool {
-	return cfg.GetAppConfigBool(a.Name(), "enabled", true)
-}
-
 const utenaShellInit = `eval "$(utena shell-init)"`
 
 func (a *App) Env() (*app.EnvSetup, error) {
@@ -48,13 +43,13 @@ func (a *App) Env() (*app.EnvSetup, error) {
 	}, nil
 }
 
-func (a *App) GenerateWithContext(outDir string, cfg *config.Config, ctx app.SyncContext) (*app.GenerateResult, error) {
-	fileMap, err := app.GenerateAppFiles("claude", contents, nil, outDir)
+func (a *App) Generate(ctx *app.Context, agents app.AgentContext) (*app.GenerateResult, error) {
+	fileMap, err := app.GenerateAppFiles("claude", contents, nil, ctx.OutDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate app files: %w", err)
 	}
 
-	mergedPath, err := a.mergeSettings(outDir, ctx)
+	mergedPath, err := a.mergeSettings(ctx.OutDir, agents)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge settings: %w", err)
 	}
@@ -66,8 +61,8 @@ func (a *App) GenerateWithContext(outDir string, cfg *config.Config, ctx app.Syn
 	}, nil
 }
 
-func (a *App) SyncWithContext(outDir string, cfg *config.Config, ctx app.SyncContext) error {
-	result, err := a.GenerateWithContext(outDir, cfg, ctx)
+func (a *App) Sync(ctx *app.Context, agents app.AgentContext) error {
+	result, err := a.Generate(ctx, agents)
 	if err != nil {
 		return err
 	}
@@ -94,28 +89,28 @@ func dedupeStrings(sources ...[]string) []string {
 	return out
 }
 
-func (a *App) collectPlugins(ctx app.SyncContext) []string {
+func (a *App) collectPlugins(agents app.AgentContext) []string {
 	sources := [][]string{a.opts.AlwaysOnPlugins}
-	for _, ac := range ctx.AgentConfigs {
+	for _, ac := range agents.AgentConfigs {
 		sources = append(sources, ac.Plugins)
 	}
 	return dedupeStrings(sources...)
 }
 
-func (a *App) collectAllowedCommands(ctx app.SyncContext) []string {
+func (a *App) collectAllowedCommands(agents app.AgentContext) []string {
 	sources := [][]string{a.opts.AllowedCommands}
-	for _, ac := range ctx.AgentConfigs {
+	for _, ac := range agents.AgentConfigs {
 		sources = append(sources, ac.AllowedCommands)
 	}
 	return dedupeStrings(sources...)
 }
 
-func (a *App) collectMarketplaces(ctx app.SyncContext) map[string]app.Marketplace {
+func (a *App) collectMarketplaces(agents app.AgentContext) map[string]app.Marketplace {
 	merged := make(map[string]app.Marketplace, len(a.opts.Marketplaces))
 	for name, m := range a.opts.Marketplaces {
 		merged[name] = m
 	}
-	for _, ac := range ctx.AgentConfigs {
+	for _, ac := range agents.AgentConfigs {
 		for name, m := range ac.Marketplaces {
 			if _, exists := merged[name]; exists {
 				continue
@@ -126,23 +121,23 @@ func (a *App) collectMarketplaces(ctx app.SyncContext) map[string]app.Marketplac
 	return merged
 }
 
-func (a *App) collectSandboxHosts(ctx app.SyncContext) []string {
+func (a *App) collectSandboxHosts(agents app.AgentContext) []string {
 	sources := [][]string{a.opts.SandboxAllowedHosts}
-	for _, ac := range ctx.AgentConfigs {
+	for _, ac := range agents.AgentConfigs {
 		sources = append(sources, ac.SandboxAllowedHosts)
 	}
 	return dedupeStrings(sources...)
 }
 
-func (a *App) collectSandboxWrite(ctx app.SyncContext) []string {
+func (a *App) collectSandboxWrite(agents app.AgentContext) []string {
 	sources := [][]string{a.opts.SandboxAllowWrite}
-	for _, ac := range ctx.AgentConfigs {
+	for _, ac := range agents.AgentConfigs {
 		sources = append(sources, ac.SandboxAllowWrite)
 	}
 	return dedupeStrings(sources...)
 }
 
-func (a *App) mergeSettings(outDir string, ctx app.SyncContext) (string, error) {
+func (a *App) mergeSettings(outDir string, agents app.AgentContext) (string, error) {
 	settings, err := util.ReadJSONMap("~/.claude/settings.json")
 	if err != nil {
 		return "", fmt.Errorf("failed to read settings.json: %w", err)
@@ -153,7 +148,7 @@ func (a *App) mergeSettings(outDir string, ctx app.SyncContext) (string, error) 
 		plugins = map[string]any{}
 	}
 
-	for _, plugin := range a.collectPlugins(ctx) {
+	for _, plugin := range a.collectPlugins(agents) {
 		plugins[plugin] = true
 	}
 	settings["enabledPlugins"] = plugins
@@ -170,7 +165,7 @@ func (a *App) mergeSettings(outDir string, ctx app.SyncContext) (string, error) 
 			existing[s] = true
 		}
 	}
-	for _, cmd := range a.collectAllowedCommands(ctx) {
+	for _, cmd := range a.collectAllowedCommands(agents) {
 		if !existing[cmd] {
 			allowRaw = append(allowRaw, cmd)
 			existing[cmd] = true
@@ -201,7 +196,7 @@ func (a *App) mergeSettings(outDir string, ctx app.SyncContext) (string, error) 
 	if knownMarketplaces == nil {
 		knownMarketplaces = map[string]any{}
 	}
-	for name, src := range a.collectMarketplaces(ctx) {
+	for name, src := range a.collectMarketplaces(agents) {
 		if _, exists := knownMarketplaces[name]; exists {
 			continue
 		}
@@ -240,7 +235,7 @@ func (a *App) mergeSettings(outDir string, ctx app.SyncContext) (string, error) 
 			existingHosts[s] = true
 		}
 	}
-	for _, host := range a.collectSandboxHosts(ctx) {
+	for _, host := range a.collectSandboxHosts(agents) {
 		if !existingHosts[host] {
 			allowedHostsRaw = append(allowedHostsRaw, host)
 		}
@@ -259,7 +254,7 @@ func (a *App) mergeSettings(outDir string, ctx app.SyncContext) (string, error) 
 			existingPaths[s] = true
 		}
 	}
-	for _, path := range a.collectSandboxWrite(ctx) {
+	for _, path := range a.collectSandboxWrite(agents) {
 		if !existingPaths[path] {
 			allowWriteRaw = append(allowWriteRaw, path)
 		}

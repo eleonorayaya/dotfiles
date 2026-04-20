@@ -1,7 +1,5 @@
 package app
 
-import "github.com/eleonorayaya/shizuku/config"
-
 type Marketplace struct {
 	Repo string
 	Path string
@@ -19,24 +17,14 @@ type AgentConfigProvider interface {
 	AgentConfig() AgentConfig
 }
 
-type SyncContext struct {
+type AgentContext struct {
 	AgentConfigs []AgentConfig
 }
 
-type ContextualSyncer interface {
-	SyncWithContext(outDir string, cfg *config.Config, ctx SyncContext) error
-}
-
-type ContextualGenerator interface {
-	GenerateWithContext(outDir string, cfg *config.Config, ctx SyncContext) (*GenerateResult, error)
-}
-
-func CollectAgentConfigs(apps []App) SyncContext {
-	configs := []AgentConfig{}
-	for _, app := range apps {
-		if provider, ok := app.(AgentConfigProvider); ok {
-			configs = append(configs, provider.AgentConfig())
-		}
+func CollectAgentConfigs(providers []AgentConfigProvider) AgentContext {
+	configs := make([]AgentConfig, 0, len(providers))
+	for _, p := range providers {
+		configs = append(configs, p.AgentConfig())
 	}
-	return SyncContext{AgentConfigs: configs}
+	return AgentContext{AgentConfigs: configs}
 }

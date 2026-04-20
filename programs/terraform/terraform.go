@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/eleonorayaya/shizuku/app"
-	"github.com/eleonorayaya/shizuku/config"
 	"github.com/eleonorayaya/shizuku/util"
 )
 
@@ -18,11 +17,7 @@ func (a *App) Name() string {
 	return "terraform"
 }
 
-func (a *App) Enabled(cfg *config.Config) bool {
-	return cfg.GetLanguageEnabled(config.LanguageTerraform)
-}
-
-func (a *App) Install(cfg *config.Config) error {
+func (a *App) Install(ctx *app.Context) error {
 	if err := util.AddTap("hashicorp/tap"); err != nil {
 		return fmt.Errorf("failed to add hashicorp tap: %w", err)
 	}

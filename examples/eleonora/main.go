@@ -8,7 +8,6 @@ import (
 
 	shizuku "github.com/eleonorayaya/shizuku"
 	"github.com/eleonorayaya/shizuku/agents/claude"
-	"github.com/eleonorayaya/shizuku/config"
 	"github.com/eleonorayaya/shizuku/examples/eleonora/data"
 	"github.com/eleonorayaya/shizuku/languages/golang"
 	"github.com/eleonorayaya/shizuku/languages/lua"
@@ -37,13 +36,21 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/terraform"
 	"github.com/eleonorayaya/shizuku/programs/tmux"
 	"github.com/eleonorayaya/shizuku/programs/utena"
+	"github.com/eleonorayaya/shizuku/styles"
+	"github.com/eleonorayaya/shizuku/styles/themes"
 	"github.com/eleonorayaya/shizuku/util"
 	"github.com/spf13/cobra"
 )
 
+const sourceDir = "~/.local/src/shizuku"
+
 func main() {
-	cmd := shizuku.New(shizuku.Options{}).
-		AddLanguages(
+	cmd := shizuku.New(
+		shizuku.WithStyles(styles.New(
+			styles.WithTheme(themes.MonadeDark),
+			styles.WithWindowOpacity(65),
+		)),
+		shizuku.WithLanguages(
 			golang.New(),
 			lua.New(),
 			python.New(),
@@ -51,31 +58,33 @@ func main() {
 			rust.New(),
 			typescript.New(),
 			zig.New(),
-		).
-		AddPrograms(
-			sketchybar.New(),
+		),
+		shizuku.WithPrograms(
 			aerospace.New(),
-			fastfetch.New(),
-			kitty.New(),
-			jankyborders.New(),
-			nvim.New(),
 			bat.New(),
+			buildkite.New(),
+			desktoppr.New(),
+			fastfetch.New(),
 			git.New(),
+			glow.New(),
+			jankyborders.New(),
+			k9s.New(),
+			kitty.New(),
 			lsd.New(),
+			nvim.New(),
 			protonpass.New(),
 			protonvpn.New(),
 			sfsymbols.New(),
+			sketchybar.New(),
 			terminal.New(),
 			terraform.New(),
 			tmux.New(),
-			desktoppr.New(),
-			glow.New(),
 			utena.New(),
-			k9s.New(),
-			buildkite.New(),
-		).
-		AddAgent(claude.New(data.ClaudeOptions())).
-		Command()
+		),
+		shizuku.WithAgents(
+			claude.New(data.ClaudeOptions()),
+		),
+	).Command()
 
 	cmd.AddCommand(upgradeCmd())
 
@@ -92,7 +101,7 @@ func upgradeCmd() *cobra.Command {
 		Use:   "upgrade",
 		Short: "Pull latest changes and rebuild the shizuku binary",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			repoDir, err := util.NormalizeFilePath(config.SourceDir)
+			repoDir, err := util.NormalizeFilePath(sourceDir)
 			if err != nil {
 				return fmt.Errorf("failed to resolve source directory: %w", err)
 			}

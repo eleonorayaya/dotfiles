@@ -2,7 +2,6 @@ package lua
 
 import (
 	"github.com/eleonorayaya/shizuku/app"
-	"github.com/eleonorayaya/shizuku/config"
 )
 
 type App struct{}
@@ -13,10 +12,6 @@ func New() *App {
 
 func (a *App) Name() string {
 	return "lua"
-}
-
-func (a *App) Enabled(cfg *config.Config) bool {
-	return cfg.GetLanguageEnabled(config.LanguageLua)
 }
 
 func (a *App) AgentConfig() app.AgentConfig {

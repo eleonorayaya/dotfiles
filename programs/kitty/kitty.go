@@ -7,7 +7,6 @@ import (
 	"os/exec"
 
 	"github.com/eleonorayaya/shizuku/app"
-	"github.com/eleonorayaya/shizuku/config"
 	"github.com/eleonorayaya/shizuku/util"
 )
 
@@ -24,11 +23,7 @@ func (a *App) Name() string {
 	return "kitty"
 }
 
-func (a *App) Enabled(cfg *config.Config) bool {
-	return cfg.GetAppConfigBool(a.Name(), "enabled", true)
-}
-
-func (a *App) Install(cfg *config.Config) error {
+func (a *App) Install(ctx *app.Context) error {
 	if util.BinaryExists("kitty") {
 		slog.Info("kitty already installed, skipping")
 		return nil
@@ -47,13 +42,13 @@ func (a *App) Install(cfg *config.Config) error {
 	return nil
 }
 
-func (a *App) Generate(outDir string, cfg *config.Config) (*app.GenerateResult, error) {
+func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 	data := map[string]any{
-		"Styles":          cfg.Styles,
-		"BackgroundAlpha": float64(cfg.Styles.WindowOpacity) / 100.0,
+		"Styles":          ctx.Styles,
+		"BackgroundAlpha": float64(ctx.Styles.WindowOpacity) / 100.0,
 	}
 
-	fileMap, err := app.GenerateAppFiles("kitty", contents, data, outDir)
+	fileMap, err := app.GenerateAppFiles("kitty", contents, data, ctx.OutDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate app files: %w", err)
 	}
@@ -64,8 +59,8 @@ func (a *App) Generate(outDir string, cfg *config.Config) (*app.GenerateResult, 
 	}, nil
 }
 
-func (a *App) Sync(outDir string, cfg *config.Config) error {
-	result, err := a.Generate(outDir, cfg)
+func (a *App) Sync(ctx *app.Context) error {
+	result, err := a.Generate(ctx)
 	if err != nil {
 		return err
 	}

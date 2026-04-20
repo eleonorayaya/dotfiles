@@ -10,21 +10,12 @@ import (
 	"path"
 	"strings"
 
-	"github.com/eleonorayaya/shizuku/config"
 	"github.com/eleonorayaya/shizuku/util"
 )
-
-type FileSyncer interface {
-	Sync(outDir string, cfg *config.Config) error
-}
 
 type GenerateResult struct {
 	FileMap map[string]string
 	DestDir string
-}
-
-type FileGenerator interface {
-	Generate(outDir string, cfg *config.Config) (*GenerateResult, error)
 }
 
 var binaryExtensions = map[string]bool{

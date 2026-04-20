@@ -3,7 +3,7 @@ package protonvpn
 import (
 	"fmt"
 
-	"github.com/eleonorayaya/shizuku/config"
+	"github.com/eleonorayaya/shizuku/app"
 	"github.com/eleonorayaya/shizuku/util"
 )
 
@@ -17,11 +17,7 @@ func (a *App) Name() string {
 	return "protonvpn"
 }
 
-func (a *App) Enabled(cfg *config.Config) bool {
-	return cfg.GetAppConfigBool(a.Name(), "enabled", false)
-}
-
-func (a *App) Install(cfg *config.Config) error {
+func (a *App) Install(ctx *app.Context) error {
 	if err := util.InstallBrewPackage("protonvpn", true); err != nil {
 		return fmt.Errorf("failed to install protonvpn: %w", err)
 	}

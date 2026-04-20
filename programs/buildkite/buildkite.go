@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/eleonorayaya/shizuku/app"
-	"github.com/eleonorayaya/shizuku/config"
 	"github.com/eleonorayaya/shizuku/util"
 )
 
@@ -18,10 +17,6 @@ func (a *App) Name() string {
 	return "buildkite"
 }
 
-func (a *App) Enabled(cfg *config.Config) bool {
-	return cfg.GetAppConfigBool(a.Name(), "enabled", false)
-}
-
 func (a *App) AgentConfig() app.AgentConfig {
 	return app.AgentConfig{
 		SandboxAllowedHosts: []string{
@@ -31,7 +26,7 @@ func (a *App) AgentConfig() app.AgentConfig {
 	}
 }
 
-func (a *App) Install(cfg *config.Config) error {
+func (a *App) Install(ctx *app.Context) error {
 	if err := util.AddTap("buildkite/buildkite"); err != nil {
 		return fmt.Errorf("failed to add tap: %w", err)
 	}

@@ -2,7 +2,6 @@ package ruby
 
 import (
 	"github.com/eleonorayaya/shizuku/app"
-	"github.com/eleonorayaya/shizuku/config"
 )
 
 type App struct{}
@@ -13,10 +12,6 @@ func New() *App {
 
 func (a *App) Name() string {
 	return "ruby"
-}
-
-func (a *App) Enabled(cfg *config.Config) bool {
-	return cfg.GetLanguageEnabled(config.LanguageRuby)
 }
 
 func (a *App) AgentConfig() app.AgentConfig {

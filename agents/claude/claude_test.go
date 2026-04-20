@@ -23,7 +23,7 @@ func testOptions() Options {
 func TestCollectPluginsEmptyContext(t *testing.T) {
 	opts := testOptions()
 	a := New(opts)
-	ctx := app.SyncContext{}
+	ctx := app.AgentContext{}
 
 	plugins := a.collectPlugins(ctx)
 
@@ -40,7 +40,7 @@ func TestCollectPluginsEmptyContext(t *testing.T) {
 
 func TestCollectPluginsWithRustConfig(t *testing.T) {
 	a := New(testOptions())
-	ctx := app.SyncContext{
+	ctx := app.AgentContext{
 		AgentConfigs: []app.AgentConfig{
 			{Plugins: []string{"rust-analyzer-lsp@claude-plugins-official"}},
 		},
@@ -59,7 +59,7 @@ func TestCollectPluginsWithRustConfig(t *testing.T) {
 func TestCollectPluginsAggregatesAllConfigs(t *testing.T) {
 	opts := testOptions()
 	a := New(opts)
-	ctx := app.SyncContext{
+	ctx := app.AgentContext{
 		AgentConfigs: []app.AgentConfig{
 			{Plugins: []string{"gopls-lsp@claude-plugins-official", "charm-dev@charm-dev-skills"}},
 			{Plugins: []string{"rust-analyzer-lsp@claude-plugins-official"}},
@@ -90,7 +90,7 @@ func TestCollectPluginsAggregatesAllConfigs(t *testing.T) {
 func TestCollectSandboxHostsAggregates(t *testing.T) {
 	opts := testOptions()
 	a := New(opts)
-	ctx := app.SyncContext{
+	ctx := app.AgentContext{
 		AgentConfigs: []app.AgentConfig{
 			{SandboxAllowedHosts: []string{"crates.io"}},
 			{SandboxAllowedHosts: []string{"registry.npmjs.org"}},
@@ -115,7 +115,7 @@ func TestCollectSandboxHostsAggregates(t *testing.T) {
 func TestCollectSandboxWriteAggregates(t *testing.T) {
 	opts := testOptions()
 	a := New(opts)
-	ctx := app.SyncContext{
+	ctx := app.AgentContext{
 		AgentConfigs: []app.AgentConfig{
 			{SandboxAllowWrite: []string{"~/.cargo"}},
 			{SandboxAllowWrite: []string{"~/.npm"}},
@@ -140,7 +140,7 @@ func TestCollectSandboxWriteAggregates(t *testing.T) {
 func TestMergeSettingsMarketplaces(t *testing.T) {
 	opts := testOptions()
 	a := New(opts)
-	ctx := app.SyncContext{}
+	ctx := app.AgentContext{}
 
 	t.Run("adds all desired marketplaces", func(t *testing.T) {
 		outDir := t.TempDir()

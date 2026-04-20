@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/eleonorayaya/shizuku/app"
-	"github.com/eleonorayaya/shizuku/config"
 	"github.com/eleonorayaya/shizuku/util"
 	"gopkg.in/ini.v1"
 )
@@ -34,10 +33,6 @@ func (a *App) Name() string {
 	return "git"
 }
 
-func (a *App) Enabled(cfg *config.Config) bool {
-	return cfg.GetAppConfigBool(a.Name(), "enabled", true)
-}
-
 func (a *App) AgentConfig() app.AgentConfig {
 	return app.AgentConfig{
 		AllowedCommands: []string{
@@ -56,13 +51,13 @@ func (a *App) AgentConfig() app.AgentConfig {
 	}
 }
 
-func (a *App) Generate(outDir string, cfg *config.Config) (*app.GenerateResult, error) {
-	fileMap, err := app.GenerateAppFiles("git", contents, nil, outDir)
+func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
+	fileMap, err := app.GenerateAppFiles("git", contents, nil, ctx.OutDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate app files: %w", err)
 	}
 
-	mergedPath, err := mergeGitConfig(outDir)
+	mergedPath, err := mergeGitConfig(ctx.OutDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge gitconfig: %w", err)
 	}
@@ -74,8 +69,8 @@ func (a *App) Generate(outDir string, cfg *config.Config) (*app.GenerateResult, 
 	}, nil
 }
 
-func (a *App) Sync(outDir string, cfg *config.Config) error {
-	result, err := a.Generate(outDir, cfg)
+func (a *App) Sync(ctx *app.Context) error {
+	result, err := a.Generate(ctx)
 	if err != nil {
 		return err
 	}

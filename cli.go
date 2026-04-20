@@ -18,18 +18,14 @@ func (b *Builder) Command() *cobra.Command {
 			if b.opts.Verbose {
 				slog.SetLogLoggerLevel(slog.LevelDebug)
 			}
+			if envProfile := os.Getenv("SHIZUKU_PROFILE"); envProfile != "" && b.opts.Profile == "" {
+				b.opts.Profile = envProfile
+			}
 			return nil
 		},
 	}
 	root.PersistentFlags().BoolVarP(&b.opts.Verbose, "verbose", "v", false, "Enable verbose output")
-
-	initCmd := &cobra.Command{
-		Use:   "init",
-		Short: "Initialize shizuku configuration directory and create default config file",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return b.Init()
-		},
-	}
+	root.PersistentFlags().StringVarP(&b.opts.Profile, "profile", "p", b.opts.Profile, "Profile to use (overlays on base)")
 
 	syncCmd := &cobra.Command{
 		Use:   "sync",
@@ -79,7 +75,7 @@ func (b *Builder) Command() *cobra.Command {
 			return nil
 		},
 	}
-	diffCmd.Flags().BoolVarP(&showContent, "print", "p", false, "Print diff contents to stdout")
+	diffCmd.Flags().BoolVar(&showContent, "print", false, "Print diff contents to stdout")
 
 	installCmd := &cobra.Command{
 		Use:   "install",
@@ -91,27 +87,23 @@ func (b *Builder) Command() *cobra.Command {
 
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List all available apps and their enabled status",
+		Short: "List apps active in the current profile",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			statuses, err := b.List()
-			if err != nil {
-				return err
-			}
+			statuses := b.List()
 
-			fmt.Println("Available apps:")
-			fmt.Println()
+			if b.opts.Profile != "" {
+				fmt.Printf("Profile: %s\n\n", b.opts.Profile)
+			} else {
+				fmt.Println("Profile: (base)")
+				fmt.Println()
+			}
 			for _, s := range statuses {
-				status := "disabled"
-				if s.Enabled {
-					status = "enabled"
-				}
-				fmt.Printf("  %-20s %s\n", s.Name, status)
+				fmt.Printf("  %-12s %s\n", s.Category, s.Name)
 			}
-
 			return nil
 		},
 	}
 
-	root.AddCommand(initCmd, syncCmd, diffCmd, installCmd, listCmd)
+	root.AddCommand(syncCmd, diffCmd, installCmd, listCmd)
 	return root
 }

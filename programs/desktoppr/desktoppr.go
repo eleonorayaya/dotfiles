@@ -6,7 +6,6 @@ import (
 	"os/exec"
 
 	"github.com/eleonorayaya/shizuku/app"
-	"github.com/eleonorayaya/shizuku/config"
 	"github.com/eleonorayaya/shizuku/util"
 )
 
@@ -25,11 +24,7 @@ func (a *App) Name() string {
 	return "desktoppr"
 }
 
-func (a *App) Enabled(cfg *config.Config) bool {
-	return cfg.GetAppConfigBool(a.Name(), "enabled", true)
-}
-
-func (a *App) Install(cfg *config.Config) error {
+func (a *App) Install(ctx *app.Context) error {
 	if err := util.InstallBrewPackage("desktoppr", true); err != nil {
 		return fmt.Errorf("failed to install desktoppr: %w", err)
 	}
@@ -37,8 +32,8 @@ func (a *App) Install(cfg *config.Config) error {
 	return nil
 }
 
-func (a *App) Generate(outDir string, cfg *config.Config) (*app.GenerateResult, error) {
-	fileMap, err := app.GenerateAppFiles("desktoppr", contents, nil, outDir)
+func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
+	fileMap, err := app.GenerateAppFiles("desktoppr", contents, nil, ctx.OutDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate desktoppr files: %w", err)
 	}
@@ -49,8 +44,8 @@ func (a *App) Generate(outDir string, cfg *config.Config) (*app.GenerateResult, 
 	}, nil
 }
 
-func (a *App) Sync(outDir string, cfg *config.Config) error {
-	result, err := a.Generate(outDir, cfg)
+func (a *App) Sync(ctx *app.Context) error {
+	result, err := a.Generate(ctx)
 	if err != nil {
 		return err
 	}

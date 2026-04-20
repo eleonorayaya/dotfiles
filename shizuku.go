@@ -10,61 +10,132 @@ import (
 	"time"
 
 	"github.com/eleonorayaya/shizuku/app"
-	"github.com/eleonorayaya/shizuku/config"
+	"github.com/eleonorayaya/shizuku/styles"
 )
 
 type Options struct {
 	OutDir  string
+	Profile string
 	Verbose bool
 }
 
+type Profile struct {
+	Languages []app.Language
+	Programs  []app.Program
+	Agents    []app.Agent
+}
+
 type Builder struct {
-	opts      Options
-	languages []app.App
-	programs  []app.App
-	agents    []app.App
+	opts     Options
+	styles   styles.Styles
+	base     Profile
+	profiles map[string]*Profile
+	target   *Profile
 }
 
-func New(opts Options) *Builder {
-	return &Builder{opts: opts}
+type Option func(*Builder)
+
+func WithOutDir(dir string) Option {
+	return func(b *Builder) { b.opts.OutDir = dir }
 }
 
-func (b *Builder) AddLanguage(a app.App) *Builder {
-	b.languages = append(b.languages, a)
+func WithVerbose(v bool) Option {
+	return func(b *Builder) { b.opts.Verbose = v }
+}
+
+func WithProfileName(name string) Option {
+	return func(b *Builder) { b.opts.Profile = name }
+}
+
+func WithStyles(s styles.Styles) Option {
+	return func(b *Builder) { b.styles = s }
+}
+
+func WithLanguages(langs ...app.Language) Option {
+	return func(b *Builder) {
+		b.target.Languages = append(b.target.Languages, langs...)
+	}
+}
+
+func WithPrograms(progs ...app.Program) Option {
+	return func(b *Builder) {
+		b.target.Programs = append(b.target.Programs, progs...)
+	}
+}
+
+func WithAgents(agents ...app.Agent) Option {
+	return func(b *Builder) {
+		b.target.Agents = append(b.target.Agents, agents...)
+	}
+}
+
+func WithProfile(name string, opts ...Option) Option {
+	return func(b *Builder) {
+		p, ok := b.profiles[name]
+		if !ok {
+			p = &Profile{}
+			b.profiles[name] = p
+		}
+		prev := b.target
+		b.target = p
+		for _, opt := range opts {
+			opt(b)
+		}
+		b.target = prev
+	}
+}
+
+func New(opts ...Option) *Builder {
+	b := &Builder{
+		styles:   styles.New(),
+		profiles: map[string]*Profile{},
+	}
+	b.target = &b.base
+	for _, opt := range opts {
+		opt(b)
+	}
 	return b
 }
 
-func (b *Builder) AddLanguages(apps ...app.App) *Builder {
-	b.languages = append(b.languages, apps...)
-	return b
+func mergeNamed[T app.Named](base, overlay []T) []T {
+	idx := map[string]int{}
+	out := make([]T, 0, len(base)+len(overlay))
+	for _, a := range base {
+		idx[a.Name()] = len(out)
+		out = append(out, a)
+	}
+	for _, a := range overlay {
+		if i, ok := idx[a.Name()]; ok {
+			out[i] = a
+		} else {
+			idx[a.Name()] = len(out)
+			out = append(out, a)
+		}
+	}
+	return out
 }
 
-func (b *Builder) AddProgram(a app.App) *Builder {
-	b.programs = append(b.programs, a)
-	return b
+func (b *Builder) activeProfile() Profile {
+	if b.opts.Profile == "" {
+		return b.base
+	}
+	p, ok := b.profiles[b.opts.Profile]
+	if !ok {
+		return b.base
+	}
+	return Profile{
+		Languages: mergeNamed(b.base.Languages, p.Languages),
+		Programs:  mergeNamed(b.base.Programs, p.Programs),
+		Agents:    mergeNamed(b.base.Agents, p.Agents),
+	}
 }
 
-func (b *Builder) AddPrograms(apps ...app.App) *Builder {
-	b.programs = append(b.programs, apps...)
-	return b
-}
-
-func (b *Builder) AddAgent(a app.App) *Builder {
-	b.agents = append(b.agents, a)
-	return b
-}
-
-func (b *Builder) AddAgents(apps ...app.App) *Builder {
-	b.agents = append(b.agents, apps...)
-	return b
-}
-
-func (b *Builder) AllApps() []app.App {
-	all := make([]app.App, 0, len(b.languages)+len(b.programs)+len(b.agents))
-	all = append(all, b.languages...)
-	all = append(all, b.programs...)
-	all = append(all, b.agents...)
-	return all
+func (b *Builder) makeContext(outDir string) *app.Context {
+	return &app.Context{
+		OutDir:  outDir,
+		Profile: b.opts.Profile,
+		Styles:  b.styles,
+	}
 }
 
 func (b *Builder) resolveOutDir() (string, error) {
@@ -78,90 +149,96 @@ func (b *Builder) resolveOutDir() (string, error) {
 	return outDir, nil
 }
 
-func (b *Builder) Init() error {
-	created, configPath, err := config.InitConfig()
-	if err != nil {
-		return fmt.Errorf("failed to create default config: %w", err)
+func collectAgentContext(profile Profile) app.AgentContext {
+	providers := []app.AgentConfigProvider{}
+	for _, l := range profile.Languages {
+		if p, ok := l.(app.AgentConfigProvider); ok {
+			providers = append(providers, p)
+		}
 	}
-
-	if created {
-		fmt.Printf("Created default shizuku configuration at %s\n", configPath)
-	} else {
-		fmt.Printf("Merged existing configuration with defaults at %s\n", configPath)
+	for _, p := range profile.Programs {
+		if pv, ok := p.(app.AgentConfigProvider); ok {
+			providers = append(providers, pv)
+		}
 	}
+	return app.CollectAgentConfigs(providers)
+}
 
-	return nil
+func collectEnvSetups(profile Profile) ([]*app.EnvSetup, error) {
+	envSetups := []*app.EnvSetup{}
+	collect := func(named app.Named) error {
+		provider, ok := named.(app.EnvProvider)
+		if !ok {
+			return nil
+		}
+		envSetup, err := provider.Env()
+		if err != nil {
+			return fmt.Errorf("failed to get env setup for %s: %w", named.Name(), err)
+		}
+		envSetups = append(envSetups, envSetup)
+		return nil
+	}
+	for _, l := range profile.Languages {
+		if err := collect(l); err != nil {
+			return nil, err
+		}
+	}
+	for _, p := range profile.Programs {
+		if err := collect(p); err != nil {
+			return nil, err
+		}
+	}
+	for _, a := range profile.Agents {
+		if err := collect(a); err != nil {
+			return nil, err
+		}
+	}
+	return envSetups, nil
 }
 
 func (b *Builder) Sync(ctx context.Context) error {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
-	}
-
 	outDir, err := b.resolveOutDir()
 	if err != nil {
 		return err
 	}
+	appCtx := b.makeContext(outDir)
+	profile := b.activeProfile()
 
-	enabledLanguages := app.FilterEnabledApps(b.languages, cfg)
-	enabledPrograms := app.FilterEnabledApps(b.programs, cfg)
-	enabledAgents := app.FilterEnabledApps(b.agents, cfg)
-
-	if err := syncApps(enabledLanguages, outDir, cfg); err != nil {
-		return err
-	}
-	if err := syncApps(enabledPrograms, outDir, cfg); err != nil {
-		return err
-	}
-
-	syncCtx := app.CollectAgentConfigs(append(enabledLanguages, enabledPrograms...))
-
-	for _, a := range enabledAgents {
-		slog.Info("app syncing", "appName", a.Name())
-
-		if syncer, ok := a.(app.ContextualSyncer); ok {
-			if err := syncer.SyncWithContext(outDir, cfg, syncCtx); err != nil {
-				return fmt.Errorf("could not sync %s: %w", a.Name(), err)
-			}
-		} else if syncer, ok := a.(app.FileSyncer); ok {
-			if err := syncer.Sync(outDir, cfg); err != nil {
-				return fmt.Errorf("could not sync %s: %w", a.Name(), err)
-			}
+	for _, p := range profile.Programs {
+		if err := syncProgram(p, appCtx); err != nil {
+			return err
 		}
+	}
 
+	agentCtx := collectAgentContext(profile)
+	for _, a := range profile.Agents {
+		slog.Info("app syncing", "appName", a.Name())
+		if err := a.Sync(appCtx, agentCtx); err != nil {
+			return fmt.Errorf("could not sync %s: %w", a.Name(), err)
+		}
 		slog.Info("app synced", "appName", a.Name())
 	}
 
-	allEnabled := append(append(enabledLanguages, enabledPrograms...), enabledAgents...)
-	return b.syncEnv(allEnabled, outDir)
+	return b.syncEnv(profile, outDir)
 }
 
-func syncApps(apps []app.App, outDir string, cfg *config.Config) error {
-	for _, a := range apps {
-		slog.Info("app syncing", "appName", a.Name())
-
-		if syncer, ok := a.(app.FileSyncer); ok {
-			if err := syncer.Sync(outDir, cfg); err != nil {
-				return fmt.Errorf("could not sync %s: %w", a.Name(), err)
-			}
-
-			slog.Info("app synced", "appName", a.Name())
-		}
+func syncProgram(p app.Program, ctx *app.Context) error {
+	syncer, ok := p.(app.FileSyncer)
+	if !ok {
+		return nil
 	}
+	slog.Info("app syncing", "appName", p.Name())
+	if err := syncer.Sync(ctx); err != nil {
+		return fmt.Errorf("could not sync %s: %w", p.Name(), err)
+	}
+	slog.Info("app synced", "appName", p.Name())
 	return nil
 }
 
-func (b *Builder) syncEnv(enabled []app.App, outDir string) error {
-	envSetups := []*app.EnvSetup{}
-	for _, a := range enabled {
-		if provider, ok := a.(app.EnvProvider); ok {
-			envSetup, err := provider.Env()
-			if err != nil {
-				return fmt.Errorf("failed to get env setup for %s: %w", a.Name(), err)
-			}
-			envSetups = append(envSetups, envSetup)
-		}
+func (b *Builder) syncEnv(profile Profile, outDir string) error {
+	envSetups, err := collectEnvSetups(profile)
+	if err != nil {
+		return err
 	}
 
 	envFileMap, err := app.GenerateEnvFiles(envSetups, outDir)
@@ -189,65 +266,53 @@ type DiffReport struct {
 }
 
 func (b *Builder) Diff(ctx context.Context) (*DiffReport, error) {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to load config: %w", err)
-	}
-
 	outDir, err := b.resolveOutDir()
 	if err != nil {
 		return nil, err
 	}
-
-	enabledLanguages := app.FilterEnabledApps(b.languages, cfg)
-	enabledPrograms := app.FilterEnabledApps(b.programs, cfg)
-	enabledAgents := app.FilterEnabledApps(b.agents, cfg)
+	appCtx := b.makeContext(outDir)
+	profile := b.activeProfile()
 
 	var results []DiffResult
 
-	languageResults, err := diffApps(enabledLanguages, outDir, cfg)
-	if err != nil {
-		return nil, err
-	}
-	results = append(results, languageResults...)
-
-	programResults, err := diffApps(enabledPrograms, outDir, cfg)
-	if err != nil {
-		return nil, err
-	}
-	results = append(results, programResults...)
-
-	syncCtx := app.CollectAgentConfigs(append(enabledLanguages, enabledPrograms...))
-
-	for _, a := range enabledAgents {
-		slog.Debug("generating files for diff", "appName", a.Name())
-
-		var result *app.GenerateResult
-		if generator, ok := a.(app.ContextualGenerator); ok {
-			result, err = generator.GenerateWithContext(outDir, cfg, syncCtx)
-		} else if generator, ok := a.(app.FileGenerator); ok {
-			result, err = generator.Generate(outDir, cfg)
-		} else {
+	for _, p := range profile.Programs {
+		generator, ok := p.(app.FileGenerator)
+		if !ok {
 			continue
 		}
+		slog.Debug("generating files for diff", "appName", p.Name())
+		result, err := generator.Generate(appCtx)
+		if err != nil {
+			return nil, fmt.Errorf("could not generate %s: %w", p.Name(), err)
+		}
+		changed, err := app.DiffAppFiles(result)
+		if err != nil {
+			return nil, fmt.Errorf("could not diff %s: %w", p.Name(), err)
+		}
+		if len(changed) > 0 {
+			sort.Strings(changed)
+			results = append(results, DiffResult{Name: p.Name(), Changed: changed, FileMap: result.FileMap})
+		}
+	}
 
+	agentCtx := collectAgentContext(profile)
+	for _, a := range profile.Agents {
+		slog.Debug("generating files for diff", "appName", a.Name())
+		result, err := a.Generate(appCtx, agentCtx)
 		if err != nil {
 			return nil, fmt.Errorf("could not generate %s: %w", a.Name(), err)
 		}
-
 		changed, err := app.DiffAppFiles(result)
 		if err != nil {
 			return nil, fmt.Errorf("could not diff %s: %w", a.Name(), err)
 		}
-
 		if len(changed) > 0 {
 			sort.Strings(changed)
 			results = append(results, DiffResult{Name: a.Name(), Changed: changed, FileMap: result.FileMap})
 		}
 	}
 
-	allEnabled := append(append(enabledLanguages, enabledPrograms...), enabledAgents...)
-	envResult, envChanged, err := b.diffEnv(allEnabled, outDir)
+	envResult, envChanged, err := b.diffEnv(profile, outDir)
 	if err != nil {
 		return nil, err
 	}
@@ -263,46 +328,10 @@ func (b *Builder) Diff(ctx context.Context) (*DiffReport, error) {
 	return &DiffReport{Results: results, TotalChanged: total, OutDir: outDir}, nil
 }
 
-func diffApps(apps []app.App, outDir string, cfg *config.Config) ([]DiffResult, error) {
-	var results []DiffResult
-
-	for _, a := range apps {
-		generator, ok := a.(app.FileGenerator)
-		if !ok {
-			continue
-		}
-
-		slog.Debug("generating files for diff", "appName", a.Name())
-
-		result, err := generator.Generate(outDir, cfg)
-		if err != nil {
-			return nil, fmt.Errorf("could not generate %s: %w", a.Name(), err)
-		}
-
-		changed, err := app.DiffAppFiles(result)
-		if err != nil {
-			return nil, fmt.Errorf("could not diff %s: %w", a.Name(), err)
-		}
-
-		if len(changed) > 0 {
-			sort.Strings(changed)
-			results = append(results, DiffResult{Name: a.Name(), Changed: changed, FileMap: result.FileMap})
-		}
-	}
-
-	return results, nil
-}
-
-func (b *Builder) diffEnv(enabled []app.App, outDir string) (*app.GenerateResult, []string, error) {
-	envSetups := []*app.EnvSetup{}
-	for _, a := range enabled {
-		if provider, ok := a.(app.EnvProvider); ok {
-			envSetup, err := provider.Env()
-			if err != nil {
-				return nil, nil, fmt.Errorf("failed to get env setup for %s: %w", a.Name(), err)
-			}
-			envSetups = append(envSetups, envSetup)
-		}
+func (b *Builder) diffEnv(profile Profile, outDir string) (*app.GenerateResult, []string, error) {
+	envSetups, err := collectEnvSetups(profile)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	envFileMap, err := app.GenerateEnvFiles(envSetups, outDir)
@@ -323,43 +352,60 @@ func (b *Builder) diffEnv(enabled []app.App, outDir string) (*app.GenerateResult
 }
 
 func (b *Builder) Install(ctx context.Context) error {
-	cfg, err := config.LoadConfig()
+	outDir, err := b.resolveOutDir()
 	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
+		return err
+	}
+	appCtx := b.makeContext(outDir)
+	profile := b.activeProfile()
+
+	install := func(named app.Named) error {
+		installer, ok := named.(app.Installer)
+		if !ok {
+			return nil
+		}
+		slog.Info("installing app dependencies", "appName", named.Name())
+		if err := installer.Install(appCtx); err != nil {
+			return fmt.Errorf("failed to install %s: %w", named.Name(), err)
+		}
+		slog.Info("app dependencies installed", "appName", named.Name())
+		return nil
 	}
 
-	enabledApps := app.FilterEnabledApps(b.AllApps(), cfg)
-
-	for _, a := range enabledApps {
-		if installer, ok := a.(app.Installer); ok {
-			slog.Info("installing app dependencies", "appName", a.Name())
-
-			if err := installer.Install(cfg); err != nil {
-				return fmt.Errorf("failed to install %s: %w", a.Name(), err)
-			}
-
-			slog.Info("app dependencies installed", "appName", a.Name())
+	for _, l := range profile.Languages {
+		if err := install(l); err != nil {
+			return err
 		}
 	}
-
+	for _, p := range profile.Programs {
+		if err := install(p); err != nil {
+			return err
+		}
+	}
+	for _, a := range profile.Agents {
+		if err := install(a); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 type AppStatus struct {
-	Name    string
-	Enabled bool
+	Name     string
+	Category string
 }
 
-func (b *Builder) List() ([]AppStatus, error) {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to load config: %w", err)
+func (b *Builder) List() []AppStatus {
+	profile := b.activeProfile()
+	statuses := make([]AppStatus, 0, len(profile.Languages)+len(profile.Programs)+len(profile.Agents))
+	for _, l := range profile.Languages {
+		statuses = append(statuses, AppStatus{Name: l.Name(), Category: "language"})
 	}
-
-	all := b.AllApps()
-	statuses := make([]AppStatus, 0, len(all))
-	for _, a := range all {
-		statuses = append(statuses, AppStatus{Name: a.Name(), Enabled: a.Enabled(cfg)})
+	for _, p := range profile.Programs {
+		statuses = append(statuses, AppStatus{Name: p.Name(), Category: "program"})
 	}
-	return statuses, nil
+	for _, a := range profile.Agents {
+		statuses = append(statuses, AppStatus{Name: a.Name(), Category: "agent"})
+	}
+	return statuses
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/eleonorayaya/shizuku/app"
-	"github.com/eleonorayaya/shizuku/config"
 	"github.com/eleonorayaya/shizuku/util"
 )
 
@@ -22,11 +21,7 @@ func (a *App) Name() string {
 	return "sketchybar"
 }
 
-func (a *App) Enabled(cfg *config.Config) bool {
-	return cfg.GetAppConfigBool(a.Name(), "enabled", true)
-}
-
-func (a *App) Install(cfg *config.Config) error {
+func (a *App) Install(ctx *app.Context) error {
 	if err := util.AddTap("felixkratz/formulae"); err != nil {
 		return fmt.Errorf("failed to add tap: %w", err)
 	}
@@ -38,22 +33,22 @@ func (a *App) Install(cfg *config.Config) error {
 	return nil
 }
 
-func (a *App) Generate(outDir string, cfg *config.Config) (*app.GenerateResult, error) {
+func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 	data := map[string]any{
-		"BarColor":                util.HexToARGB(cfg.Styles.Theme.Colors.Surface, cfg.Styles.WindowOpacity),
-		"BarBorderColor":          util.HexToARGB(cfg.Styles.Theme.Colors.SurfaceBorder, cfg.Styles.WindowOpacity),
-		"IconColor":               util.HexToARGB(cfg.Styles.Theme.Colors.TextOnSurface, 100),
-		"IconHighlightColor":      util.HexToARGB(cfg.Styles.Theme.Colors.Primary, 100),
-		"LabelColor":              util.HexToARGB(cfg.Styles.Theme.Colors.TextOnSurface, 100),
-		"LabelHighlightColor":     util.HexToARGB(cfg.Styles.Theme.Colors.Primary, 100),
-		"PopupBorderColor":        util.HexToARGB(cfg.Styles.Theme.Colors.SurfaceBorder, 100),
-		"PopupBackgroundColor":    util.HexToARGB(cfg.Styles.Theme.Colors.Surface, 100),
-		"ActiveWorkspaceColor":    util.HexToARGB(cfg.Styles.Theme.Colors.Primary, 100),
-		"SpacesWrapperBackground": util.HexToARGB(cfg.Styles.Theme.Colors.Surface, 100),
-		"SpacesItemBackground":    util.HexToARGB(cfg.Styles.Theme.Colors.Primary, 100),
+		"BarColor":                util.HexToARGB(ctx.Styles.Theme.Colors.Surface, ctx.Styles.WindowOpacity),
+		"BarBorderColor":          util.HexToARGB(ctx.Styles.Theme.Colors.SurfaceBorder, ctx.Styles.WindowOpacity),
+		"IconColor":               util.HexToARGB(ctx.Styles.Theme.Colors.TextOnSurface, 100),
+		"IconHighlightColor":      util.HexToARGB(ctx.Styles.Theme.Colors.Primary, 100),
+		"LabelColor":              util.HexToARGB(ctx.Styles.Theme.Colors.TextOnSurface, 100),
+		"LabelHighlightColor":     util.HexToARGB(ctx.Styles.Theme.Colors.Primary, 100),
+		"PopupBorderColor":        util.HexToARGB(ctx.Styles.Theme.Colors.SurfaceBorder, 100),
+		"PopupBackgroundColor":    util.HexToARGB(ctx.Styles.Theme.Colors.Surface, 100),
+		"ActiveWorkspaceColor":    util.HexToARGB(ctx.Styles.Theme.Colors.Primary, 100),
+		"SpacesWrapperBackground": util.HexToARGB(ctx.Styles.Theme.Colors.Surface, 100),
+		"SpacesItemBackground":    util.HexToARGB(ctx.Styles.Theme.Colors.Primary, 100),
 	}
 
-	fileMap, err := app.GenerateAppFiles("sketchybar", contents, data, outDir)
+	fileMap, err := app.GenerateAppFiles("sketchybar", contents, data, ctx.OutDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate app files: %w", err)
 	}
@@ -64,8 +59,8 @@ func (a *App) Generate(outDir string, cfg *config.Config) (*app.GenerateResult, 
 	}, nil
 }
 
-func (a *App) Sync(outDir string, cfg *config.Config) error {
-	result, err := a.Generate(outDir, cfg)
+func (a *App) Sync(ctx *app.Context) error {
+	result, err := a.Generate(ctx)
 	if err != nil {
 		return err
 	}

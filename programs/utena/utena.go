@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/eleonorayaya/shizuku/app"
-	"github.com/eleonorayaya/shizuku/config"
 )
 
 //go:embed all:contents
@@ -29,11 +28,7 @@ func (a *App) Name() string {
 	return "utena"
 }
 
-func (a *App) Enabled(cfg *config.Config) bool {
-	return cfg.GetAppConfigBool(a.Name(), "enabled", true)
-}
-
-func (a *App) Install(cfg *config.Config) error {
+func (a *App) Install(ctx *app.Context) error {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return fmt.Errorf("failed to get home directory: %w", err)
@@ -83,8 +78,8 @@ func updateClaudePlugin() error {
 	return nil
 }
 
-func (a *App) Generate(outDir string, cfg *config.Config) (*app.GenerateResult, error) {
-	colors := cfg.Styles.Theme.Colors
+func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
+	colors := ctx.Styles.Theme.Colors
 	data := map[string]any{
 		"Primary":               colors.Primary,
 		"PrimaryVariant":        colors.PrimaryVariant,
@@ -104,7 +99,7 @@ func (a *App) Generate(outDir string, cfg *config.Config) (*app.GenerateResult, 
 		"Error":                 colors.Error,
 	}
 
-	fileMap, err := app.GenerateAppFiles("utena", contents, data, outDir)
+	fileMap, err := app.GenerateAppFiles("utena", contents, data, ctx.OutDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate utena files: %w", err)
 	}
@@ -115,8 +110,8 @@ func (a *App) Generate(outDir string, cfg *config.Config) (*app.GenerateResult, 
 	}, nil
 }
 
-func (a *App) Sync(outDir string, cfg *config.Config) error {
-	result, err := a.Generate(outDir, cfg)
+func (a *App) Sync(ctx *app.Context) error {
+	result, err := a.Generate(ctx)
 	if err != nil {
 		return err
 	}

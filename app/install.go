@@ -3,13 +3,8 @@ package app
 import (
 	"fmt"
 
-	"github.com/eleonorayaya/shizuku/config"
 	"github.com/eleonorayaya/shizuku/util"
 )
-
-type Installer interface {
-	Install(cfg *config.Config) error
-}
 
 func VerifyInstallation(binaryName string) error {
 	if !util.BinaryExists(binaryName) {

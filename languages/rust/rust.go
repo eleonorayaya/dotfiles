@@ -5,7 +5,6 @@ import (
 	"path"
 
 	"github.com/eleonorayaya/shizuku/app"
-	"github.com/eleonorayaya/shizuku/config"
 	"github.com/eleonorayaya/shizuku/util"
 )
 
@@ -19,11 +18,7 @@ func (a *App) Name() string {
 	return "rust"
 }
 
-func (a *App) Enabled(cfg *config.Config) bool {
-	return cfg.GetLanguageEnabled(config.LanguageRust)
-}
-
-func (a *App) Install(cfg *config.Config) error {
+func (a *App) Install(ctx *app.Context) error {
 	if err := util.InstallBrewPackage("rustup", false); err != nil {
 		return fmt.Errorf("failed to install rustup: %w", err)
 	}
