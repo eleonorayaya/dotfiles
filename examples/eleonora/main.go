@@ -55,7 +55,6 @@ func main() {
 			golang.New(),
 			lua.New(),
 			python.New(),
-			ruby.New(),
 			rust.New(),
 			typescript.New(),
 		),
@@ -81,6 +80,9 @@ func main() {
 			claude.New(data.ClaudeOptions()),
 		),
 		shizuku.WithProfile("work",
+			shizuku.WithLanguages(
+				ruby.New(),
+			),
 			shizuku.WithPrograms(
 				buildkite.New(),
 				k9s.New(),
