@@ -219,3 +219,113 @@ func TestMergeSettingsMarketplaces(t *testing.T) {
 func contains(slice []string, item string) bool {
 	return slices.Contains(slice, item)
 }
+
+func TestMergeHooksAddsNewHook(t *testing.T) {
+	result := mergeHooks(nil, []app.Hook{
+		{Event: "PreToolUse", Matcher: "Bash", Command: "rtk hook claude"},
+	})
+
+	entries, ok := result["PreToolUse"].([]any)
+	if !ok || len(entries) != 1 {
+		t.Fatalf("expected one PreToolUse entry, got %#v", result["PreToolUse"])
+	}
+	entry := entries[0].(map[string]any)
+	if entry["matcher"] != "Bash" {
+		t.Errorf("expected matcher Bash, got %v", entry["matcher"])
+	}
+	commands := entry["hooks"].([]any)
+	if len(commands) != 1 {
+		t.Fatalf("expected one command hook, got %d", len(commands))
+	}
+	cmd := commands[0].(map[string]any)
+	if cmd["type"] != "command" || cmd["command"] != "rtk hook claude" {
+		t.Errorf("unexpected command hook: %#v", cmd)
+	}
+}
+
+func TestMergeHooksPreservesExistingAndDedupes(t *testing.T) {
+	existing := map[string]any{
+		"PreToolUse": []any{
+			map[string]any{
+				"matcher": "Bash",
+				"hooks": []any{
+					map[string]any{"type": "command", "command": "rtk hook claude"},
+				},
+			},
+		},
+	}
+
+	result := mergeHooks(existing, []app.Hook{
+		{Event: "PreToolUse", Matcher: "Bash", Command: "rtk hook claude"},
+		{Event: "PreToolUse", Matcher: "Bash", Command: "other-hook"},
+		{Event: "Stop", Matcher: "", Command: "stop-hook"},
+	})
+
+	preEntries := result["PreToolUse"].([]any)
+	if len(preEntries) != 1 {
+		t.Fatalf("expected one Bash matcher entry, got %d", len(preEntries))
+	}
+	commands := preEntries[0].(map[string]any)["hooks"].([]any)
+	if len(commands) != 2 {
+		t.Fatalf("expected 2 deduped commands, got %d", len(commands))
+	}
+
+	stopEntries := result["Stop"].([]any)
+	if len(stopEntries) != 1 {
+		t.Fatalf("expected one Stop entry, got %d", len(stopEntries))
+	}
+}
+
+func TestMergeSettingsHooksFromAgentConfig(t *testing.T) {
+	a := New(testOptions())
+	ctx := app.AgentContext{
+		AgentConfigs: []app.AgentConfig{
+			{Hooks: []app.Hook{{Event: "PreToolUse", Matcher: "Bash", Command: "rtk hook claude"}}},
+		},
+	}
+
+	outDir := t.TempDir()
+	resultPath, err := a.mergeSettings(outDir, ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, err := os.ReadFile(resultPath)
+	if err != nil {
+		t.Fatalf("failed to read output: %v", err)
+	}
+
+	var settings map[string]any
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatalf("failed to parse output: %v", err)
+	}
+
+	hooks, ok := settings["hooks"].(map[string]any)
+	if !ok {
+		t.Fatal("expected hooks to be a map")
+	}
+	pre, ok := hooks["PreToolUse"].([]any)
+	if !ok || len(pre) == 0 {
+		t.Fatal("expected PreToolUse entry from agent config")
+	}
+	matched := false
+	for _, entry := range pre {
+		entryMap, ok := entry.(map[string]any)
+		if !ok {
+			continue
+		}
+		if entryMap["matcher"] != "Bash" {
+			continue
+		}
+		commandHooks, _ := entryMap["hooks"].([]any)
+		for _, ch := range commandHooks {
+			chMap, _ := ch.(map[string]any)
+			if chMap["command"] == "rtk hook claude" {
+				matched = true
+			}
+		}
+	}
+	if !matched {
+		t.Errorf("expected rtk hook claude to be merged into settings, got %#v", hooks)
+	}
+}
