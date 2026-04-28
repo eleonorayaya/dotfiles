@@ -5,12 +5,19 @@ type Marketplace struct {
 	Path string
 }
 
+type Hook struct {
+	Event   string
+	Matcher string
+	Command string
+}
+
 type AgentConfig struct {
 	Plugins             []string
 	Marketplaces        map[string]Marketplace
 	AllowedCommands     []string
 	SandboxAllowedHosts []string
 	SandboxAllowWrite   []string
+	Hooks               []Hook
 }
 
 type AgentConfigProvider interface {

@@ -31,6 +31,7 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/nvim"
 	"github.com/eleonorayaya/shizuku/programs/protonpass"
 	"github.com/eleonorayaya/shizuku/programs/protonvpn"
+	"github.com/eleonorayaya/shizuku/programs/rtk"
 	"github.com/eleonorayaya/shizuku/programs/sfsymbols"
 	"github.com/eleonorayaya/shizuku/programs/sketchybar"
 	"github.com/eleonorayaya/shizuku/programs/terminal"
@@ -69,6 +70,7 @@ func main() {
 			kitty.New(),
 			lsd.New(),
 			nvim.New(),
+			rtk.New(),
 			sfsymbols.New(),
 			sketchybar.New(),
 			terminal.New(),

@@ -162,6 +162,66 @@ func (a *App) collectSandboxWrite(agents app.AgentContext) []string {
 	return dedupeStrings(sources...)
 }
 
+func (a *App) collectHooks(agents app.AgentContext) []app.Hook {
+	hooks := []app.Hook{}
+	for _, ac := range agents.AgentConfigs {
+		hooks = append(hooks, ac.Hooks...)
+	}
+	return hooks
+}
+
+func mergeHooks(existing map[string]any, hooks []app.Hook) map[string]any {
+	if existing == nil {
+		existing = map[string]any{}
+	}
+	for _, h := range hooks {
+		eventEntries, _ := existing[h.Event].([]any)
+		matcherIdx := -1
+		for i, entry := range eventEntries {
+			entryMap, ok := entry.(map[string]any)
+			if !ok {
+				continue
+			}
+			if m, _ := entryMap["matcher"].(string); m == h.Matcher {
+				matcherIdx = i
+				break
+			}
+		}
+
+		if matcherIdx == -1 {
+			eventEntries = append(eventEntries, map[string]any{
+				"matcher": h.Matcher,
+				"hooks": []any{
+					map[string]any{"type": "command", "command": h.Command},
+				},
+			})
+			existing[h.Event] = eventEntries
+			continue
+		}
+
+		entryMap, _ := eventEntries[matcherIdx].(map[string]any)
+		commandHooks, _ := entryMap["hooks"].([]any)
+		exists := false
+		for _, ch := range commandHooks {
+			chMap, ok := ch.(map[string]any)
+			if !ok {
+				continue
+			}
+			if cmd, _ := chMap["command"].(string); cmd == h.Command {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			commandHooks = append(commandHooks, map[string]any{"type": "command", "command": h.Command})
+			entryMap["hooks"] = commandHooks
+			eventEntries[matcherIdx] = entryMap
+			existing[h.Event] = eventEntries
+		}
+	}
+	return existing
+}
+
 func (a *App) mergeSettings(outDir string, agents app.AgentContext) (string, error) {
 	settings, err := util.ReadJSONMap("~/.claude/settings.json")
 	if err != nil {
@@ -253,6 +313,9 @@ func (a *App) mergeSettings(outDir string, agents app.AgentContext) (string, err
 	filesystem["allowWrite"] = mergeStringsIntoAnySlice(allowWriteRaw, a.collectSandboxWrite(agents))
 	sandbox["filesystem"] = filesystem
 	settings["sandbox"] = sandbox
+
+	hooks, _ := settings["hooks"].(map[string]any)
+	settings["hooks"] = mergeHooks(hooks, a.collectHooks(agents))
 
 	outPath := filepath.Join(outDir, "claude", "settings.json")
 	if err := util.WriteJSONMap(outPath, settings); err != nil {
