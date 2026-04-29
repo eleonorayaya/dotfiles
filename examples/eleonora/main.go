@@ -19,6 +19,7 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/aerospace"
 	"github.com/eleonorayaya/shizuku/programs/bat"
 	"github.com/eleonorayaya/shizuku/programs/buildkite"
+	"github.com/eleonorayaya/shizuku/programs/datadog"
 	"github.com/eleonorayaya/shizuku/programs/desktoppr"
 	"github.com/eleonorayaya/shizuku/programs/fastfetch"
 	"github.com/eleonorayaya/shizuku/programs/git"
@@ -85,6 +86,7 @@ func main() {
 			),
 			shizuku.WithPrograms(
 				buildkite.New(),
+				datadog.New(),
 				k9s.New(),
 				mise.New(),
 			),
