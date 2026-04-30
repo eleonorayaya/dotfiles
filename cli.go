@@ -126,6 +126,51 @@ func (b *Builder) Command() *cobra.Command {
 		},
 	}
 
-	root.AddCommand(syncCmd, diffCmd, installCmd, listCmd)
+	root.AddCommand(syncCmd, diffCmd, installCmd, listCmd, profileCmd())
 	return root
+}
+
+func profileCmd() *cobra.Command {
+	profileFile := filepath.Join(os.Getenv("HOME"), ".config", "shizuku", "profile")
+
+	cmd := &cobra.Command{
+		Use:   "profile",
+		Short: "Manage the default profile for this device",
+	}
+
+	setCmd := &cobra.Command{
+		Use:   "set <name>",
+		Short: "Set the default profile for this device",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := os.MkdirAll(filepath.Dir(profileFile), 0755); err != nil {
+				return fmt.Errorf("failed to create config dir: %w", err)
+			}
+			if err := os.WriteFile(profileFile, []byte(args[0]+"\n"), 0644); err != nil {
+				return fmt.Errorf("failed to write profile: %w", err)
+			}
+			slog.Info("default profile set", "profile", args[0])
+			return nil
+		},
+	}
+
+	getCmd := &cobra.Command{
+		Use:   "get",
+		Short: "Show the default profile for this device",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name, err := ResolveProfile("", "", profileFile)
+			if err != nil {
+				return err
+			}
+			if name == "" {
+				fmt.Println("(none - using base profile)")
+			} else {
+				fmt.Println(name)
+			}
+			return nil
+		},
+	}
+
+	cmd.AddCommand(setCmd, getCmd)
+	return cmd
 }
