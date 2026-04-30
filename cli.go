@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -36,8 +37,16 @@ func (b *Builder) Command() *cobra.Command {
 			if b.opts.Verbose {
 				slog.SetLogLoggerLevel(slog.LevelDebug)
 			}
-			if envProfile := os.Getenv("SHIZUKU_PROFILE"); envProfile != "" && b.opts.Profile == "" {
-				b.opts.Profile = envProfile
+			profileFile := filepath.Join(os.Getenv("HOME"), ".config", "shizuku", "profile")
+			profile, err := ResolveProfile(b.opts.Profile, os.Getenv("SHIZUKU_PROFILE"), profileFile)
+			if err != nil {
+				return err
+			}
+			b.opts.Profile = profile
+			if b.opts.Profile != "" {
+				slog.Info("using profile", "profile", b.opts.Profile)
+			} else {
+				slog.Warn("no profile set, using base profile")
 			}
 			return nil
 		},
