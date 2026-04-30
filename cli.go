@@ -5,9 +5,29 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
+
+// ResolveProfile determines the active profile name using priority:
+// flag > env var > profile file > "" (base)
+func ResolveProfile(flag, env, profileFilePath string) (string, error) {
+	if flag != "" {
+		return flag, nil
+	}
+	if env != "" {
+		return env, nil
+	}
+	data, err := os.ReadFile(profileFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", fmt.Errorf("failed to read default profile: %w", err)
+	}
+	return strings.TrimSpace(string(data)), nil
+}
 
 func (b *Builder) Command() *cobra.Command {
 	root := &cobra.Command{
