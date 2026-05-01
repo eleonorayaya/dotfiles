@@ -11,8 +11,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func defaultConfigPath() string {
-	return filepath.Join(os.Getenv("HOME"), ".config", "shizuku", "shizuku.yml")
+func defaultConfigPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to get home directory: %w", err)
+	}
+	return filepath.Join(home, ".config", "shizuku", "shizuku.yml"), nil
 }
 
 func (b *Builder) Command() *cobra.Command {
@@ -22,7 +26,11 @@ func (b *Builder) Command() *cobra.Command {
 			if b.opts.Verbose {
 				slog.SetLogLoggerLevel(slog.LevelDebug)
 			}
-			cfg, err := config.Load(defaultConfigPath())
+			configPath, err := defaultConfigPath()
+			if err != nil {
+				return err
+			}
+			cfg, err := config.Load(configPath)
 			if err != nil {
 				return err
 			}
@@ -127,7 +135,11 @@ func configCmd() *cobra.Command {
 		Short: "Set a config value",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := config.Set(defaultConfigPath(), args[0], args[1]); err != nil {
+			configPath, err := defaultConfigPath()
+			if err != nil {
+				return err
+			}
+			if err := config.Set(configPath, args[0], args[1]); err != nil {
 				return err
 			}
 			slog.Info("config updated", "key", args[0], "value", args[1])
@@ -140,7 +152,11 @@ func configCmd() *cobra.Command {
 		Short: "Get a config value, or print all config if no key given",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := config.Load(defaultConfigPath())
+			configPath, err := defaultConfigPath()
+			if err != nil {
+				return err
+			}
+			cfg, err := config.Load(configPath)
 			if err != nil {
 				return err
 			}

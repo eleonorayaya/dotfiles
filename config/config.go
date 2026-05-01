@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,8 +14,6 @@ type Config struct {
 	Profile string `yaml:"profile" env:"SHIZUKU_PROFILE"`
 }
 
-// Load reads the YAML config at path (silent no-op if missing), then overrides
-// any field whose "env" tag names a non-empty environment variable.
 func Load(path string) (*Config, error) {
 	cfg, err := loadRaw(path)
 	if err != nil {
@@ -24,8 +23,7 @@ func Load(path string) (*Config, error) {
 	return cfg, nil
 }
 
-// Set loads the raw file (no env override), updates the field named by its yaml
-// tag, and writes the result back. Env-derived values never bleed into the file.
+// Set uses loadRaw (not Load) so env-derived values never bleed into the written file.
 func Set(path, key, value string) error {
 	cfg, err := loadRaw(path)
 	if err != nil {
@@ -37,19 +35,14 @@ func Set(path, key, value string) error {
 	return write(path, cfg)
 }
 
-// Get returns the value of the field whose yaml tag equals key.
 func Get(cfg *Config, key string) (string, error) {
-	v := reflect.ValueOf(cfg).Elem()
-	t := v.Type()
-	for i := range t.NumField() {
-		if t.Field(i).Tag.Get("yaml") == key {
-			return v.Field(i).String(), nil
-		}
+	f, ok := fieldByYAMLKey(cfg, key)
+	if !ok {
+		return "", fmt.Errorf("unknown config key %q", key)
 	}
-	return "", fmt.Errorf("unknown config key %q", key)
+	return f.String(), nil
 }
 
-// YAML marshals the config to a YAML string.
 func (c *Config) YAML() (string, error) {
 	data, err := yaml.Marshal(c)
 	if err != nil {
@@ -62,7 +55,7 @@ func loadRaw(path string) (*Config, error) {
 	cfg := &Config{}
 	data, err := os.ReadFile(path)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			return cfg, nil
 		}
 		return nil, fmt.Errorf("failed to read config: %w", err)
@@ -86,15 +79,23 @@ func applyEnv(cfg *Config) {
 }
 
 func setField(cfg *Config, key, value string) error {
+	f, ok := fieldByYAMLKey(cfg, key)
+	if !ok {
+		return fmt.Errorf("unknown config key %q", key)
+	}
+	f.SetString(value)
+	return nil
+}
+
+func fieldByYAMLKey(cfg *Config, key string) (reflect.Value, bool) {
 	v := reflect.ValueOf(cfg).Elem()
 	t := v.Type()
 	for i := range t.NumField() {
 		if t.Field(i).Tag.Get("yaml") == key {
-			v.Field(i).SetString(value)
-			return nil
+			return v.Field(i), true
 		}
 	}
-	return fmt.Errorf("unknown config key %q", key)
+	return reflect.Value{}, false
 }
 
 func write(path string, cfg *Config) error {
