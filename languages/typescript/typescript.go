@@ -25,7 +25,7 @@ func (a *App) AgentConfig() app.AgentConfig {
 		AllowedCommands: []string{
 			"Bash(npm install)",
 		},
-		SandboxAllowedHosts: []string{
+		SandboxAllowedDomains: []string{
 			"registry.npmjs.org",
 		},
 		SandboxAllowWrite: []string{

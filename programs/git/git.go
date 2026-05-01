@@ -56,7 +56,7 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"Bash(gh run list:*)",
 			"Bash(gh run watch:*)",
 		},
-		SandboxAllowedHosts: []string{
+		SandboxAllowedDomains: []string{
 			"api.github.com",
 			"docs.github.com",
 			"github.com",

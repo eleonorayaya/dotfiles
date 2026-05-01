@@ -25,7 +25,7 @@ func ClaudeOptions() claude.Options {
 			"command": "npx -y ccstatusline@latest",
 			"padding": 0,
 		},
-		SandboxAllowedHosts: []string{
+		SandboxAllowedDomains: []string{
 			"api.anthropic.com",
 			"code.claude.com",
 			"formulae.brew.sh",

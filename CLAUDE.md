@@ -151,9 +151,9 @@ Any app — language, program, or otherwise — may declare what agentic coding 
 ```go
 func (a *App) AgentConfig() app.AgentConfig {
     return app.AgentConfig{
-        Plugins:             []string{"rust-analyzer-lsp@claude-plugins-official"},
-        SandboxAllowedHosts: []string{"crates.io", "docs.rs"},
-        SandboxAllowWrite:   []string{"~/.cargo", "~/.rustup"},
+        Plugins:               []string{"rust-analyzer-lsp@claude-plugins-official"},
+        SandboxAllowedDomains: []string{"crates.io", "docs.rs"},
+        SandboxAllowWrite:     []string{"~/.cargo", "~/.rustup"},
     }
 }
 ```
