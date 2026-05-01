@@ -13,14 +13,14 @@ import (
 var contents embed.FS
 
 type Options struct {
-	Marketplaces        map[string]app.Marketplace
-	AlwaysOnPlugins     []string
-	Env                 map[string]string
-	StatusLine          map[string]any
-	SandboxAllowedHosts []string
-	SandboxAllowWrite   []string
-	AllowedCommands     []string
-	DefaultMode         string
+	Marketplaces          map[string]app.Marketplace
+	AlwaysOnPlugins       []string
+	Env                   map[string]string
+	StatusLine            map[string]any
+	SandboxAllowedDomains []string
+	SandboxAllowWrite     []string
+	AllowedCommands       []string
+	DefaultMode           string
 }
 
 type App struct {
@@ -146,10 +146,10 @@ func (a *App) collectMarketplaces(agents app.AgentContext) map[string]app.Market
 	return merged
 }
 
-func (a *App) collectSandboxHosts(agents app.AgentContext) []string {
-	sources := [][]string{a.opts.SandboxAllowedHosts}
+func (a *App) collectSandboxDomains(agents app.AgentContext) []string {
+	sources := [][]string{a.opts.SandboxAllowedDomains}
 	for _, ac := range agents.AgentConfigs {
-		sources = append(sources, ac.SandboxAllowedHosts)
+		sources = append(sources, ac.SandboxAllowedDomains)
 	}
 	return dedupeStrings(sources...)
 }
@@ -301,8 +301,12 @@ func (a *App) mergeSettings(outDir string, agents app.AgentContext) (string, err
 	network["allowAllUnixSockets"] = true
 	network["allowLocalBinding"] = true
 
-	allowedHostsRaw, _ := network["allowedHosts"].([]any)
-	network["allowedHosts"] = mergeStringsIntoAnySlice(allowedHostsRaw, a.collectSandboxHosts(agents))
+	allowedDomainsRaw, _ := network["allowedDomains"].([]any)
+	if legacy, ok := network["allowedHosts"].([]any); ok {
+		allowedDomainsRaw = append(allowedDomainsRaw, legacy...)
+		delete(network, "allowedHosts")
+	}
+	network["allowedDomains"] = mergeStringsIntoAnySlice(allowedDomainsRaw, a.collectSandboxDomains(agents))
 	sandbox["network"] = network
 
 	filesystem, _ := sandbox["filesystem"].(map[string]any)

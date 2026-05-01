@@ -3,6 +3,7 @@ package claude
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"slices"
 	"testing"
 
@@ -14,9 +15,9 @@ func testOptions() Options {
 		Marketplaces: map[string]app.Marketplace{
 			"test-marketplace": {Repo: "example/test-marketplace"},
 		},
-		AlwaysOnPlugins:     []string{"always-on@test-marketplace"},
-		SandboxAllowedHosts: []string{"default.example.com"},
-		SandboxAllowWrite:   []string{"~/default-path"},
+		AlwaysOnPlugins:       []string{"always-on@test-marketplace"},
+		SandboxAllowedDomains: []string{"default.example.com"},
+		SandboxAllowWrite:     []string{"~/default-path"},
 	}
 }
 
@@ -87,27 +88,27 @@ func TestCollectPluginsAggregatesAllConfigs(t *testing.T) {
 	}
 }
 
-func TestCollectSandboxHostsAggregates(t *testing.T) {
+func TestCollectSandboxDomainsAggregates(t *testing.T) {
 	opts := testOptions()
 	a := New(opts)
 	ctx := app.AgentContext{
 		AgentConfigs: []app.AgentConfig{
-			{SandboxAllowedHosts: []string{"crates.io"}},
-			{SandboxAllowedHosts: []string{"registry.npmjs.org"}},
+			{SandboxAllowedDomains: []string{"crates.io"}},
+			{SandboxAllowedDomains: []string{"registry.npmjs.org"}},
 		},
 	}
 
-	hosts := a.collectSandboxHosts(ctx)
+	domains := a.collectSandboxDomains(ctx)
 
-	if !contains(hosts, "crates.io") {
+	if !contains(domains, "crates.io") {
 		t.Error("expected crates.io to be present")
 	}
-	if !contains(hosts, "registry.npmjs.org") {
+	if !contains(domains, "registry.npmjs.org") {
 		t.Error("expected registry.npmjs.org to be present")
 	}
-	for _, h := range opts.SandboxAllowedHosts {
-		if !contains(hosts, h) {
-			t.Errorf("expected default host %q to be present", h)
+	for _, d := range opts.SandboxAllowedDomains {
+		if !contains(domains, d) {
+			t.Errorf("expected default domain %q to be present", d)
 		}
 	}
 }
@@ -214,6 +215,73 @@ func TestMergeSettingsMarketplaces(t *testing.T) {
 			t.Errorf("expected at least %d marketplaces, got %d", len(opts.Marketplaces), len(marketplaces))
 		}
 	})
+}
+
+func TestMergeSettingsWritesAllowedDomainsAndStripsLegacyKey(t *testing.T) {
+	fakeHome := t.TempDir()
+	t.Setenv("HOME", fakeHome)
+
+	if err := os.MkdirAll(filepath.Join(fakeHome, ".claude"), 0o755); err != nil {
+		t.Fatalf("failed to create fake .claude dir: %v", err)
+	}
+	legacy := []byte(`{"sandbox":{"network":{"allowedHosts":["legacy.example.com"]}}}`)
+	if err := os.WriteFile(filepath.Join(fakeHome, ".claude", "settings.json"), legacy, 0o644); err != nil {
+		t.Fatalf("failed to write fake settings.json: %v", err)
+	}
+
+	opts := testOptions()
+	a := New(opts)
+	ctx := app.AgentContext{
+		AgentConfigs: []app.AgentConfig{
+			{SandboxAllowedDomains: []string{"crates.io"}},
+		},
+	}
+
+	outDir := t.TempDir()
+	result, err := a.mergeSettings(outDir, ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, err := os.ReadFile(result)
+	if err != nil {
+		t.Fatalf("failed to read output: %v", err)
+	}
+
+	var settings map[string]any
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatalf("failed to parse output: %v", err)
+	}
+
+	sandbox, ok := settings["sandbox"].(map[string]any)
+	if !ok {
+		t.Fatal("expected sandbox to be a map")
+	}
+	network, ok := sandbox["network"].(map[string]any)
+	if !ok {
+		t.Fatal("expected sandbox.network to be a map")
+	}
+
+	if _, hasLegacy := network["allowedHosts"]; hasLegacy {
+		t.Error("legacy sandbox.network.allowedHosts key must be stripped on write")
+	}
+
+	domains, ok := network["allowedDomains"].([]any)
+	if !ok {
+		t.Fatal("expected sandbox.network.allowedDomains to be a slice")
+	}
+	for _, want := range []string{"crates.io", "default.example.com", "legacy.example.com"} {
+		found := false
+		for _, d := range domains {
+			if s, _ := d.(string); s == want {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("expected sandbox.network.allowedDomains to contain %q, got %v", want, domains)
+		}
+	}
 }
 
 func contains(slice []string, item string) bool {
