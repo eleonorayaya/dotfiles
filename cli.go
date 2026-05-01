@@ -6,28 +6,13 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"strings"
 
+	"github.com/eleonorayaya/shizuku/config"
 	"github.com/spf13/cobra"
 )
 
-// ResolveProfile determines the active profile name using priority:
-// flag > env var > profile file > "" (base)
-func ResolveProfile(flag, env, profileFilePath string) (string, error) {
-	if flag != "" {
-		return flag, nil
-	}
-	if env != "" {
-		return env, nil
-	}
-	data, err := os.ReadFile(profileFilePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return "", nil
-		}
-		return "", fmt.Errorf("failed to read default profile: %w", err)
-	}
-	return strings.TrimSpace(string(data)), nil
+func defaultConfigPath() string {
+	return filepath.Join(os.Getenv("HOME"), ".config", "shizuku", "shizuku.yml")
 }
 
 func (b *Builder) Command() *cobra.Command {
@@ -37,13 +22,14 @@ func (b *Builder) Command() *cobra.Command {
 			if b.opts.Verbose {
 				slog.SetLogLoggerLevel(slog.LevelDebug)
 			}
-			profileFile := filepath.Join(os.Getenv("HOME"), ".config", "shizuku", "profile")
-			profile, err := ResolveProfile(b.opts.Profile, os.Getenv("SHIZUKU_PROFILE"), profileFile)
+			cfg, err := config.Load(defaultConfigPath())
 			if err != nil {
 				return err
 			}
-			b.opts.Profile = profile
 			if b.opts.Profile != "" {
+				slog.Info("using profile", "profile", b.opts.Profile)
+			} else if cfg.Profile != "" {
+				b.opts.Profile = cfg.Profile
 				slog.Info("using profile", "profile", b.opts.Profile)
 			} else {
 				slog.Warn("no profile set, using base profile")
@@ -126,47 +112,51 @@ func (b *Builder) Command() *cobra.Command {
 		},
 	}
 
-	root.AddCommand(syncCmd, diffCmd, installCmd, listCmd, profileCmd())
+	root.AddCommand(syncCmd, diffCmd, installCmd, listCmd, configCmd())
 	return root
 }
 
-func profileCmd() *cobra.Command {
-	profileFile := filepath.Join(os.Getenv("HOME"), ".config", "shizuku", "profile")
-
+func configCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "profile",
-		Short: "Manage the default profile for this device",
+		Use:   "config",
+		Short: "Manage shizuku configuration",
 	}
 
 	setCmd := &cobra.Command{
-		Use:   "set <name>",
-		Short: "Set the default profile for this device",
-		Args:  cobra.ExactArgs(1),
+		Use:   "set <key> <value>",
+		Short: "Set a config value",
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := os.MkdirAll(filepath.Dir(profileFile), 0755); err != nil {
-				return fmt.Errorf("failed to create config dir: %w", err)
+			if err := config.Set(defaultConfigPath(), args[0], args[1]); err != nil {
+				return err
 			}
-			if err := os.WriteFile(profileFile, []byte(args[0]+"\n"), 0644); err != nil {
-				return fmt.Errorf("failed to write profile: %w", err)
-			}
-			slog.Info("default profile set", "profile", args[0])
+			slog.Info("config updated", "key", args[0], "value", args[1])
 			return nil
 		},
 	}
 
 	getCmd := &cobra.Command{
-		Use:   "get",
-		Short: "Show the default profile for this device",
+		Use:   "get [key]",
+		Short: "Get a config value, or print all config if no key given",
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			name, err := ResolveProfile("", "", profileFile)
+			cfg, err := config.Load(defaultConfigPath())
 			if err != nil {
 				return err
 			}
-			if name == "" {
-				fmt.Println("(none - using base profile)")
-			} else {
-				fmt.Println(name)
+			if len(args) == 0 {
+				out, err := cfg.YAML()
+				if err != nil {
+					return err
+				}
+				fmt.Print(out)
+				return nil
 			}
+			val, err := config.Get(cfg, args[0])
+			if err != nil {
+				return err
+			}
+			fmt.Println(val)
 			return nil
 		},
 	}
