@@ -259,14 +259,14 @@ func (a *App) Env() (*app.EnvSetup, error) {
 
 ### Step 4b: Add AgentConfig (optional)
 
-If the app needs agentic tools to install LSP plugins, allow specific sandbox hosts, or write to specific paths, implement `AgentConfigProvider`:
+If the app needs agentic tools to install LSP plugins, allow specific sandbox domains, or write to specific paths, implement `AgentConfigProvider`:
 
 ```go
 func (a *App) AgentConfig() app.AgentConfig {
     return app.AgentConfig{
-        Plugins:             []string{"my-lsp@claude-plugins-official"},
-        SandboxAllowedHosts: []string{"my-package-registry.example"},
-        SandboxAllowWrite:   []string{"~/.cache/my-tool"},
+        Plugins:               []string{"my-lsp@claude-plugins-official"},
+        SandboxAllowedDomains: []string{"my-package-registry.example"},
+        SandboxAllowWrite:     []string{"~/.cache/my-tool"},
     }
 }
 ```

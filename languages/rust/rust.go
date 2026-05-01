@@ -34,7 +34,7 @@ func (a *App) AgentConfig() app.AgentConfig {
 		Marketplaces: map[string]app.Marketplace{
 			"claude-plugins-official": {Repo: "anthropics/claude-plugins-official"},
 		},
-		SandboxAllowedHosts: []string{
+		SandboxAllowedDomains: []string{
 			"index.crates.io",
 			"static.crates.io",
 			"static.rust-lang.org",

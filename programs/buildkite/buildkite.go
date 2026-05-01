@@ -19,7 +19,7 @@ func (a *App) Name() string {
 
 func (a *App) AgentConfig() app.AgentConfig {
 	return app.AgentConfig{
-		SandboxAllowedHosts: []string{
+		SandboxAllowedDomains: []string{
 			"api.buildkite.com",
 			"buildkite.com",
 		},
