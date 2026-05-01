@@ -5,9 +5,19 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 
+	"github.com/eleonorayaya/shizuku/config"
 	"github.com/spf13/cobra"
 )
+
+func defaultConfigPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to get home directory: %w", err)
+	}
+	return filepath.Join(home, ".config", "shizuku", "shizuku.yml"), nil
+}
 
 func (b *Builder) Command() *cobra.Command {
 	root := &cobra.Command{
@@ -16,8 +26,21 @@ func (b *Builder) Command() *cobra.Command {
 			if b.opts.Verbose {
 				slog.SetLogLoggerLevel(slog.LevelDebug)
 			}
-			if envProfile := os.Getenv("SHIZUKU_PROFILE"); envProfile != "" && b.opts.Profile == "" {
-				b.opts.Profile = envProfile
+			configPath, err := defaultConfigPath()
+			if err != nil {
+				return err
+			}
+			cfg, err := config.Load(configPath)
+			if err != nil {
+				return err
+			}
+			if b.opts.Profile != "" {
+				slog.Info("using profile", "profile", b.opts.Profile)
+			} else if cfg.Profile != "" {
+				b.opts.Profile = cfg.Profile
+				slog.Info("using profile", "profile", b.opts.Profile)
+			} else {
+				slog.Warn("no profile set, using base profile")
 			}
 			return nil
 		},
@@ -97,6 +120,63 @@ func (b *Builder) Command() *cobra.Command {
 		},
 	}
 
-	root.AddCommand(syncCmd, diffCmd, installCmd, listCmd)
+	root.AddCommand(syncCmd, diffCmd, installCmd, listCmd, configCmd())
 	return root
+}
+
+func configCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "config",
+		Short: "Manage shizuku configuration",
+	}
+
+	setCmd := &cobra.Command{
+		Use:   "set <key> <value>",
+		Short: "Set a config value",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			configPath, err := defaultConfigPath()
+			if err != nil {
+				return err
+			}
+			if err := config.Set(configPath, args[0], args[1]); err != nil {
+				return err
+			}
+			slog.Info("config updated", "key", args[0], "value", args[1])
+			return nil
+		},
+	}
+
+	getCmd := &cobra.Command{
+		Use:   "get [key]",
+		Short: "Get a config value, or print all config if no key given",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			configPath, err := defaultConfigPath()
+			if err != nil {
+				return err
+			}
+			cfg, err := config.Load(configPath)
+			if err != nil {
+				return err
+			}
+			if len(args) == 0 {
+				out, err := cfg.YAML()
+				if err != nil {
+					return err
+				}
+				fmt.Print(out)
+				return nil
+			}
+			val, err := config.Get(cfg, args[0])
+			if err != nil {
+				return err
+			}
+			fmt.Println(val)
+			return nil
+		},
+	}
+
+	cmd.AddCommand(setCmd, getCmd)
+	return cmd
 }
