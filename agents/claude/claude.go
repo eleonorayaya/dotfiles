@@ -21,6 +21,7 @@ type Options struct {
 	SandboxAllowWrite     []string
 	AllowedCommands       []string
 	DefaultMode           string
+	AdvisorModel          string
 }
 
 type App struct {
@@ -260,6 +261,9 @@ func (a *App) mergeSettings(outDir string, agents app.AgentContext) (string, err
 
 	if a.opts.DefaultMode != "" {
 		settings["defaultMode"] = a.opts.DefaultMode
+	}
+	if a.opts.AdvisorModel != "" {
+		settings["advisorModel"] = a.opts.AdvisorModel
 	}
 	if a.opts.StatusLine != nil {
 		settings["statusLine"] = a.opts.StatusLine

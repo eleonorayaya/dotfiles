@@ -52,9 +52,11 @@ func ClaudeOptions() claude.Options {
 
 			"Bash(npx nx:*)",
 
+			"Read(//tmp/**)",
 			"Edit(//tmp/**)",
 			"Write(//tmp/**)",
 		},
-		DefaultMode: "plan",
+		DefaultMode:  "plan",
+		AdvisorModel: "opus",
 	}
 }
