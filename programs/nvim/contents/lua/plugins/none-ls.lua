@@ -169,7 +169,7 @@ return {
     event = "LSPAttach",
     dependencies = {
       "nvim-lua/plenary.nvim",
-      "nvim-treesitter/nvim-treesitter",
+      "romus204/tree-sitter-manager.nvim",
     },
     config = function()
       local null_ls = require("null-ls")

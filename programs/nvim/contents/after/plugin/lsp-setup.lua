@@ -22,6 +22,7 @@ local builtin_configs = {
   docker_compose_language_service = {},
   jsonls = {},
   yamlls = {},
+  sourcekit = {},
 }
 
 local custom_configs = {
