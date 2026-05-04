@@ -26,6 +26,10 @@ func (a *App) Install(ctx *app.Context) error {
 		return fmt.Errorf("failed to install neovim: %w", err)
 	}
 
+	if err := util.InstallBrewPackage("tree-sitter-cli", false); err != nil {
+		return fmt.Errorf("failed to install tree-sitter-cli: %w", err)
+	}
+
 	return nil
 }
 
