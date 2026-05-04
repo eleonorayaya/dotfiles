@@ -4,7 +4,7 @@ return {
     requires = {
       "nvim-lua/plenary.nvim",
       "nvim-tree/nvim-web-devicons",
-      "nvim-treesitter/nvim-treesitter",
+      "romus204/tree-sitter-manager.nvim",
     },
     cmd = { "Octo" },
     config = function()

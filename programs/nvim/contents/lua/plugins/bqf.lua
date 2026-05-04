@@ -3,7 +3,7 @@ return {
     "kevinhwang91/nvim-bqf",
     event = "VeryLazy",
     dependencies = {
-      "nvim-treesitter/nvim-treesitter",
+      "romus204/tree-sitter-manager.nvim",
     },
     config = function()
       require("bqf").setup({

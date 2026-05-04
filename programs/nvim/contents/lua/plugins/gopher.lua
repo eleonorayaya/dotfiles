@@ -5,7 +5,7 @@ return {
     ft = { "go", "gomod", "gowork", "gotmpl" },
     dependencies = {
       "nvim-lua/plenary.nvim",
-      "nvim-treesitter/nvim-treesitter",
+      "romus204/tree-sitter-manager.nvim",
     },
     config = function()
       require("gopher").setup({

@@ -2,7 +2,7 @@ return {
   {
     "theHamsta/nvim-dap-virtual-text",
     dependencies = {
-      "nvim-treesitter/nvim-treesitter",
+      "romus204/tree-sitter-manager.nvim",
     },
     lazy = true,
     config = function()
