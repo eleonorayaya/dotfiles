@@ -16,6 +16,7 @@ local builtin_configs = {
   rust_analyzer = {},
   bashls = {},
   marksman = {},
+  sourcekit = {},
   zls = {},
   awk_ls = {},
   statix = {},

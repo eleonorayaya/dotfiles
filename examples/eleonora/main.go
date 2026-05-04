@@ -14,6 +14,7 @@ import (
 	"github.com/eleonorayaya/shizuku/languages/python"
 	"github.com/eleonorayaya/shizuku/languages/ruby"
 	"github.com/eleonorayaya/shizuku/languages/rust"
+	"github.com/eleonorayaya/shizuku/languages/swift"
 	"github.com/eleonorayaya/shizuku/languages/typescript"
 	"github.com/eleonorayaya/shizuku/languages/zig"
 	"github.com/eleonorayaya/shizuku/programs/aerospace"
@@ -97,6 +98,7 @@ func main() {
 		),
 		shizuku.WithProfile("personal",
 			shizuku.WithLanguages(
+				swift.New(),
 				zig.New(),
 			),
 			shizuku.WithPrograms(
