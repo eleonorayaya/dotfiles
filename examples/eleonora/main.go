@@ -29,6 +29,7 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/kitty"
 	"github.com/eleonorayaya/shizuku/programs/lsd"
 	"github.com/eleonorayaya/shizuku/programs/mise"
+	"github.com/eleonorayaya/shizuku/programs/notion"
 	"github.com/eleonorayaya/shizuku/programs/nvim"
 	"github.com/eleonorayaya/shizuku/programs/protonpass"
 	"github.com/eleonorayaya/shizuku/programs/protonvpn"
@@ -70,6 +71,7 @@ func main() {
 			jankyborders.New(),
 			kitty.New(),
 			lsd.New(),
+			notion.New(),
 			nvim.New(),
 			rtk.New(),
 			sfsymbols.New(),
