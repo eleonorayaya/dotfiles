@@ -31,6 +31,8 @@ func ClaudeOptions() claude.Options {
 			"formulae.brew.sh",
 		},
 		SandboxAllowWrite: []string{
+			"/tmp",
+			"/private/tmp",
 			"/dev/ptmx",
 			"/dev/ttys*",
 			"~/.docker",
