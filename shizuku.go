@@ -175,7 +175,9 @@ func collectEnvSetups(profile Profile) ([]*app.EnvSetup, error) {
 		if err != nil {
 			return fmt.Errorf("failed to get env setup for %s: %w", named.Name(), err)
 		}
-		envSetups = append(envSetups, envSetup)
+		if envSetup != nil {
+			envSetups = append(envSetups, envSetup)
+		}
 		return nil
 	}
 	for _, l := range profile.Languages {
