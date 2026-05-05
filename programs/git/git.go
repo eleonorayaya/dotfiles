@@ -60,7 +60,6 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"git fetch *",
 			"git push *",
 			"git ls-remote *",
-			"gh *",
 		},
 		SandboxAllowedDomains: []string{
 			"api.github.com",
