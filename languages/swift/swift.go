@@ -20,8 +20,8 @@ func (a *App) Install(ctx *app.Context) error {
 
 func (a *App) AgentConfig() app.AgentConfig {
 	return app.AgentConfig{
-		AllowedCommands: []string{
-			"Bash(swift build:*)",
+		AllowedBashCommands: []string{
+			"swift build:*",
 		},
 		SandboxAllowWrite: []string{
 			"~/Library/Developer/",

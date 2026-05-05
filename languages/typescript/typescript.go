@@ -22,8 +22,8 @@ func (a *App) AgentConfig() app.AgentConfig {
 		Marketplaces: map[string]app.Marketplace{
 			"claude-plugins-official": {Repo: "anthropics/claude-plugins-official"},
 		},
-		AllowedCommands: []string{
-			"Bash(npm install)",
+		AllowedBashCommands: []string{
+			"npm install",
 		},
 		SandboxAllowedDomains: []string{
 			"registry.npmjs.org",

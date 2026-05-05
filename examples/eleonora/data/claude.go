@@ -38,22 +38,21 @@ func ClaudeOptions() claude.Options {
 			"~/.docker",
 			"~/.colima",
 		},
-		AllowedCommands: []string{
-			"Bash(grep:*)",
-			"Bash(find:*)",
-			"Bash(ls:*)",
-			"Bash(tree:*)",
-			"Bash(cat:*)",
-			"Bash(wc:*)",
-			"Bash(xargs:*)",
-			"Bash(echo:*)",
-			"Bash(head:*)",
-			"Bash(tail:*)",
-
-			"Bash(brew --prefix:*)",
-
-			"Bash(npx nx:*)",
-
+		AllowedBashCommands: []string{
+			"grep:*",
+			"find:*",
+			"ls:*",
+			"tree:*",
+			"cat:*",
+			"wc:*",
+			"xargs:*",
+			"echo:*",
+			"head:*",
+			"tail:*",
+			"brew --prefix:*",
+			"npx nx:*",
+		},
+		AllowedToolPermissions: []string{
 			"Read(//tmp/**)",
 			"Edit(//tmp/**)",
 			"Write(//tmp/**)",

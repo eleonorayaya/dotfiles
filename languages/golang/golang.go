@@ -51,11 +51,13 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"claude-plugins-official": {Repo: "anthropics/claude-plugins-official"},
 			"charm-dev-skills":        {Repo: "williavs/charm-dev-skill-marketplace"},
 		},
-		AllowedCommands: []string{
-			"Bash(go build:*)",
-			"Bash(go vet:*)",
-			"Bash(go mod tidy:*)",
-			"Bash(task:*)",
+		AllowedBashCommands: []string{
+			"go build:*",
+			"go vet:*",
+			"go mod tidy:*",
+			"task:*",
+		},
+		AllowedToolPermissions: []string{
 			"Skill(task)",
 		},
 		SandboxAllowWrite: []string{
