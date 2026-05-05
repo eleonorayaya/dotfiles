@@ -26,5 +26,8 @@ func (a *App) AgentConfig() app.AgentConfig {
 		SandboxAllowWrite: []string{
 			"~/Library/Developer/",
 		},
+		SandboxExcludedCommands: []string{
+			"swift *",
+		},
 	}
 }
