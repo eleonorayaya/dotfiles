@@ -18,6 +18,7 @@ type Options struct {
 	Env                    map[string]string
 	StatusLine             map[string]any
 	SandboxAllowedDomains   []string
+	SandboxAllowRead        []string
 	SandboxAllowWrite       []string
 	SandboxExcludedCommands []string
 	AllowedBashCommands     []string
@@ -177,6 +178,14 @@ func (a *App) collectSandboxDomains(agents app.AgentContext) []string {
 	sources := [][]string{a.opts.SandboxAllowedDomains}
 	for _, ac := range agents.AgentConfigs {
 		sources = append(sources, ac.SandboxAllowedDomains)
+	}
+	return dedupeStrings(sources...)
+}
+
+func (a *App) collectSandboxRead(agents app.AgentContext) []string {
+	sources := [][]string{a.opts.SandboxAllowRead}
+	for _, ac := range agents.AgentConfigs {
+		sources = append(sources, ac.SandboxAllowRead)
 	}
 	return dedupeStrings(sources...)
 }
@@ -350,6 +359,10 @@ func (a *App) mergeSettings(outDir string, agents app.AgentContext) (string, err
 	filesystem, _ := sandbox["filesystem"].(map[string]any)
 	if filesystem == nil {
 		filesystem = map[string]any{}
+	}
+	if readPaths := a.collectSandboxRead(agents); len(readPaths) > 0 {
+		allowReadRaw, _ := filesystem["allowRead"].([]any)
+		filesystem["allowRead"] = mergeStringsIntoAnySlice(allowReadRaw, readPaths)
 	}
 	allowWriteRaw, _ := filesystem["allowWrite"].([]any)
 	filesystem["allowWrite"] = mergeStringsIntoAnySlice(allowWriteRaw, a.collectSandboxWrite(agents))

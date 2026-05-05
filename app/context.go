@@ -17,6 +17,7 @@ type AgentConfig struct {
 	AllowedBashCommands     []string
 	AllowedToolPermissions  []string
 	SandboxAllowedDomains   []string
+	SandboxAllowRead        []string
 	SandboxAllowWrite       []string
 	SandboxExcludedCommands []string
 	Hooks                  []Hook
