@@ -27,6 +27,7 @@ func (a *App) Install(ctx *app.Context) error {
 
 func (a *App) AgentConfig() app.AgentConfig {
 	return app.AgentConfig{
+		BashCommandPrefix: "rtk",
 		Hooks: []app.Hook{
 			{
 				Event:   "PreToolUse",

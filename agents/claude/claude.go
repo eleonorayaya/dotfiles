@@ -13,15 +13,17 @@ import (
 var contents embed.FS
 
 type Options struct {
-	Marketplaces          map[string]app.Marketplace
-	AlwaysOnPlugins       []string
-	Env                   map[string]string
-	StatusLine            map[string]any
-	SandboxAllowedDomains []string
-	SandboxAllowWrite     []string
-	AllowedCommands       []string
-	DefaultMode           string
-	AdvisorModel          string
+	Marketplaces           map[string]app.Marketplace
+	AlwaysOnPlugins        []string
+	Env                    map[string]string
+	StatusLine             map[string]any
+	SandboxAllowedDomains   []string
+	SandboxAllowWrite       []string
+	SandboxExcludedCommands []string
+	AllowedBashCommands     []string
+	AllowedToolPermissions  []string
+	DefaultMode            string
+	AdvisorModel           string
 }
 
 type App struct {
@@ -107,7 +109,7 @@ func mergeStringsIntoAnySlice(existing []any, additions []string) []any {
 	return existing
 }
 
-var baselineAllowedCommands = []string{
+var baselineAllowedToolPermissions = []string{
 	"mcp__ide__getDiagnostics",
 }
 
@@ -124,11 +126,35 @@ func (a *App) collectPlugins(agents app.AgentContext) []string {
 }
 
 func (a *App) collectAllowedCommands(agents app.AgentContext) []string {
-	sources := [][]string{baselineAllowedCommands, a.opts.AllowedCommands}
+	bashSources := [][]string{a.opts.AllowedBashCommands}
+	toolSources := [][]string{baselineAllowedToolPermissions, a.opts.AllowedToolPermissions}
 	for _, ac := range agents.AgentConfigs {
-		sources = append(sources, ac.AllowedCommands)
+		bashSources = append(bashSources, ac.AllowedBashCommands)
+		toolSources = append(toolSources, ac.AllowedToolPermissions)
 	}
-	return dedupeStrings(sources...)
+	bashCmds := dedupeStrings(bashSources...)
+	toolPerms := dedupeStrings(toolSources...)
+
+	prefixes := collectBashPrefixes(agents)
+	permissions := make([]string, 0, len(bashCmds)*(1+len(prefixes))+len(toolPerms))
+	for _, cmd := range bashCmds {
+		permissions = append(permissions, "Bash("+cmd+")")
+		for _, p := range prefixes {
+			permissions = append(permissions, "Bash("+p+" "+cmd+")")
+		}
+	}
+	permissions = append(permissions, toolPerms...)
+	return permissions
+}
+
+func collectBashPrefixes(agents app.AgentContext) []string {
+	var raw []string
+	for _, ac := range agents.AgentConfigs {
+		if ac.BashCommandPrefix != "" {
+			raw = append(raw, ac.BashCommandPrefix)
+		}
+	}
+	return dedupeStrings(raw)
 }
 
 func (a *App) collectMarketplaces(agents app.AgentContext) map[string]app.Marketplace {
@@ -159,6 +185,14 @@ func (a *App) collectSandboxWrite(agents app.AgentContext) []string {
 	sources := [][]string{baselineSandboxAllowWrite, a.opts.SandboxAllowWrite}
 	for _, ac := range agents.AgentConfigs {
 		sources = append(sources, ac.SandboxAllowWrite)
+	}
+	return dedupeStrings(sources...)
+}
+
+func (a *App) collectSandboxExcludedCommands(agents app.AgentContext) []string {
+	sources := [][]string{a.opts.SandboxExcludedCommands}
+	for _, ac := range agents.AgentConfigs {
+		sources = append(sources, ac.SandboxExcludedCommands)
 	}
 	return dedupeStrings(sources...)
 }
@@ -320,6 +354,9 @@ func (a *App) mergeSettings(outDir string, agents app.AgentContext) (string, err
 	allowWriteRaw, _ := filesystem["allowWrite"].([]any)
 	filesystem["allowWrite"] = mergeStringsIntoAnySlice(allowWriteRaw, a.collectSandboxWrite(agents))
 	sandbox["filesystem"] = filesystem
+
+	excludedRaw, _ := sandbox["excludedCommands"].([]any)
+	sandbox["excludedCommands"] = mergeStringsIntoAnySlice(excludedRaw, a.collectSandboxExcludedCommands(agents))
 	settings["sandbox"] = sandbox
 
 	hooks, _ := settings["hooks"].(map[string]any)
