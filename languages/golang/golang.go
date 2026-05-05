@@ -60,6 +60,9 @@ func (a *App) AgentConfig() app.AgentConfig {
 		AllowedToolPermissions: []string{
 			"Skill(task)",
 		},
+		SandboxAllowRead: []string{
+			"~/go/pkg",
+		},
 		SandboxAllowWrite: []string{
 			"~/.cache/go-build",
 			"~/.config/go",

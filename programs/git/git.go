@@ -57,6 +57,8 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"gh run watch:*",
 		},
 		SandboxExcludedCommands: []string{
+			"git add *",
+			"git commit *",
 			"git fetch *",
 			"git push *",
 			"git ls-remote *",
