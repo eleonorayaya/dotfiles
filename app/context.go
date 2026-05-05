@@ -12,12 +12,14 @@ type Hook struct {
 }
 
 type AgentConfig struct {
-	Plugins               []string
-	Marketplaces          map[string]Marketplace
-	AllowedCommands       []string
-	SandboxAllowedDomains []string
-	SandboxAllowWrite     []string
-	Hooks                 []Hook
+	Plugins                []string
+	Marketplaces           map[string]Marketplace
+	AllowedBashCommands    []string
+	AllowedToolPermissions []string
+	SandboxAllowedDomains  []string
+	SandboxAllowWrite      []string
+	Hooks                  []Hook
+	BashCommandPrefix      string
 }
 
 type AgentConfigProvider interface {

@@ -344,6 +344,130 @@ func TestMergeHooksPreservesExistingAndDedupes(t *testing.T) {
 	}
 }
 
+func TestCollectAllowedCommandsWrapsBashCommands(t *testing.T) {
+	a := New(testOptions())
+	ctx := app.AgentContext{
+		AgentConfigs: []app.AgentConfig{
+			{AllowedBashCommands: []string{"git add:*", "git status:*"}},
+		},
+	}
+
+	cmds := a.collectAllowedCommands(ctx)
+
+	for _, want := range []string{"Bash(git add:*)", "Bash(git status:*)"} {
+		if !contains(cmds, want) {
+			t.Errorf("expected %q to be present", want)
+		}
+	}
+}
+
+func TestCollectAllowedCommandsPassesThroughToolPermissions(t *testing.T) {
+	a := New(testOptions())
+	ctx := app.AgentContext{
+		AgentConfigs: []app.AgentConfig{
+			{AllowedToolPermissions: []string{"Read(//tmp/**)", "Skill(task)"}},
+		},
+	}
+
+	cmds := a.collectAllowedCommands(ctx)
+
+	for _, want := range []string{"Read(//tmp/**)", "Skill(task)"} {
+		if !contains(cmds, want) {
+			t.Errorf("expected %q to be present unchanged", want)
+		}
+	}
+}
+
+func TestCollectAllowedCommandsBaselineAlwaysPresent(t *testing.T) {
+	a := New(testOptions())
+	ctx := app.AgentContext{}
+
+	cmds := a.collectAllowedCommands(ctx)
+
+	if !contains(cmds, "mcp__ide__getDiagnostics") {
+		t.Error("expected baseline mcp__ide__getDiagnostics to always be present")
+	}
+}
+
+func TestCollectAllowedCommandsWithBashPrefix(t *testing.T) {
+	a := New(testOptions())
+	ctx := app.AgentContext{
+		AgentConfigs: []app.AgentConfig{
+			{AllowedBashCommands: []string{"git add:*", "grep:*"}},
+			{BashCommandPrefix: "rtk"},
+		},
+	}
+
+	cmds := a.collectAllowedCommands(ctx)
+
+	for _, want := range []string{
+		"Bash(git add:*)", "Bash(rtk git add:*)",
+		"Bash(grep:*)", "Bash(rtk grep:*)",
+	} {
+		if !contains(cmds, want) {
+			t.Errorf("expected %q to be present", want)
+		}
+	}
+}
+
+func TestCollectAllowedCommandsPrefixDoesNotApplyToToolPermissions(t *testing.T) {
+	a := New(testOptions())
+	ctx := app.AgentContext{
+		AgentConfigs: []app.AgentConfig{
+			{AllowedToolPermissions: []string{"Read(//tmp/**)"}},
+			{BashCommandPrefix: "rtk"},
+		},
+	}
+
+	cmds := a.collectAllowedCommands(ctx)
+
+	if !contains(cmds, "Read(//tmp/**)") {
+		t.Error("expected Read(//tmp/**) to be present")
+	}
+	if contains(cmds, "Bash(rtk Read(//tmp/**)") {
+		t.Error("prefix must not be applied to tool permissions")
+	}
+}
+
+func TestCollectAllowedCommandsMergesOptsAndAgentConfigs(t *testing.T) {
+	opts := testOptions()
+	opts.AllowedBashCommands = []string{"grep:*"}
+	opts.AllowedToolPermissions = []string{"Write(//tmp/**)"}
+	a := New(opts)
+	ctx := app.AgentContext{
+		AgentConfigs: []app.AgentConfig{
+			{AllowedBashCommands: []string{"git status:*"}},
+		},
+	}
+
+	cmds := a.collectAllowedCommands(ctx)
+
+	for _, want := range []string{"Bash(grep:*)", "Bash(git status:*)", "Write(//tmp/**)"} {
+		if !contains(cmds, want) {
+			t.Errorf("expected %q to be present", want)
+		}
+	}
+}
+
+func TestCollectBashPrefixesDedupes(t *testing.T) {
+	ctx := app.AgentContext{
+		AgentConfigs: []app.AgentConfig{
+			{BashCommandPrefix: "rtk"},
+			{BashCommandPrefix: "rtk"},
+			{BashCommandPrefix: ""},
+		},
+	}
+
+	prefixes := collectBashPrefixes(ctx)
+
+	if len(prefixes) != 1 {
+		t.Errorf("expected 1 unique prefix, got %d: %v", len(prefixes), prefixes)
+	}
+	if prefixes[0] != "rtk" {
+		t.Errorf("expected prefix rtk, got %q", prefixes[0])
+	}
+}
+
 func TestMergeSettingsHooksFromAgentConfig(t *testing.T) {
 	a := New(testOptions())
 	ctx := app.AgentContext{

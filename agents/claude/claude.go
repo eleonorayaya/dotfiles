@@ -19,7 +19,8 @@ type Options struct {
 	StatusLine            map[string]any
 	SandboxAllowedDomains []string
 	SandboxAllowWrite     []string
-	AllowedCommands       []string
+	AllowedBashCommands    []string
+	AllowedToolPermissions []string
 	DefaultMode           string
 	AdvisorModel          string
 }
@@ -107,7 +108,7 @@ func mergeStringsIntoAnySlice(existing []any, additions []string) []any {
 	return existing
 }
 
-var baselineAllowedCommands = []string{
+var baselineAllowedToolPermissions = []string{
 	"mcp__ide__getDiagnostics",
 }
 
@@ -124,11 +125,41 @@ func (a *App) collectPlugins(agents app.AgentContext) []string {
 }
 
 func (a *App) collectAllowedCommands(agents app.AgentContext) []string {
-	sources := [][]string{baselineAllowedCommands, a.opts.AllowedCommands}
+	bashSources := [][]string{a.opts.AllowedBashCommands}
 	for _, ac := range agents.AgentConfigs {
-		sources = append(sources, ac.AllowedCommands)
+		bashSources = append(bashSources, ac.AllowedBashCommands)
 	}
-	return dedupeStrings(sources...)
+	bashCmds := dedupeStrings(bashSources...)
+
+	toolSources := [][]string{baselineAllowedToolPermissions, a.opts.AllowedToolPermissions}
+	for _, ac := range agents.AgentConfigs {
+		toolSources = append(toolSources, ac.AllowedToolPermissions)
+	}
+	toolPerms := dedupeStrings(toolSources...)
+
+	prefixes := collectBashPrefixes(agents)
+
+	var permissions []string
+	for _, cmd := range bashCmds {
+		permissions = append(permissions, "Bash("+cmd+")")
+		for _, p := range prefixes {
+			permissions = append(permissions, "Bash("+p+" "+cmd+")")
+		}
+	}
+	permissions = append(permissions, toolPerms...)
+	return dedupeStrings(permissions)
+}
+
+func collectBashPrefixes(agents app.AgentContext) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, ac := range agents.AgentConfigs {
+		if ac.BashCommandPrefix != "" && !seen[ac.BashCommandPrefix] {
+			seen[ac.BashCommandPrefix] = true
+			out = append(out, ac.BashCommandPrefix)
+		}
+	}
+	return out
 }
 
 func (a *App) collectMarketplaces(agents app.AgentContext) map[string]app.Marketplace {
