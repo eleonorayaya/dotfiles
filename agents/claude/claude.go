@@ -13,16 +13,16 @@ import (
 var contents embed.FS
 
 type Options struct {
-	Marketplaces          map[string]app.Marketplace
-	AlwaysOnPlugins       []string
-	Env                   map[string]string
-	StatusLine            map[string]any
-	SandboxAllowedDomains []string
-	SandboxAllowWrite     []string
+	Marketplaces           map[string]app.Marketplace
+	AlwaysOnPlugins        []string
+	Env                    map[string]string
+	StatusLine             map[string]any
+	SandboxAllowedDomains  []string
+	SandboxAllowWrite      []string
 	AllowedBashCommands    []string
 	AllowedToolPermissions []string
-	DefaultMode           string
-	AdvisorModel          string
+	DefaultMode            string
+	AdvisorModel           string
 }
 
 type App struct {
@@ -126,20 +126,16 @@ func (a *App) collectPlugins(agents app.AgentContext) []string {
 
 func (a *App) collectAllowedCommands(agents app.AgentContext) []string {
 	bashSources := [][]string{a.opts.AllowedBashCommands}
-	for _, ac := range agents.AgentConfigs {
-		bashSources = append(bashSources, ac.AllowedBashCommands)
-	}
-	bashCmds := dedupeStrings(bashSources...)
-
 	toolSources := [][]string{baselineAllowedToolPermissions, a.opts.AllowedToolPermissions}
 	for _, ac := range agents.AgentConfigs {
+		bashSources = append(bashSources, ac.AllowedBashCommands)
 		toolSources = append(toolSources, ac.AllowedToolPermissions)
 	}
+	bashCmds := dedupeStrings(bashSources...)
 	toolPerms := dedupeStrings(toolSources...)
 
 	prefixes := collectBashPrefixes(agents)
-
-	var permissions []string
+	permissions := make([]string, 0, len(bashCmds)*(1+len(prefixes))+len(toolPerms))
 	for _, cmd := range bashCmds {
 		permissions = append(permissions, "Bash("+cmd+")")
 		for _, p := range prefixes {
@@ -147,19 +143,17 @@ func (a *App) collectAllowedCommands(agents app.AgentContext) []string {
 		}
 	}
 	permissions = append(permissions, toolPerms...)
-	return dedupeStrings(permissions)
+	return permissions
 }
 
 func collectBashPrefixes(agents app.AgentContext) []string {
-	seen := map[string]bool{}
-	var out []string
+	var raw []string
 	for _, ac := range agents.AgentConfigs {
-		if ac.BashCommandPrefix != "" && !seen[ac.BashCommandPrefix] {
-			seen[ac.BashCommandPrefix] = true
-			out = append(out, ac.BashCommandPrefix)
+		if ac.BashCommandPrefix != "" {
+			raw = append(raw, ac.BashCommandPrefix)
 		}
 	}
-	return out
+	return dedupeStrings(raw)
 }
 
 func (a *App) collectMarketplaces(agents app.AgentContext) map[string]app.Marketplace {
