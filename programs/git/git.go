@@ -56,6 +56,12 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"gh run list:*",
 			"gh run watch:*",
 		},
+		SandboxExcludedCommands: []string{
+			"git fetch *",
+			"git push *",
+			"git ls-remote *",
+			"gh *",
+		},
 		SandboxAllowedDomains: []string{
 			"api.github.com",
 			"docs.github.com",

@@ -17,10 +17,11 @@ type Options struct {
 	AlwaysOnPlugins        []string
 	Env                    map[string]string
 	StatusLine             map[string]any
-	SandboxAllowedDomains  []string
-	SandboxAllowWrite      []string
-	AllowedBashCommands    []string
-	AllowedToolPermissions []string
+	SandboxAllowedDomains   []string
+	SandboxAllowWrite       []string
+	SandboxExcludedCommands []string
+	AllowedBashCommands     []string
+	AllowedToolPermissions  []string
 	DefaultMode            string
 	AdvisorModel           string
 }
@@ -188,6 +189,14 @@ func (a *App) collectSandboxWrite(agents app.AgentContext) []string {
 	return dedupeStrings(sources...)
 }
 
+func (a *App) collectSandboxExcludedCommands(agents app.AgentContext) []string {
+	sources := [][]string{a.opts.SandboxExcludedCommands}
+	for _, ac := range agents.AgentConfigs {
+		sources = append(sources, ac.SandboxExcludedCommands)
+	}
+	return dedupeStrings(sources...)
+}
+
 func (a *App) collectHooks(agents app.AgentContext) []app.Hook {
 	hooks := []app.Hook{}
 	for _, ac := range agents.AgentConfigs {
@@ -345,6 +354,9 @@ func (a *App) mergeSettings(outDir string, agents app.AgentContext) (string, err
 	allowWriteRaw, _ := filesystem["allowWrite"].([]any)
 	filesystem["allowWrite"] = mergeStringsIntoAnySlice(allowWriteRaw, a.collectSandboxWrite(agents))
 	sandbox["filesystem"] = filesystem
+
+	excludedRaw, _ := sandbox["excludedCommands"].([]any)
+	sandbox["excludedCommands"] = mergeStringsIntoAnySlice(excludedRaw, a.collectSandboxExcludedCommands(agents))
 	settings["sandbox"] = sandbox
 
 	hooks, _ := settings["hooks"].(map[string]any)
