@@ -17,6 +17,7 @@ import (
 	"github.com/eleonorayaya/shizuku/languages/swift"
 	"github.com/eleonorayaya/shizuku/languages/typescript"
 	"github.com/eleonorayaya/shizuku/languages/zig"
+	"github.com/eleonorayaya/shizuku/programs/acli"
 	"github.com/eleonorayaya/shizuku/programs/aerospace"
 	"github.com/eleonorayaya/shizuku/programs/bat"
 	"github.com/eleonorayaya/shizuku/programs/buildkite"
@@ -90,6 +91,7 @@ func main() {
 				ruby.New(),
 			),
 			shizuku.WithPrograms(
+				acli.New(),
 				buildkite.New(),
 				datadog.New(),
 				k9s.New(),
