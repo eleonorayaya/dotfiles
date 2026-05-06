@@ -13,18 +13,18 @@ import (
 var contents embed.FS
 
 type Options struct {
-	Marketplaces           map[string]app.Marketplace
-	AlwaysOnPlugins        []string
-	Env                    map[string]string
-	StatusLine             map[string]any
+	Marketplaces            map[string]app.Marketplace
+	AlwaysOnPlugins         []string
+	Env                     map[string]string
+	StatusLine              map[string]any
 	SandboxAllowedDomains   []string
 	SandboxAllowRead        []string
 	SandboxAllowWrite       []string
 	SandboxExcludedCommands []string
 	AllowedBashCommands     []string
 	AllowedToolPermissions  []string
-	DefaultMode            string
-	AdvisorModel           string
+	DefaultMode             string
+	AdvisorModel            string
 }
 
 type App struct {
