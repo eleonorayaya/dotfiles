@@ -50,11 +50,32 @@ import (
 
 const sourceDir = "~/.local/src/shizuku"
 
+var (
+	desktopGaps = styles.Gaps{
+		InnerHorizontal: 16,
+		InnerVertical:   16,
+		OuterLeft:       64,
+		OuterBottom:     128,
+		OuterTop:        64,
+		OuterRight:      64,
+	}
+	laptopGaps = styles.Gaps{
+		InnerHorizontal: 8,
+		InnerVertical:   8,
+		OuterLeft:       8,
+		OuterBottom:     8,
+		OuterTop:        8,
+		OuterRight:      8,
+	}
+)
+
 func main() {
 	cmd := shizuku.New(
 		shizuku.WithStyles(styles.New(
 			styles.WithTheme(themes.MonadeDark),
 			styles.WithWindowOpacity(65),
+			styles.WithGaps(desktopGaps),
+			styles.WithGapOverride("built-in retina", laptopGaps),
 		)),
 		shizuku.WithLanguages(
 			golang.New(),

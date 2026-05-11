@@ -9,29 +9,16 @@ type Gaps struct {
 	OuterRight      int
 }
 
-var (
-	DesktopGaps = Gaps{
-		InnerHorizontal: 16,
-		InnerVertical:   16,
-		OuterLeft:       64,
-		OuterBottom:     128,
-		OuterTop:        64,
-		OuterRight:      64,
-	}
-	LaptopGaps = Gaps{
-		InnerHorizontal: 8,
-		InnerVertical:   8,
-		OuterLeft:       8,
-		OuterBottom:     8,
-		OuterTop:        8,
-		OuterRight:      8,
-	}
-)
+type GapOverride struct {
+	Pattern string
+	Gaps    Gaps
+}
 
 type Styles struct {
-	Theme         Theme
+	Theme       Theme
 	WindowOpacity int
 	Gaps          Gaps
+	GapOverride   *GapOverride
 }
 
 type Option func(*Styles)
@@ -48,10 +35,13 @@ func WithGaps(g Gaps) Option {
 	return func(s *Styles) { s.Gaps = g }
 }
 
+func WithGapOverride(pattern string, g Gaps) Option {
+	return func(s *Styles) { s.GapOverride = &GapOverride{Pattern: pattern, Gaps: g} }
+}
+
 func New(opts ...Option) Styles {
 	s := Styles{
 		WindowOpacity: 85,
-		Gaps:          DesktopGaps,
 	}
 	for _, opt := range opts {
 		opt(&s)
