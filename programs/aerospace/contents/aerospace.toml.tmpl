@@ -15,10 +15,17 @@ exec-on-workspace-change = [
 [gaps]
 inner.horizontal = {{ .Gaps.InnerHorizontal }}
 inner.vertical = {{ .Gaps.InnerVertical }}
-outer.left = {{ .Gaps.OuterLeft }}
+{{ if .GapOverride -}}
+outer.left =   [{ monitor."{{ .GapOverride.Pattern }}" = {{ .GapOverride.Gaps.OuterLeft }} }, {{ .Gaps.OuterLeft }}]
+outer.bottom = [{ monitor."{{ .GapOverride.Pattern }}" = {{ .GapOverride.Gaps.OuterBottom }} }, {{ .Gaps.OuterBottom }}]
+outer.top =    [{ monitor."{{ .GapOverride.Pattern }}" = {{ .GapOverride.Gaps.OuterTop }} }, {{ .Gaps.OuterTop }}]
+outer.right =  [{ monitor."{{ .GapOverride.Pattern }}" = {{ .GapOverride.Gaps.OuterRight }} }, {{ .Gaps.OuterRight }}]
+{{- else }}
+outer.left =   {{ .Gaps.OuterLeft }}
 outer.bottom = {{ .Gaps.OuterBottom }}
-outer.top = {{ .Gaps.OuterTop }}
-outer.right = {{ .Gaps.OuterRight }}
+outer.top =    {{ .Gaps.OuterTop }}
+outer.right =  {{ .Gaps.OuterRight }}
+{{- end }}
 
 
 [mode.main.binding]

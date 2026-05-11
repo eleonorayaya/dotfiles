@@ -35,7 +35,8 @@ func (a *App) Install(ctx *app.Context) error {
 
 func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 	data := map[string]any{
-		"Gaps": ctx.Styles.Gaps,
+		"Gaps":        ctx.Styles.Gaps,
+		"GapOverride": ctx.Styles.GapOverride,
 	}
 
 	fileMap, err := app.GenerateAppFiles("aerospace", contents, data, ctx.OutDir)

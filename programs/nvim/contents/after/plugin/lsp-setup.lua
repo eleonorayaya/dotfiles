@@ -1,7 +1,6 @@
 local capabilities = require("blink.cmp").get_lsp_capabilities()
 
 local builtin_configs = {
-  copilot_ls = {},
   eslint = {},
   gopls = {},
   tflint = {},
@@ -9,8 +8,6 @@ local builtin_configs = {
   jqls = {},
   lua_ls = {},
   nil_ls = {},
-  nixd = {},
-  openscad_lsp = {},
   pyright = {},
   terraformls = {},
   rust_analyzer = {},
@@ -23,7 +20,6 @@ local builtin_configs = {
   docker_compose_language_service = {},
   jsonls = {},
   yamlls = {},
-  sourcekit = {},
 }
 
 local custom_configs = {
