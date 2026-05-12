@@ -120,15 +120,5 @@ func (a *App) Sync(ctx *app.Context) error {
 		return fmt.Errorf("failed to sync utena files: %w", err)
 	}
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return fmt.Errorf("failed to get home directory: %w", err)
-	}
-
-	scriptPath := filepath.Join(homeDir, ".config", "utena", "worktree-setup")
-	if err := os.Chmod(scriptPath, 0755); err != nil {
-		return fmt.Errorf("failed to make worktree-setup executable: %w", err)
-	}
-
 	return nil
 }
