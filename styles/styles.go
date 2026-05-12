@@ -15,7 +15,7 @@ type GapOverride struct {
 }
 
 type Styles struct {
-	Theme       Theme
+	Theme         Theme
 	WindowOpacity int
 	Gaps          Gaps
 	GapOverride   *GapOverride
