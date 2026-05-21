@@ -1,7 +1,7 @@
 return {
   {
     "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
-    event = "LSPAttach",
+    event = "LspAttach",
     config = function()
       local lsp_lines = require("lsp_lines")
       local original_hide = lsp_lines.hide
