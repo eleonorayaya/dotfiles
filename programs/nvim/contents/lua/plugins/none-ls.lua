@@ -166,7 +166,7 @@ end
 return {
   {
     "nvimtools/none-ls.nvim",
-    event = "LSPAttach",
+    event = "LspAttach",
     dependencies = {
       "nvim-lua/plenary.nvim",
       "romus204/tree-sitter-manager.nvim",

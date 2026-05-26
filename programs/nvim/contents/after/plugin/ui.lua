@@ -1,3 +1,5 @@
+require("vim._core.ui2").enable()
+
 vim.opt.laststatus = 3
 vim.opt.pumblend = 15
 vim.opt.winblend = 0
