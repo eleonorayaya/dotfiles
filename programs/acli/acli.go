@@ -33,7 +33,9 @@ func (a *App) AgentConfig() app.AgentConfig {
 		SandboxAllowedDomains: []string{
 			"api.atlassian.com",
 			"as.atlassian.com",
+			"auth.atlassian.com",
 			"ingest.us.sentry.io",
+			"o55978.ingest.us.sentry.io",
 		},
 		SandboxAllowRead: []string{
 			"~/.config/acli",
