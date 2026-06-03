@@ -3,6 +3,7 @@ package git
 import (
 	"embed"
 	"fmt"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -31,6 +32,33 @@ func New() *App {
 
 func (a *App) Name() string {
 	return "git"
+}
+
+func (a *App) Install(ctx *app.Context) error {
+	if !util.BinaryExists("gh") {
+		return fmt.Errorf("gh not found in PATH; install the GitHub CLI before installing the gh-dash extension")
+	}
+
+	if ghExtensionInstalled("dlvhdr/gh-dash") {
+		return nil
+	}
+
+	cmd := exec.Command("gh", "extension", "install", "dlvhdr/gh-dash")
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to install gh-dash extension: %s: %w", string(output), err)
+	}
+
+	return nil
+}
+
+func ghExtensionInstalled(repo string) bool {
+	cmd := exec.Command("gh", "extension", "list")
+	output, err := cmd.Output()
+	if err != nil {
+		return false
+	}
+
+	return strings.Contains(string(output), repo)
 }
 
 func (a *App) AgentConfig() app.AgentConfig {
