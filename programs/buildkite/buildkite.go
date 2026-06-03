@@ -23,6 +23,12 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"api.buildkite.com",
 			"buildkite.com",
 		},
+		SandboxAllowRead: []string{
+			"~/.config/bk.yaml",
+		},
+		SandboxAllowWrite: []string{
+			"~/.config/bk.yaml",
+		},
 	}
 }
 
