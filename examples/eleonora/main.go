@@ -25,7 +25,6 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/desktoppr"
 	"github.com/eleonorayaya/shizuku/programs/fastfetch"
 	"github.com/eleonorayaya/shizuku/programs/git"
-	ghdash "github.com/eleonorayaya/shizuku/programs/gh-dash"
 	"github.com/eleonorayaya/shizuku/programs/glow"
 	"github.com/eleonorayaya/shizuku/programs/jankyborders"
 	"github.com/eleonorayaya/shizuku/programs/k9s"
@@ -90,7 +89,6 @@ func main() {
 			bat.New(),
 			desktoppr.New(),
 			fastfetch.New(),
-			ghdash.New(),
 			git.New(),
 			glow.New(),
 			jankyborders.New(),
