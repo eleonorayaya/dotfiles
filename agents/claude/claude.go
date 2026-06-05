@@ -23,6 +23,7 @@ type Options struct {
 	SandboxExcludedCommands []string
 	AllowedBashCommands     []string
 	AllowedToolPermissions  []string
+	DeniedBashCommands      []string
 	DefaultMode             string
 	AdvisorModel            string
 }
@@ -145,6 +146,15 @@ func (a *App) collectAllowedCommands(agents app.AgentContext) []string {
 		}
 	}
 	permissions = append(permissions, toolPerms...)
+	return permissions
+}
+
+func (a *App) collectDeniedCommands() []string {
+	cmds := dedupeStrings(a.opts.DeniedBashCommands)
+	permissions := make([]string, 0, len(cmds))
+	for _, cmd := range cmds {
+		permissions = append(permissions, "Bash("+cmd+")")
+	}
 	return permissions
 }
 
@@ -289,6 +299,9 @@ func (a *App) mergeSettings(outDir string, agents app.AgentContext) (string, err
 
 	allowRaw, _ := permissions["allow"].([]any)
 	permissions["allow"] = mergeStringsIntoAnySlice(allowRaw, a.collectAllowedCommands(agents))
+
+	denyRaw, _ := permissions["deny"].([]any)
+	permissions["deny"] = mergeStringsIntoAnySlice(denyRaw, a.collectDeniedCommands())
 	settings["permissions"] = permissions
 
 	if len(a.opts.Env) > 0 {
