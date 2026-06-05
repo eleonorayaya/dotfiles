@@ -19,6 +19,7 @@ The claude app reads the existing `~/.claude/settings.json`, additively merges m
 |-------|------|----------|----------|
 | `enabledPlugins` | `map[string]any` | Set key to `true` | `desiredPlugins` |
 | `permissions.allow` | `[]any` | Append if not present | `desiredAllowedCommands` |
+| `permissions.deny` | `[]any` | Append if not present | `DeniedBashCommands` |
 | `env` | `map[string]any` | Set key to value | `desiredEnv` |
 
 Unmanaged fields (e.g. `plansDirectory`, `promptSuggestionEnabled`) pass through untouched.
@@ -45,6 +46,22 @@ var desiredAllowedCommands = []string{
     "Bash(docker:*)",  // add here
 }
 ```
+
+## Blocking a Command
+
+To **block** a bash command (so Claude Code refuses to run it), add the raw command to the
+`DeniedBashCommands` slice in the consumer data (`examples/eleonora/data/claude.go`). Each entry
+is wrapped as `Bash(<entry>)` and merged into `permissions.deny`, which takes precedence over
+`permissions.allow`.
+
+```go
+DeniedBashCommands: []string{
+    "aws",    // blocks bare `aws`
+    "aws:*",  // blocks `aws <anything>`
+},
+```
+
+Include both the bare command and the `:*` form to cover invocations with and without arguments.
 
 ## Adding a Plugin
 

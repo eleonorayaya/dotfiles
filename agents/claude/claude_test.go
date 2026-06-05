@@ -521,3 +521,69 @@ func TestMergeSettingsHooksFromAgentConfig(t *testing.T) {
 		t.Errorf("expected rtk hook claude to be merged into settings, got %#v", hooks)
 	}
 }
+
+func TestCollectDeniedCommandsWrapsBashCommands(t *testing.T) {
+	opts := testOptions()
+	opts.DeniedBashCommands = []string{"aws", "aws:*"}
+	a := New(opts)
+
+	cmds := a.collectDeniedCommands()
+
+	for _, want := range []string{"Bash(aws)", "Bash(aws:*)"} {
+		if !contains(cmds, want) {
+			t.Errorf("expected %q to be present", want)
+		}
+	}
+}
+
+func TestCollectDeniedCommandsEmpty(t *testing.T) {
+	a := New(testOptions())
+
+	cmds := a.collectDeniedCommands()
+
+	if len(cmds) != 0 {
+		t.Errorf("expected no denied commands, got %d: %v", len(cmds), cmds)
+	}
+}
+
+func TestMergeSettingsWritesDeniedCommands(t *testing.T) {
+	opts := testOptions()
+	opts.DeniedBashCommands = []string{"aws", "aws:*"}
+	a := New(opts)
+
+	outDir := t.TempDir()
+	resultPath, err := a.mergeSettings(outDir, app.AgentContext{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, err := os.ReadFile(resultPath)
+	if err != nil {
+		t.Fatalf("failed to read output: %v", err)
+	}
+
+	var settings map[string]any
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatalf("failed to parse output: %v", err)
+	}
+
+	permissions, ok := settings["permissions"].(map[string]any)
+	if !ok {
+		t.Fatal("expected permissions to be a map")
+	}
+	denyRaw, ok := permissions["deny"].([]any)
+	if !ok {
+		t.Fatal("expected permissions.deny to be a slice")
+	}
+	deny := make([]string, 0, len(denyRaw))
+	for _, entry := range denyRaw {
+		if s, ok := entry.(string); ok {
+			deny = append(deny, s)
+		}
+	}
+	for _, want := range []string{"Bash(aws)", "Bash(aws:*)"} {
+		if !contains(deny, want) {
+			t.Errorf("expected %q in permissions.deny, got %v", want, deny)
+		}
+	}
+}

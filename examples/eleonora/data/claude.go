@@ -57,6 +57,10 @@ func ClaudeOptions() claude.Options {
 			"Edit(//tmp/**)",
 			"Write(//tmp/**)",
 		},
+		DeniedBashCommands: []string{
+			"aws",
+			"aws:*",
+		},
 		DefaultMode:  "plan",
 		AdvisorModel: "opus",
 	}
