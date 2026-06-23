@@ -34,18 +34,31 @@ func (a *App) Name() string {
 	return "git"
 }
 
+var ghExtensions = []string{
+	"dlvhdr/gh-dash",
+	"github/gh-stack",
+}
+
 func (a *App) Install(ctx *app.Context) error {
 	if !util.BinaryExists("gh") {
-		return fmt.Errorf("gh not found in PATH; install the GitHub CLI before installing the gh-dash extension")
+		return fmt.Errorf("gh not found in PATH; install the GitHub CLI before installing gh extensions")
 	}
 
-	if ghExtensionInstalled("dlvhdr/gh-dash") {
-		return nil
+	for _, repo := range ghExtensions {
+		if ghExtensionInstalled(repo) {
+			continue
+		}
+
+		cmd := exec.Command("gh", "extension", "install", repo)
+		if output, err := cmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("failed to install %s extension: %s: %w", repo, string(output), err)
+		}
 	}
 
-	cmd := exec.Command("gh", "extension", "install", "dlvhdr/gh-dash")
+	// ponytail: gh skill install is idempotent and unguarded; add a check if it ever gets slow
+	cmd := exec.Command("gh", "skill", "install", "github/gh-stack", "--agent", "claude-code", "--scope", "user")
 	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("failed to install gh-dash extension: %s: %w", string(output), err)
+		return fmt.Errorf("failed to install gh-stack skill: %s: %w", string(output), err)
 	}
 
 	return nil
