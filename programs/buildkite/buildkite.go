@@ -29,6 +29,9 @@ func (a *App) AgentConfig() app.AgentConfig {
 		SandboxAllowWrite: []string{
 			"~/.config/bk.yaml",
 		},
+		SandboxExcludedCommands: []string{
+			"bk *",
+		},
 	}
 }
 
