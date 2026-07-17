@@ -101,6 +101,7 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"git add *",
 			"git commit *",
 			"git fetch *",
+			"git pull *",
 			"git push *",
 			"git ls-remote *",
 		},
