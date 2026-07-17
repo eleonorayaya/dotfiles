@@ -55,7 +55,6 @@ func ClaudeOptions() claude.Options {
 		AllowedToolPermissions: []string{
 			"Read(//tmp/**)",
 			"Edit(//tmp/**)",
-			"Write(//tmp/**)",
 		},
 		DeniedBashCommands: []string{
 			"aws",
