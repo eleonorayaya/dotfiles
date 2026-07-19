@@ -94,7 +94,7 @@ func main() {
 			jankyborders.New(),
 			kitty.New(),
 			lsd.New(),
-			notion.New(),
+			notion.New(notion.Options{DisableClaudeMCP: true}),
 			nvim.New(),
 			rtk.New(),
 			sfsymbols.New(),
@@ -127,6 +127,7 @@ func main() {
 			shizuku.WithPrograms(
 				protonpass.New(),
 				protonvpn.New(),
+				notion.New(notion.Options{DisableClaudeMCP: false}),
 			),
 		),
 	).Command()

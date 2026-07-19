@@ -8,10 +8,9 @@ import (
 func ClaudeOptions() claude.Options {
 	return claude.Options{
 		Marketplaces: map[string]app.Marketplace{
-			"superpowers-marketplace":   {Repo: "obra/superpowers-marketplace"},
-			"claude-code-notion-plugin": {Repo: "makenotion/claude-code-notion-plugin"},
-			"eleonorayaya-claude-code":  {Repo: "eleonorayaya/claude-plugins"},
-			"utena":                     {Repo: "eleonorayaya/utena"},
+			"superpowers-marketplace":  {Repo: "obra/superpowers-marketplace"},
+			"eleonorayaya-claude-code": {Repo: "eleonorayaya/claude-plugins"},
+			"utena":                    {Repo: "eleonorayaya/utena"},
 		},
 		AlwaysOnPlugins: []string{
 			"superpowers@superpowers-marketplace",

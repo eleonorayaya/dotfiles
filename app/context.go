@@ -14,6 +14,7 @@ type Hook struct {
 type AgentConfig struct {
 	Plugins                 []string
 	Marketplaces            map[string]Marketplace
+	DisabledMcpJsonServers  []string
 	AllowedBashCommands     []string
 	AllowedToolPermissions  []string
 	SandboxAllowedDomains   []string

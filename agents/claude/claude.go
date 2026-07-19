@@ -15,6 +15,7 @@ var contents embed.FS
 type Options struct {
 	Marketplaces            map[string]app.Marketplace
 	AlwaysOnPlugins         []string
+	DisabledMcpJsonServers  []string
 	Env                     map[string]string
 	StatusLine              map[string]any
 	SandboxAllowedDomains   []string
@@ -184,6 +185,14 @@ func (a *App) collectMarketplaces(agents app.AgentContext) map[string]app.Market
 	return merged
 }
 
+func (a *App) collectDisabledMcpServers(agents app.AgentContext) []string {
+	sources := [][]string{a.opts.DisabledMcpJsonServers}
+	for _, ac := range agents.AgentConfigs {
+		sources = append(sources, ac.DisabledMcpJsonServers)
+	}
+	return dedupeStrings(sources...)
+}
+
 func (a *App) collectSandboxDomains(agents app.AgentContext) []string {
 	sources := [][]string{a.opts.SandboxAllowedDomains}
 	for _, ac := range agents.AgentConfigs {
@@ -345,6 +354,11 @@ func (a *App) mergeSettings(outDir string, agents app.AgentContext) (string, err
 		}
 	}
 	settings["extraKnownMarketplaces"] = knownMarketplaces
+
+	if disabledServers := a.collectDisabledMcpServers(agents); len(disabledServers) > 0 {
+		disabledMcpRaw, _ := settings["disabledMcpjsonServers"].([]any)
+		settings["disabledMcpjsonServers"] = mergeStringsIntoAnySlice(disabledMcpRaw, disabledServers)
+	}
 
 	sandbox, _ := settings["sandbox"].(map[string]any)
 	if sandbox == nil {

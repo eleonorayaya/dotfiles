@@ -138,6 +138,93 @@ func TestCollectSandboxWriteAggregates(t *testing.T) {
 	}
 }
 
+func TestCollectDisabledMcpServersAggregates(t *testing.T) {
+	opts := testOptions()
+	opts.DisabledMcpJsonServers = []string{"opts-server"}
+	a := New(opts)
+	ctx := app.AgentContext{
+		AgentConfigs: []app.AgentConfig{
+			{DisabledMcpJsonServers: []string{"notion"}},
+			{DisabledMcpJsonServers: []string{"notion"}},
+		},
+	}
+
+	servers := a.collectDisabledMcpServers(ctx)
+
+	if !contains(servers, "opts-server") {
+		t.Error("expected opts-server to be present")
+	}
+	if !contains(servers, "notion") {
+		t.Error("expected notion to be present")
+	}
+	if len(servers) != 2 {
+		t.Errorf("expected 2 deduped servers, got %d: %v", len(servers), servers)
+	}
+}
+
+func TestMergeSettingsWritesDisabledMcpServers(t *testing.T) {
+	a := New(testOptions())
+	ctx := app.AgentContext{
+		AgentConfigs: []app.AgentConfig{
+			{DisabledMcpJsonServers: []string{"notion"}},
+		},
+	}
+
+	outDir := t.TempDir()
+	resultPath, err := a.mergeSettings(outDir, ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, err := os.ReadFile(resultPath)
+	if err != nil {
+		t.Fatalf("failed to read output: %v", err)
+	}
+
+	var settings map[string]any
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatalf("failed to parse output: %v", err)
+	}
+
+	disabled, ok := settings["disabledMcpjsonServers"].([]any)
+	if !ok {
+		t.Fatal("expected disabledMcpjsonServers to be a slice")
+	}
+	found := false
+	for _, d := range disabled {
+		if s, _ := d.(string); s == "notion" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected disabledMcpjsonServers to contain notion, got %v", disabled)
+	}
+}
+
+func TestMergeSettingsOmitsDisabledMcpServersWhenEmpty(t *testing.T) {
+	a := New(testOptions())
+
+	outDir := t.TempDir()
+	resultPath, err := a.mergeSettings(outDir, app.AgentContext{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, err := os.ReadFile(resultPath)
+	if err != nil {
+		t.Fatalf("failed to read output: %v", err)
+	}
+
+	var settings map[string]any
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatalf("failed to parse output: %v", err)
+	}
+
+	if v, exists := settings["disabledMcpjsonServers"]; exists {
+		t.Errorf("expected disabledMcpjsonServers to be omitted when empty, got %#v", v)
+	}
+}
+
 func TestMergeSettingsMarketplaces(t *testing.T) {
 	opts := testOptions()
 	a := New(opts)
