@@ -1,0 +1,52 @@
+#!/bin/sh
+set -eu
+
+herdr="${HERDR_BIN_PATH:-herdr}"
+roots="${HERDR_PICKER_ROOTS:-{{.PickerRoots}}}"
+
+fzf_opts="--no-input --no-multi --bind=j:down,k:up --bind=g:first,G:last --bind=ctrl-d:half-page-down,ctrl-u:half-page-up --bind=/:show-input --bind=esc:hide-input+clear-query --bind=q:abort"
+
+create_workspace() {
+	dir=$(
+		for root in $roots; do
+			[ -d "$root" ] || continue
+			for d in "$root"/*/; do
+				[ -d "$d" ] && printf '%s\n' "${d%/}"
+			done
+		done | sort |
+			fzf $fzf_opts \
+				--prompt='new workspace in> ' \
+				--header='j/k move · / search · enter create · q cancel'
+	) || return 0
+
+	[ -n "$dir" ] || return 0
+	"$herdr" workspace create --cwd "$dir" --label "$(basename "$dir")" --focus
+}
+
+result=$(
+	"$herdr" workspace list |
+		jq -r '.result.workspaces[]
+			| [ .workspace_id
+			  , (if .focused then "*" else " " end)
+			  , .label
+			  , (.agent_status // "-")
+			  , ((.pane_count|tostring) + "p")
+			  ] | @tsv' |
+		fzf $fzf_opts \
+			--expect=n \
+			--delimiter='\t' \
+			--with-nth=2,3,4,5 \
+			--prompt='workspace> ' \
+			--header='j/k move · / search · enter focus · n new · q quit'
+) || exit 0
+
+key=$(printf '%s\n' "$result" | head -1)
+row=$(printf '%s\n' "$result" | tail -n +2 | head -1)
+
+if [ "$key" = "n" ]; then
+	create_workspace
+	exit 0
+fi
+
+selection=$(printf '%s\n' "$row" | cut -f1)
+[ -n "$selection" ] && "$herdr" workspace focus "$selection"

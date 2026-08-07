@@ -1,6 +1,7 @@
 return {
   {
     "christoomey/vim-tmux-navigator",
+    cond = vim.env.HERDR_ENV ~= "1",
     event = "VeryLazy",
     keys = {
       { "<C-h>", "<cmd>TmuxNavigateLeft<cr>", desc = "Navigate left" },
