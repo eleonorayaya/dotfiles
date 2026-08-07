@@ -1,0 +1,88 @@
+[theme]
+name = "terminal"
+
+[theme.custom]
+panel_bg = "{{.Surface}}"
+text = "{{.TextOnSurface}}"
+accent = "{{.Primary}}"
+red = "{{.Error}}"
+green = "{{.AccentMint}}"
+blue = "{{.AccentBlue}}"
+yellow = "{{.AccentGold}}"
+teal = "{{.AccentMint}}"
+mauve = "{{.AccentPurple}}"
+peach = "{{.AccentPeach}}"
+
+[keys]
+settings = "prefix+shift+s"
+previous_tab = "prefix+h"
+next_tab = "prefix+l"
+new_tab = "prefix+n"
+split_vertical = "prefix+v"
+split_horizontal = "prefix+s"
+focus_pane_left = "prefix+ctrl+h"
+focus_pane_down = "prefix+j"
+focus_pane_up = "prefix+k"
+focus_pane_right = "prefix+ctrl+l"
+
+[[keys.command]]
+key = "prefix+p"
+type = "popup"
+command = "{{.WorkspacePicker}}"
+width = "60%"
+height = "50%"
+description = "workspace picker"
+
+[[keys.command]]
+key = "prefix+a"
+type = "plugin_action"
+command = "cloudmanic.herdr-plus.projects"
+description = "herdr-plus: projects"
+
+[[keys.command]]
+key = "prefix+d"
+type = "plugin_action"
+command = "persiyanov.reviewr.toggle"
+description = "toggle reviewr code-review pane"
+
+[[keys.command]]
+key = "ctrl+h"
+type = "plugin_action"
+command = "herdr-splits.nav-left"
+description = "navigate left (vim/herdr)"
+
+[[keys.command]]
+key = "ctrl+j"
+type = "plugin_action"
+command = "herdr-splits.nav-down"
+description = "navigate down (vim/herdr)"
+
+[[keys.command]]
+key = "ctrl+k"
+type = "plugin_action"
+command = "herdr-splits.nav-up"
+description = "navigate up (vim/herdr)"
+
+[[keys.command]]
+key = "ctrl+l"
+type = "plugin_action"
+command = "herdr-splits.nav-right"
+description = "navigate right (vim/herdr)"
+
+[[keys.command]]
+key = "prefix+down"
+type = "plugin_action"
+command = "cloudmanic.herdr-plus.quick-actions"
+description = "herdr-plus: quick actions"
+
+[worktrees]
+directory = "~/herdr-sessions"
+
+[ui]
+agent_panel_sort = "spaces"
+
+[session]
+resume_agents_on_restore = true
+
+[experimental]
+kitty_graphics = true
