@@ -4,9 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"log/slog"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/eleonorayaya/shizuku/app"
@@ -75,18 +73,8 @@ func installPlugin(repo string) error {
 }
 
 func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get home directory: %w", err)
-	}
-
 	colors := ctx.Styles.Theme.Colors
 	data := map[string]any{
-		"WorkspacePicker": filepath.Join(homeDir, ".config", "herdr", "workspace-picker.sh"),
-		"PickerRoots": strings.Join([]string{
-			filepath.Join(homeDir, "workspace"),
-			filepath.Join(homeDir, "herdr-sessions"),
-		}, " "),
 		"Surface":       colors.Surface,
 		"TextOnSurface": colors.TextOnSurface,
 		"Primary":       colors.Primary,

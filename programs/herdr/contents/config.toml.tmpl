@@ -27,17 +27,21 @@ focus_pane_right = "prefix+ctrl+l"
 
 [[keys.command]]
 key = "prefix+p"
-type = "popup"
-command = "{{.WorkspacePicker}}"
-width = "60%"
-height = "50%"
-description = "workspace picker"
+type = "plugin_action"
+command = "eleonorayaya.utena.pick"
+description = "utena: go to session"
 
 [[keys.command]]
 key = "prefix+a"
 type = "plugin_action"
 command = "cloudmanic.herdr-plus.projects"
 description = "herdr-plus: projects"
+
+[[keys.command]]
+key = "prefix+u"
+type = "plugin_action"
+command = "eleonorayaya.utena.sessions"
+description = "utena: session sidebar"
 
 [[keys.command]]
 key = "prefix+d"
@@ -80,6 +84,9 @@ directory = "~/herdr-sessions"
 
 [ui]
 agent_panel_sort = "spaces"
+
+[ui.sidebar.spaces]
+rows = [["state_icon", "$session", "workspace"], ["branch", "git_status"]]
 
 [session]
 resume_agents_on_restore = true
