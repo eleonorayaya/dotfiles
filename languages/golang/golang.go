@@ -46,10 +46,17 @@ func (a *App) AgentConfig() app.AgentConfig {
 		Plugins: []string{
 			"gopls-lsp@claude-plugins-official",
 			"charm-dev@charm-dev-skills",
+			"go@go-skills",
+			"cobra-viper@go-skills",
+			"go-spec-reviewer@go-skills",
+			"go-release@go-skills",
+			"wails@go-skills",
+			"fileflow-pathologize@go-skills",
 		},
 		Marketplaces: map[string]app.Marketplace{
 			"claude-plugins-official": {Repo: "anthropics/claude-plugins-official"},
 			"charm-dev-skills":        {Repo: "williavs/charm-dev-skill-marketplace"},
+			"go-skills":               {Repo: "spf13/go-skills"},
 		},
 		AllowedBashCommands: []string{
 			"go build:*",
