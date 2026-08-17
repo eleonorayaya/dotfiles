@@ -28,6 +28,7 @@ func (a *App) AgentConfig() app.AgentConfig {
 		},
 		SandboxAllowWrite: []string{
 			"~/.config/bk.yaml",
+			"~/Library/Keychains",
 		},
 		SandboxExcludedCommands: []string{
 			"bk *",
