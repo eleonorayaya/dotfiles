@@ -23,6 +23,9 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"api.datadoghq.com",
 			"app.datadoghq.com",
 		},
+		SandboxExcludedCommands: []string{
+			"pup auth refresh",
+		},
 		Marketplaces: map[string]app.Marketplace{
 			"datadog-pup": {Repo: "datadog-labs/pup"},
 		},
