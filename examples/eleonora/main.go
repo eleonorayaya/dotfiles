@@ -42,6 +42,7 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/terminal"
 	"github.com/eleonorayaya/shizuku/programs/terraform"
 	"github.com/eleonorayaya/shizuku/programs/tmux"
+	"github.com/eleonorayaya/shizuku/programs/tuios"
 	"github.com/eleonorayaya/shizuku/programs/utena"
 	"github.com/eleonorayaya/shizuku/styles"
 	"github.com/eleonorayaya/shizuku/styles/themes"
@@ -104,6 +105,7 @@ func main() {
 			terminal.New(),
 			terraform.New(),
 			tmux.New(),
+			tuios.New(),
 			utena.New(),
 		),
 		shizuku.WithAgents(

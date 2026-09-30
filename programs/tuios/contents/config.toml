@@ -1,0 +1,25 @@
+[appearance]
+theme = 'monade'
+dockbar_position = 'bottom'
+click_to_type = 'single'
+dim_unfocused = 30
+
+[keybindings.prefix_mode]
+prefix_new_window = ['n']
+prefix_next_window = ['l', 'tab']
+prefix_prev_window = ['h', 'shift+tab']
+prefix_split_vertical = ['v', '|', '\']
+prefix_split_horizontal = ['s', '-']
+prefix_scrollback = ['u']
+prefix_review = ['V']
+
+[keybindings.terminal_mode]
+terminal_focus_left = ['ctrl+h', 'alt+left']
+terminal_focus_down = ['ctrl+j', 'alt+down']
+terminal_focus_up = ['ctrl+k', 'alt+up']
+terminal_focus_right = ['ctrl+l', 'alt+right']
+
+[startup]
+tiled = true
+open_default_window = true
+start_in_terminal_mode = true
