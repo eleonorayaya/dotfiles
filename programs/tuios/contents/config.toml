@@ -5,6 +5,9 @@ dockbar_position = 'bottom'
 click_to_type = 'single'
 dim_unfocused = 30
 
+[appearance.sidebar]
+position = "left"
+
 [keybindings.prefix_mode]
 prefix_new_window = []
 prefix_window = []
