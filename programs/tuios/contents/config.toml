@@ -1,4 +1,5 @@
 [appearance]
+hide_window_buttons = true
 theme = 'monade'
 dockbar_position = 'bottom'
 click_to_type = 'single'
