@@ -23,3 +23,26 @@ terminal_focus_right = ['ctrl+l', 'alt+right']
 tiled = true
 open_default_window = true
 start_in_terminal_mode = true
+
+[[keybindings.command]]
+key = "prefix+p"
+type = "popup"
+command = "utena"
+description = "utena sessions"
+
+[[keybindings.command]]
+key = "prefix+t"
+type = "popup"
+command = "utena new-task"
+description = "utena new task"
+
+[dock]
+right = ["custom/utena", "notifications", "clock"]
+
+[dock.custom.utena]
+command = "utena status-line"
+refresh = "5s"
+max-width = 60
+
+[hooks]
+after-attach = '''curl -sf --max-time 1 -X PUT -H 'Content-Type: application/json' -d "{\"session_name\":\"$TUIOS_SESSION_ID\"}" http://localhost:3333/tmux/hooks/client-session-changed'''
