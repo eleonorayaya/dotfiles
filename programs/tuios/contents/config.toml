@@ -5,10 +5,10 @@ click_to_type = 'single'
 dim_unfocused = 30
 
 [keybindings.prefix_mode]
-prefix_new_window = ['c', 'n']
+prefix_new_window = []
 prefix_window = []
-prefix_next_window = ['l', 'tab']
-prefix_prev_window = ['h', 'shift+tab']
+prefix_next_window = ['tab']
+prefix_prev_window = ['shift+tab']
 prefix_split_vertical = ['v', '|', '\']
 prefix_split_horizontal = ['s', '-']
 prefix_scrollback = ['u']
@@ -36,6 +36,30 @@ key = "prefix+t"
 type = "popup"
 command = "UTENA_POPUP=1 $HOME/.local/bin/utena new-task"
 description = "utena new task"
+
+[[keybindings.command]]
+key = "prefix+n"
+type = "shell"
+command = "$HOME/.local/bin/utena workspace new"
+description = "new window in the next empty workspace"
+
+[[keybindings.command]]
+key = "prefix+c"
+type = "shell"
+command = "$HOME/.local/bin/utena workspace new"
+description = "new window in the next empty workspace (tmux c)"
+
+[[keybindings.command]]
+key = "prefix+l"
+type = "shell"
+command = "$HOME/.local/bin/utena workspace next"
+description = "next workspace"
+
+[[keybindings.command]]
+key = "prefix+h"
+type = "shell"
+command = "$HOME/.local/bin/utena workspace prev"
+description = "previous workspace"
 
 [dock]
 right = ["custom/utena", "notifications", "clock"]
