@@ -27,13 +27,13 @@ start_in_terminal_mode = true
 [[keybindings.command]]
 key = "prefix+p"
 type = "popup"
-command = "$HOME/.local/bin/utena"
+command = "UTENA_POPUP=1 $HOME/.local/bin/utena"
 description = "utena sessions"
 
 [[keybindings.command]]
 key = "prefix+t"
 type = "popup"
-command = "$HOME/.local/bin/utena new-task"
+command = "UTENA_POPUP=1 $HOME/.local/bin/utena new-task"
 description = "utena new task"
 
 [dock]
