@@ -27,20 +27,20 @@ start_in_terminal_mode = true
 [[keybindings.command]]
 key = "prefix+p"
 type = "popup"
-command = "utena"
+command = "$HOME/.local/bin/utena"
 description = "utena sessions"
 
 [[keybindings.command]]
 key = "prefix+t"
 type = "popup"
-command = "utena new-task"
+command = "$HOME/.local/bin/utena new-task"
 description = "utena new task"
 
 [dock]
 right = ["custom/utena", "notifications", "clock"]
 
 [dock.custom.utena]
-command = "utena status-line"
+command = "$HOME/.local/bin/utena status-line"
 refresh = "5s"
 max-width = 60
 
