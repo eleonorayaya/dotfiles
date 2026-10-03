@@ -7,7 +7,7 @@ dim_unfocused = 30
 
 [appearance.sidebar]
 position = "left"
-sections = "sessions:25,files:25,agents:34"
+sections = "sessions:41,files:25,agents:34"
 
 [keybindings.prefix_mode]
 prefix_new_window = []
