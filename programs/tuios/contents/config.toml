@@ -5,7 +5,8 @@ click_to_type = 'single'
 dim_unfocused = 30
 
 [keybindings.prefix_mode]
-prefix_new_window = ['n']
+prefix_new_window = ['c', 'n']
+prefix_window = []
 prefix_next_window = ['l', 'tab']
 prefix_prev_window = ['h', 'shift+tab']
 prefix_split_vertical = ['v', '|', '\']
