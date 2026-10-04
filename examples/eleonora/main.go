@@ -40,6 +40,7 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/sfsymbols"
 	"github.com/eleonorayaya/shizuku/programs/sketchybar"
 	"github.com/eleonorayaya/shizuku/programs/terminal"
+	"github.com/eleonorayaya/shizuku/programs/terminalbrowser"
 	"github.com/eleonorayaya/shizuku/programs/terraform"
 	"github.com/eleonorayaya/shizuku/programs/tmux"
 	"github.com/eleonorayaya/shizuku/programs/tuios"
@@ -103,6 +104,7 @@ func main() {
 			sfsymbols.New(),
 			sketchybar.New(),
 			terminal.New(),
+			terminalbrowser.New(),
 			terraform.New(),
 			tmux.New(),
 			tuios.New(),
