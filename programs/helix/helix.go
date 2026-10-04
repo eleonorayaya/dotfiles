@@ -1,4 +1,4 @@
-package nvim
+package helix
 
 import (
 	"embed"
@@ -18,16 +18,12 @@ func New() *App {
 }
 
 func (a *App) Name() string {
-	return "nvim"
+	return "helix"
 }
 
 func (a *App) Install(ctx *app.Context) error {
-	if err := util.InstallBrewPackage("neovim", false); err != nil {
-		return fmt.Errorf("failed to install neovim: %w", err)
-	}
-
-	if err := util.InstallBrewPackage("tree-sitter-cli", false); err != nil {
-		return fmt.Errorf("failed to install tree-sitter-cli: %w", err)
+	if err := util.InstallBrewPackage("helix", false); err != nil {
+		return fmt.Errorf("failed to install helix: %w", err)
 	}
 
 	return nil
@@ -36,26 +32,22 @@ func (a *App) Install(ctx *app.Context) error {
 func (a *App) AgentConfig() app.AgentConfig {
 	return app.AgentConfig{
 		SandboxAllowWrite: []string{
-			"~/.cache/nvim/",
+			"~/.cache/helix/",
 		},
 	}
 }
 
 func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
-	data := map[string]any{
-		"ThemeName": ctx.Styles.Theme.Name,
-		"ThemeType": ctx.Styles.Theme.Type,
-		"Colors":    ctx.Styles.Theme.Colors,
-	}
-
-	fileMap, err := app.GenerateAppFiles("nvim", contents, data, ctx.OutDir)
+	fileMap, err := app.GenerateAppFiles("helix", contents, map[string]any{
+		"Colors": ctx.Styles.Theme.Colors,
+	}, ctx.OutDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate app files: %w", err)
 	}
 
 	return &app.GenerateResult{
 		FileMap: fileMap,
-		DestDir: "~/.config/nvim/",
+		DestDir: "~/.config/helix/",
 	}, nil
 }
 
@@ -74,8 +66,9 @@ func (a *App) Sync(ctx *app.Context) error {
 
 func (a *App) Env() (*app.EnvSetup, error) {
 	return &app.EnvSetup{
-		Aliases: []app.Alias{
-			{Name: "vim", Command: "nvim"},
+		Variables: []app.EnvVar{
+			{Key: "EDITOR", Value: "hx"},
+			{Key: "VISUAL", Value: "hx"},
 		},
 	}, nil
 }
