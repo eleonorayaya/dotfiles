@@ -1,13 +1,19 @@
 [appearance]
+hide_window_buttons = true
 theme = 'monade'
 dockbar_position = 'bottom'
 click_to_type = 'single'
 dim_unfocused = 30
 
+[appearance.sidebar]
+position = "left"
+sections = "sessions:41,files:25,agents:34"
+
 [keybindings.prefix_mode]
-prefix_new_window = ['n']
-prefix_next_window = ['l', 'tab']
-prefix_prev_window = ['h', 'shift+tab']
+prefix_new_window = []
+prefix_window = []
+prefix_next_window = ['tab']
+prefix_prev_window = ['shift+tab']
 prefix_split_vertical = ['v', '|', '\']
 prefix_split_horizontal = ['s', '-']
 prefix_scrollback = ['u']
@@ -23,3 +29,50 @@ terminal_focus_right = ['ctrl+l', 'alt+right']
 tiled = true
 open_default_window = true
 start_in_terminal_mode = true
+
+[[keybindings.command]]
+key = "prefix+p"
+type = "popup"
+command = "UTENA_POPUP=1 $HOME/.local/bin/utena"
+description = "utena sessions"
+
+[[keybindings.command]]
+key = "prefix+t"
+type = "popup"
+command = "UTENA_POPUP=1 $HOME/.local/bin/utena new-task"
+description = "utena new task"
+
+[[keybindings.command]]
+key = "prefix+n"
+type = "shell"
+command = "$HOME/.local/bin/utena workspace new"
+description = "new window in the next empty workspace"
+
+[[keybindings.command]]
+key = "prefix+c"
+type = "shell"
+command = "$HOME/.local/bin/utena workspace new"
+description = "new window in the next empty workspace (tmux c)"
+
+[[keybindings.command]]
+key = "prefix+l"
+type = "shell"
+command = "$HOME/.local/bin/utena workspace next"
+description = "next workspace"
+
+[[keybindings.command]]
+key = "prefix+h"
+type = "shell"
+command = "$HOME/.local/bin/utena workspace prev"
+description = "previous workspace"
+
+[dock]
+right = ["custom/utena", "notifications", "clock"]
+
+[dock.custom.utena]
+command = "$HOME/.local/bin/utena status-line"
+refresh = "5s"
+max-width = 60
+
+[hooks]
+after-attach = '''curl -sf --max-time 1 -X PUT -H 'Content-Type: application/json' -d "{\"session_name\":\"$TUIOS_SESSION_ID\"}" http://localhost:3333/tmux/hooks/client-session-changed'''
