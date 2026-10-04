@@ -1,0 +1,131 @@
+"attribute" = "accent_salmon"
+"type" = { fg = "secondary", modifiers = ["bold"] }
+"type.builtin" = { fg = "secondary", modifiers = ["bold"] }
+"type.enum.variant" = "accent_salmon"
+"constructor" = "accent"
+"constant" = "accent_salmon"
+"constant.builtin" = "accent"
+"constant.builtin.boolean" = "accent_peach"
+"constant.character" = "accent_yellow"
+"constant.character.escape" = "accent_gold"
+"constant.numeric" = "accent_salmon"
+"string" = "accent_gold"
+"string.regexp" = "accent_gold"
+"string.special" = "accent_gold"
+"string.special.url" = { fg = "link", modifiers = ["underlined"] }
+"comment" = { fg = "comment", modifiers = ["italic"] }
+"comment.line.documentation" = { fg = "comment", modifiers = ["italic", "bold"] }
+"comment.block.documentation" = { fg = "comment", modifiers = ["italic", "bold"] }
+"variable" = "text"
+"variable.builtin" = "accent"
+"variable.parameter" = "text_emphasis"
+"variable.other.member" = "accent_salmon"
+"label" = "primary_variant"
+"punctuation" = "text_variant"
+"punctuation.special" = "accent"
+"keyword" = { fg = "accent_peach", modifiers = ["bold"] }
+"keyword.control" = { fg = "primary", modifiers = ["bold"] }
+"keyword.control.import" = "accent_salmon"
+"keyword.control.exception" = { fg = "error", modifiers = ["bold"] }
+"keyword.directive" = "accent_salmon"
+"operator" = "text_variant"
+"function" = { fg = "secondary", modifiers = ["bold"] }
+"function.builtin" = "accent"
+"function.macro" = "accent_salmon"
+"tag" = "accent_lavender"
+"namespace" = "accent_lavender"
+"special" = "accent"
+
+"markup.heading" = { fg = "primary", modifiers = ["bold"] }
+"markup.list" = "accent_peach"
+"markup.bold" = { modifiers = ["bold"] }
+"markup.italic" = { modifiers = ["italic"] }
+"markup.strikethrough" = { modifiers = ["crossed_out"] }
+"markup.link.url" = { fg = "link", modifiers = ["underlined"] }
+"markup.link.text" = "accent_lavender"
+"markup.quote" = { fg = "text_variant", modifiers = ["italic"] }
+"markup.raw" = "accent_gold"
+
+"diff.plus" = "accent_mint"
+"diff.minus" = "accent_salmon"
+"diff.delta" = "warning"
+
+"ui.background" = {}
+"ui.text" = "text"
+"ui.text.focus" = { fg = "text_emphasis", modifiers = ["bold"] }
+"ui.text.inactive" = "text_muted"
+"ui.text.directory" = "accent_peach"
+"ui.cursor" = { fg = "cursor_text", bg = "text_variant" }
+"ui.cursor.primary" = { fg = "cursor_text", bg = "cursor" }
+"ui.cursor.match" = { fg = "surface", bg = "accent_lavender", modifiers = ["bold"] }
+"ui.cursorline.primary" = { bg = "surface_highlight" }
+"ui.linenr" = "text_muted"
+"ui.linenr.selected" = { fg = "text_emphasis", modifiers = ["bold"] }
+"ui.statusline" = { fg = "text", bg = "surface_variant" }
+"ui.statusline.inactive" = { fg = "text_muted", bg = "surface_variant" }
+"ui.statusline.normal" = { fg = "text_on_primary", bg = "primary", modifiers = ["bold"] }
+"ui.statusline.insert" = { fg = "text_on_secondary", bg = "secondary", modifiers = ["bold"] }
+"ui.statusline.select" = { fg = "text_on_tertiary", bg = "tertiary", modifiers = ["bold"] }
+"ui.bufferline" = { fg = "text_variant", bg = "surface_variant" }
+"ui.bufferline.active" = { fg = "text_emphasis", bg = "surface_highlight", modifiers = ["bold"] }
+"ui.bufferline.background" = { bg = "surface" }
+"ui.popup" = { fg = "text", bg = "surface_variant" }
+"ui.window" = "surface_border"
+"ui.help" = { fg = "text", bg = "surface_variant" }
+"ui.menu" = { fg = "text", bg = "surface_variant" }
+"ui.menu.selected" = { fg = "selection_fg", bg = "selection", modifiers = ["bold"] }
+"ui.menu.scroll" = { fg = "surface_border", bg = "surface_variant" }
+"ui.picker.header" = { fg = "text_emphasis", modifiers = ["bold"] }
+"ui.selection" = { bg = "selection" }
+"ui.selection.primary" = { fg = "selection_fg", bg = "selection" }
+"ui.highlight" = { bg = "surface_highlight" }
+"ui.virtual.whitespace" = "surface_border"
+"ui.virtual.indent-guide" = "surface_border"
+"ui.virtual.ruler" = { bg = "surface_variant" }
+"ui.virtual.inlay-hint" = { fg = "text_muted", modifiers = ["italic"] }
+"ui.virtual.wrap" = "text_muted"
+"ui.virtual.jump-label" = { fg = "primary", modifiers = ["bold"] }
+
+"error" = "error"
+"warning" = "warning"
+"info" = "info"
+"hint" = "text_variant"
+"diagnostic.error" = { underline = { color = "error", style = "curl" } }
+"diagnostic.warning" = { underline = { color = "warning", style = "curl" } }
+"diagnostic.info" = { underline = { color = "info", style = "curl" } }
+"diagnostic.hint" = { underline = { color = "text_variant", style = "curl" } }
+"diagnostic.unnecessary" = { modifiers = ["dim"] }
+"diagnostic.deprecated" = { modifiers = ["crossed_out"] }
+
+[palette]
+surface = "{{.Colors.Surface}}"
+surface_variant = "{{.Colors.SurfaceVariant}}"
+surface_highlight = "{{.Colors.SurfaceHighlight}}"
+surface_border = "{{.Colors.SurfaceBorder}}"
+text = "{{.Colors.TextOnSurface}}"
+text_variant = "{{.Colors.TextOnSurfaceVariant}}"
+text_muted = "{{.Colors.TextOnSurfaceMuted}}"
+text_emphasis = "{{.Colors.TextOnSurfaceEmphasis}}"
+primary = "{{.Colors.Primary}}"
+primary_variant = "{{.Colors.PrimaryVariant}}"
+text_on_primary = "{{.Colors.TextOnPrimary}}"
+secondary = "{{.Colors.Secondary}}"
+text_on_secondary = "{{.Colors.TextOnSecondary}}"
+tertiary = "{{.Colors.Tertiary}}"
+text_on_tertiary = "{{.Colors.TextOnTertiary}}"
+accent = "{{.Colors.Accent}}"
+accent_peach = "{{.Colors.AccentPeach}}"
+accent_salmon = "{{.Colors.AccentSalmon}}"
+accent_lavender = "{{.Colors.AccentLavender}}"
+accent_gold = "{{.Colors.AccentGold}}"
+accent_yellow = "{{.Colors.AccentYellow}}"
+accent_mint = "{{.Colors.AccentMint}}"
+error = "{{.Colors.Error}}"
+warning = "{{.Colors.Warning}}"
+info = "{{.Colors.Info}}"
+selection = "{{.Colors.Selection}}"
+selection_fg = "{{.Colors.SelectionForeground}}"
+cursor = "{{.Colors.Cursor}}"
+cursor_text = "{{.Colors.CursorText}}"
+link = "{{.Colors.Link}}"
+comment = "{{.Colors.Comment}}"

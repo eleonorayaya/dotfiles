@@ -74,9 +74,6 @@ func (a *App) Sync(ctx *app.Context) error {
 
 func (a *App) Env() (*app.EnvSetup, error) {
 	return &app.EnvSetup{
-		Variables: []app.EnvVar{
-			{Key: "EDITOR", Value: "nvim"},
-		},
 		Aliases: []app.Alias{
 			{Name: "vim", Command: "nvim"},
 		},

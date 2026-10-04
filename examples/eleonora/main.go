@@ -26,7 +26,7 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/fastfetch"
 	"github.com/eleonorayaya/shizuku/programs/git"
 	"github.com/eleonorayaya/shizuku/programs/glow"
-	"github.com/eleonorayaya/shizuku/programs/herdr"
+	"github.com/eleonorayaya/shizuku/programs/helix"
 	"github.com/eleonorayaya/shizuku/programs/jankyborders"
 	"github.com/eleonorayaya/shizuku/programs/k9s"
 	"github.com/eleonorayaya/shizuku/programs/kitty"
@@ -93,7 +93,7 @@ func main() {
 			fastfetch.New(),
 			git.New(),
 			glow.New(),
-			herdr.New(),
+			helix.New(),
 			jankyborders.New(),
 			kitty.New(),
 			lsd.New(),
