@@ -20,6 +20,7 @@ type Options struct {
 }
 
 type Profile struct {
+	Extends   string
 	Languages []app.Language
 	Programs  []app.Program
 	Agents    []app.Agent
@@ -69,6 +70,12 @@ func WithAgents(agents ...app.Agent) Option {
 	}
 }
 
+func Extends(name string) Option {
+	return func(b *Builder) {
+		b.target.Extends = name
+	}
+}
+
 func WithProfile(name string, opts ...Option) Option {
 	return func(b *Builder) {
 		p, ok := b.profiles[name]
@@ -115,19 +122,35 @@ func mergeNamed[T app.Named](base, overlay []T) []T {
 	return out
 }
 
-func (b *Builder) activeProfile() Profile {
+func (b *Builder) activeProfile() (Profile, error) {
 	if b.opts.Profile == "" {
-		return b.base
+		return b.base, nil
 	}
-	p, ok := b.profiles[b.opts.Profile]
-	if !ok {
-		return b.base
+
+	chain := []*Profile{}
+	seen := map[string]bool{}
+	for name := b.opts.Profile; name != ""; {
+		if seen[name] {
+			return Profile{}, fmt.Errorf("profile cycle detected at %q", name)
+		}
+		seen[name] = true
+		p, ok := b.profiles[name]
+		if !ok {
+			return Profile{}, fmt.Errorf("unknown profile %q", name)
+		}
+		chain = append(chain, p)
+		name = p.Extends
 	}
-	return Profile{
-		Languages: mergeNamed(b.base.Languages, p.Languages),
-		Programs:  mergeNamed(b.base.Programs, p.Programs),
-		Agents:    mergeNamed(b.base.Agents, p.Agents),
+
+	out := b.base
+	for i := len(chain) - 1; i >= 0; i-- {
+		out = Profile{
+			Languages: mergeNamed(out.Languages, chain[i].Languages),
+			Programs:  mergeNamed(out.Programs, chain[i].Programs),
+			Agents:    mergeNamed(out.Agents, chain[i].Agents),
+		}
 	}
+	return out, nil
 }
 
 func (b *Builder) makeContext(outDir string) *app.Context {
@@ -204,7 +227,10 @@ func (b *Builder) Sync(ctx context.Context) error {
 		return err
 	}
 	appCtx := b.makeContext(outDir)
-	profile := b.activeProfile()
+	profile, err := b.activeProfile()
+	if err != nil {
+		return err
+	}
 
 	for _, p := range profile.Programs {
 		if err := syncProgram(p, appCtx); err != nil {
@@ -273,7 +299,10 @@ func (b *Builder) Diff(ctx context.Context) (*DiffReport, error) {
 		return nil, err
 	}
 	appCtx := b.makeContext(outDir)
-	profile := b.activeProfile()
+	profile, err := b.activeProfile()
+	if err != nil {
+		return nil, err
+	}
 
 	var results []DiffResult
 
@@ -359,7 +388,10 @@ func (b *Builder) Install(ctx context.Context) error {
 		return err
 	}
 	appCtx := b.makeContext(outDir)
-	profile := b.activeProfile()
+	profile, err := b.activeProfile()
+	if err != nil {
+		return err
+	}
 
 	install := func(named app.Named) error {
 		installer, ok := named.(app.Installer)
@@ -397,8 +429,11 @@ type AppStatus struct {
 	Category string
 }
 
-func (b *Builder) List() []AppStatus {
-	profile := b.activeProfile()
+func (b *Builder) List() ([]AppStatus, error) {
+	profile, err := b.activeProfile()
+	if err != nil {
+		return nil, err
+	}
 	statuses := make([]AppStatus, 0, len(profile.Languages)+len(profile.Programs)+len(profile.Agents))
 	for _, l := range profile.Languages {
 		statuses = append(statuses, AppStatus{Name: l.Name(), Category: "language"})
@@ -409,5 +444,5 @@ func (b *Builder) List() []AppStatus {
 	for _, a := range profile.Agents {
 		statuses = append(statuses, AppStatus{Name: a.Name(), Category: "agent"})
 	}
-	return statuses
+	return statuses, nil
 }
