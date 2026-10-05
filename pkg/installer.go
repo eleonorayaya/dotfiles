@@ -200,7 +200,3 @@ func (i *Installer) linkBin(from, to string) error {
 	}
 	return nil
 }
-
-func (i *Installer) releaseInstall(s Spec) error {
-	return fmt.Errorf("release install not implemented for %s", s.name())
-}
