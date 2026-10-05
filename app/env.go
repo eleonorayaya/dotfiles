@@ -158,10 +158,11 @@ func GenerateEnvFiles(envSetups []*EnvSetup, outDir string) (map[string]string, 
 
 		for _, k := range sortedAliasKeys {
 			a := aliases[k]
+			command := strings.ReplaceAll(a.Command, "'", `'\''`)
 			if a.Requires != "" {
-				sh.WriteString(fmt.Sprintf("command -v %s >/dev/null 2>&1 && alias %s='%s'\n", a.Requires, a.Name, a.Command))
+				sh.WriteString(fmt.Sprintf("command -v %s >/dev/null 2>&1 && alias %s='%s'\n", a.Requires, a.Name, command))
 			} else {
-				sh.WriteString(fmt.Sprintf("alias %s='%s'\n", a.Name, a.Command))
+				sh.WriteString(fmt.Sprintf("alias %s='%s'\n", a.Name, command))
 			}
 		}
 		sh.WriteString("\n")

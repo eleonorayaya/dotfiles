@@ -23,6 +23,8 @@ const zshViModeRepo = "https://github.com/jeffreytse/zsh-vi-mode"
 
 const zshViModePath = "~/.local/share/shizuku/plugins/zsh-vi-mode"
 
+const zshViModePlugin = "zsh-vi-mode.plugin.zsh"
+
 const zshViModeInit = `if [[ -f ~/.local/share/shizuku/plugins/zsh-vi-mode/zsh-vi-mode.plugin.zsh ]]; then
   source ~/.local/share/shizuku/plugins/zsh-vi-mode/zsh-vi-mode.plugin.zsh
 fi`
@@ -38,15 +40,20 @@ type rcLine struct {
 }
 
 var rcLines = []rcLine{
-	{file: "~/.zshenv", line: "source ~/.config/shizuku/shizuku.zshenv", marker: "shizuku/shizuku.zshenv"},
-	{file: "~/.zshrc", line: "source ~/.config/shizuku/shizuku.sh", marker: "shizuku/shizuku.sh"},
+	{file: "~/.zshenv", line: "[[ -r ~/.config/shizuku/shizuku.zshenv ]] && source ~/.config/shizuku/shizuku.zshenv", marker: "shizuku/shizuku.zshenv"},
+	{file: "~/.zshrc", line: "[[ -r ~/.config/shizuku/shizuku.sh ]] && source ~/.config/shizuku/shizuku.sh", marker: "shizuku/shizuku.sh"},
 }
 
-var packages = []pkg.Spec{
-	{Apt: "zsh", Bin: "zsh"},
-	{Apt: "ca-certificates"},
-	{Apt: "xz-utils", Bin: "xz"},
-	{
+type terminalPackage struct {
+	spec         pkg.Spec
+	skipIfExists string
+}
+
+var packages = []terminalPackage{
+	{spec: pkg.Spec{Apt: "zsh", Bin: "zsh"}},
+	{spec: pkg.Spec{Apt: "ca-certificates"}, skipIfExists: "/etc/ssl/certs/ca-certificates.crt"},
+	{spec: pkg.Spec{Apt: "xz-utils", Bin: "xz"}},
+	{spec: pkg.Spec{
 		Brew: "jandedobbeleer/oh-my-posh/oh-my-posh",
 		Bin:  "oh-my-posh",
 		Release: &pkg.Release{
@@ -54,7 +61,17 @@ var packages = []pkg.Spec{
 			Asset: `posh-linux-{arch}`,
 			Arch:  map[string]string{"amd64": "amd64", "arm64": "arm64"},
 		},
-	},
+	}},
+}
+
+var installPkg = pkg.Install
+
+var cloneRepo = func(repo, dest string) error {
+	output, err := exec.Command("git", "clone", "--depth", "1", repo, dest).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("git clone %s: %w\nOutput: %s", repo, err, string(output))
+	}
+	return nil
 }
 
 type App struct{}
@@ -68,51 +85,81 @@ func (a *App) Name() string {
 }
 
 func (a *App) Install(ctx *app.Context) error {
-	for _, spec := range packages {
-		if err := pkg.Install(spec); err != nil {
-			return fmt.Errorf("failed to install terminal package: %w", err)
-		}
-	}
-
-	if err := ensureZshViMode(); err != nil {
-		return fmt.Errorf("failed to install zsh-vi-mode: %w", err)
-	}
+	var errs []error
 
 	for _, rc := range rcLines {
 		path, err := util.NormalizeFilePath(rc.file)
 		if err != nil {
-			return fmt.Errorf("failed to resolve %s: %w", rc.file, err)
+			errs = append(errs, fmt.Errorf("failed to resolve %s: %w", rc.file, err))
+			continue
 		}
 		if err := ensureLine(path, rc.line, rc.marker); err != nil {
-			return fmt.Errorf("failed to update %s: %w", rc.file, err)
+			errs = append(errs, fmt.Errorf("failed to update %s: %w", rc.file, err))
 		}
+	}
+
+	if err := installPackages(packages); err != nil {
+		errs = append(errs, err)
+	}
+
+	if err := ensureZshViMode(); err != nil {
+		slog.Warn("failed to install zsh-vi-mode", "error", err)
 	}
 
 	if shell := os.Getenv("SHELL"); !strings.HasSuffix(shell, "zsh") {
 		slog.Warn("login shell is not zsh; switch with: chsh -s \"$(command -v zsh)\"", "shell", shell)
 	}
 
-	return nil
+	return errors.Join(errs...)
+}
+
+func installPackages(pkgs []terminalPackage) error {
+	var errs []error
+	for _, p := range pkgs {
+		if p.skipIfExists != "" {
+			if _, err := os.Stat(p.skipIfExists); err == nil {
+				continue
+			}
+		}
+		if err := installPkg(p.spec); err != nil {
+			errs = append(errs, fmt.Errorf("failed to install terminal package: %w", err))
+		}
+	}
+	return errors.Join(errs...)
+}
+
+func zshViModeDir() (string, error) {
+	path, err := util.NormalizeFilePath(zshViModePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve zsh-vi-mode path: %w", err)
+	}
+	return path, nil
 }
 
 func ensureZshViMode() error {
-	path, err := util.NormalizeFilePath(zshViModePath)
+	path, err := zshViModeDir()
 	if err != nil {
-		return fmt.Errorf("failed to resolve zsh-vi-mode path: %w", err)
+		return err
 	}
 
-	if _, err := os.Stat(path); err == nil {
+	if _, err := os.Stat(filepath.Join(path, zshViModePlugin)); err == nil {
 		slog.Debug("zsh-vi-mode already installed, skipping")
 		return nil
+	}
+
+	if err := os.RemoveAll(path); err != nil {
+		return fmt.Errorf("failed to remove incomplete zsh-vi-mode dir: %w", err)
 	}
 
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return fmt.Errorf("failed to create plugin dir: %w", err)
 	}
 
-	output, err := exec.Command("git", "clone", "--depth", "1", zshViModeRepo, path).CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("failed to clone zsh-vi-mode: %w\nOutput: %s", err, string(output))
+	if err := cloneRepo(zshViModeRepo, path); err != nil {
+		if rmErr := os.RemoveAll(path); rmErr != nil {
+			return errors.Join(fmt.Errorf("failed to clone zsh-vi-mode: %w", err), fmt.Errorf("failed to clean up %s: %w", path, rmErr))
+		}
+		return fmt.Errorf("failed to clone zsh-vi-mode: %w", err)
 	}
 
 	return nil
