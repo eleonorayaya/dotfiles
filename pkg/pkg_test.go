@@ -81,6 +81,13 @@ func TestMatchAsset_NoMatch(t *testing.T) {
 	}
 }
 
+func TestMatchAsset_AlternationIsAnchored(t *testing.T) {
+	r := Release{Repo: "x/y", Asset: `thing|other-{arch}`}
+	if got, err := r.matchAsset("amd64", []string{"thing-extra"}); err == nil {
+		t.Fatalf("expected error, matched %q", got)
+	}
+}
+
 func TestMatchAsset_UnsupportedArch(t *testing.T) {
 	r := Release{Repo: "x/y", Asset: `thing-{arch}`}
 	if _, err := r.matchAsset("riscv64", []string{"thing-riscv64"}); err == nil {

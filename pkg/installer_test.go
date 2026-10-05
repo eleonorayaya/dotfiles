@@ -15,11 +15,13 @@ type fakeRunner struct {
 	outputs map[string]string
 	fail    map[string]bool
 	calls   []string
+	envs    []string
 }
 
 func (f *fakeRunner) run(env []string, name string, args ...string) ([]byte, error) {
 	cmd := strings.Join(append([]string{name}, args...), " ")
 	f.calls = append(f.calls, cmd)
+	f.envs = append(f.envs, strings.Join(env, " "))
 	if f.fail[cmd] {
 		return nil, errors.New("command failed")
 	}
@@ -91,7 +93,10 @@ func TestInstall_DarwinCask(t *testing.T) {
 	if err := i.Install(Spec{Brew: "aerospace", BrewCask: true}); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if got := fr.calls[len(fr.calls)-1]; got != "brew install aerospace --cask" {
+	if len(fr.calls) != 2 {
+		t.Fatalf("expected 2 calls, got %v", fr.calls)
+	}
+	if got := fr.calls[1]; got != "brew install aerospace --cask" {
 		t.Errorf("got %q", got)
 	}
 }
@@ -116,7 +121,62 @@ func TestInstall_AptAsRoot(t *testing.T) {
 	}
 	want := "apt-get update|apt-cache policy lsd|apt-get install -y lsd"
 	if got := strings.Join(fr.calls, "|"); got != want {
-		t.Errorf("got %q, want %q", got, want)
+		t.Fatalf("got %q, want %q", got, want)
+	}
+	if !strings.Contains(fr.envs[1], "LC_ALL=C") {
+		t.Errorf("apt-cache policy env = %q, want LC_ALL=C", fr.envs[1])
+	}
+	if !strings.Contains(fr.envs[2], "DEBIAN_FRONTEND=noninteractive") {
+		t.Errorf("apt-get install env = %q, want DEBIAN_FRONTEND=noninteractive", fr.envs[2])
+	}
+}
+
+func TestInstall_AptUpdateFailureFallsBackToRelease(t *testing.T) {
+	i, fr := testInstaller(t, "linux")
+	i.IsRoot = true
+	fr.paths["apt-get"] = "/usr/bin/apt-get"
+	fr.fail["apt-get update"] = true
+	srv := releaseServer(t, map[string][]byte{"posh-linux-amd64": []byte("POSH")})
+	i.APIBase = srv.URL
+
+	err := i.Install(Spec{Apt: "oh-my-posh", Bin: "oh-my-posh", Release: &Release{
+		Repo: "JanDeDobbeleer/oh-my-posh", Asset: `posh-linux-{arch}`,
+		Arch: map[string]string{"amd64": "amd64"},
+	}})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertFile(t, filepath.Join(i.BinDir(), "oh-my-posh"), "POSH")
+}
+
+func TestInstall_AptUpdateFailureAptOnlyErrors(t *testing.T) {
+	i, fr := testInstaller(t, "linux")
+	i.IsRoot = true
+	fr.paths["apt-get"] = "/usr/bin/apt-get"
+	fr.fail["apt-get update"] = true
+	if err := i.Install(Spec{Apt: "zsh", Bin: "zsh"}); err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestInstall_AptUpdateFailureCached(t *testing.T) {
+	i, fr := testInstaller(t, "linux")
+	i.IsRoot = true
+	fr.paths["apt-get"] = "/usr/bin/apt-get"
+	fr.fail["apt-get update"] = true
+	for _, s := range []Spec{{Apt: "zsh"}, {Apt: "git"}} {
+		if err := i.Install(s); err == nil {
+			t.Fatalf("expected error for %s", s.Apt)
+		}
+	}
+	count := 0
+	for _, c := range fr.calls {
+		if c == "apt-get update" {
+			count++
+		}
+	}
+	if count != 1 {
+		t.Errorf("expected 1 apt-get update, got %d (%v)", count, fr.calls)
 	}
 }
 
@@ -126,6 +186,9 @@ func TestInstall_AptUsesSudoWhenNotRoot(t *testing.T) {
 	fr.outputs["apt-cache policy zsh"] = "  Candidate: 5.9-4\n"
 	if err := i.Install(Spec{Apt: "zsh", Bin: "zsh"}); err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(fr.calls) != 3 {
+		t.Fatalf("expected 3 calls, got %v", fr.calls)
 	}
 	if fr.calls[0] != "sudo DEBIAN_FRONTEND=noninteractive apt-get update" {
 		t.Errorf("got %q", fr.calls[0])

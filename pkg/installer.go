@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 )
 
 type runFunc func(env []string, name string, args ...string) ([]byte, error)
@@ -25,6 +26,7 @@ type Installer struct {
 	lookPath func(string) (string, error)
 	run      runFunc
 	aptReady bool
+	aptErr   error
 }
 
 func NewInstaller() (*Installer, error) {
@@ -39,7 +41,7 @@ func NewInstaller() (*Installer, error) {
 		IsRoot:   os.Geteuid() == 0,
 		APIBase:  "https://api.github.com",
 		Token:    os.Getenv("GITHUB_TOKEN"),
-		HTTP:     http.DefaultClient,
+		HTTP:     &http.Client{Timeout: 5 * time.Minute},
 		lookPath: exec.LookPath,
 		run:      runCommand,
 	}, nil
@@ -100,10 +102,12 @@ func (i *Installer) Install(s Spec) error {
 	case "linux":
 		if s.Apt != "" && i.hasApt() {
 			ok, err := i.aptHasCandidate(s.Apt)
-			if err != nil {
+			switch {
+			case err != nil && s.Release == nil:
 				return err
-			}
-			if ok {
+			case err != nil:
+				slog.Warn("apt unavailable, falling back to github release", "package", s.Apt, "error", err)
+			case ok:
 				return i.aptInstall(s)
 			}
 		}
@@ -145,8 +149,12 @@ func (i *Installer) aptUpdate() error {
 	if i.aptReady {
 		return nil
 	}
+	if i.aptErr != nil {
+		return i.aptErr
+	}
 	if _, err := i.privileged("apt-get", "update"); err != nil {
-		return fmt.Errorf("apt-get update failed: %w", err)
+		i.aptErr = fmt.Errorf("apt-get update failed: %w", err)
+		return i.aptErr
 	}
 	i.aptReady = true
 	return nil
@@ -156,7 +164,7 @@ func (i *Installer) aptHasCandidate(name string) (bool, error) {
 	if err := i.aptUpdate(); err != nil {
 		return false, err
 	}
-	out, err := i.run(nil, "apt-cache", "policy", name)
+	out, err := i.run([]string{"LC_ALL=C"}, "apt-cache", "policy", name)
 	if err != nil {
 		return false, fmt.Errorf("apt-cache policy %s failed: %w", name, err)
 	}

@@ -207,19 +207,26 @@ func installFile(src, dest string) error {
 	}
 	defer in.Close()
 
-	tmp := dest + ".tmp"
-	out, err := os.OpenFile(tmp, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o755)
+	out, err := os.CreateTemp(filepath.Dir(dest), "."+filepath.Base(dest)+".*")
 	if err != nil {
-		return fmt.Errorf("failed to create %s: %w", tmp, err)
+		return fmt.Errorf("failed to create temp file for %s: %w", dest, err)
 	}
+	tmp := out.Name()
 	if _, err := io.Copy(out, in); err != nil {
 		out.Close()
+		os.Remove(tmp)
 		return fmt.Errorf("failed to write %s: %w", tmp, err)
 	}
 	if err := out.Close(); err != nil {
+		os.Remove(tmp)
 		return fmt.Errorf("failed to close %s: %w", tmp, err)
 	}
+	if err := os.Chmod(tmp, 0o755); err != nil {
+		os.Remove(tmp)
+		return fmt.Errorf("failed to chmod %s: %w", tmp, err)
+	}
 	if err := os.Rename(tmp, dest); err != nil {
+		os.Remove(tmp)
 		return fmt.Errorf("failed to move %s into place: %w", dest, err)
 	}
 	return nil

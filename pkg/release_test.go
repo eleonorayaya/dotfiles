@@ -135,6 +135,46 @@ func TestReleaseInstall_APIError(t *testing.T) {
 	}
 }
 
+func TestInstallFile_NoDebris(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	if err := os.WriteFile(src, []byte("BIN"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	binDir := filepath.Join(dir, "bin")
+
+	if err := installFile(src, filepath.Join(binDir, "ok")); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	info, err := os.Stat(filepath.Join(binDir, "ok"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0o755 {
+		t.Errorf("mode = %v, want 0755", info.Mode().Perm())
+	}
+
+	blocked := filepath.Join(binDir, "blocked")
+	if err := os.MkdirAll(filepath.Join(blocked, "child"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := installFile(src, blocked); err == nil {
+		t.Fatal("expected error installing over non-empty directory")
+	}
+
+	entries, err := os.ReadDir(binDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	names := []string{}
+	for _, e := range entries {
+		names = append(names, e.Name())
+	}
+	if got := strings.Join(names, ","); got != "blocked,ok" {
+		t.Errorf("bin dir contains %q, want only blocked,ok", got)
+	}
+}
+
 func assertFile(t *testing.T, path, want string) {
 	t.Helper()
 	got, err := os.ReadFile(path)

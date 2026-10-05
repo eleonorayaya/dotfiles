@@ -48,7 +48,7 @@ func (r *Release) matchAsset(goarch string, names []string) (string, error) {
 		return "", fmt.Errorf("unsupported architecture %s for %s", goarch, r.Repo)
 	}
 
-	re, err := regexp.Compile("^" + strings.ReplaceAll(r.Asset, "{arch}", regexp.QuoteMeta(token)) + "$")
+	re, err := regexp.Compile("^(?:" + strings.ReplaceAll(r.Asset, "{arch}", regexp.QuoteMeta(token)) + ")$")
 	if err != nil {
 		return "", fmt.Errorf("invalid asset pattern for %s: %w", r.Repo, err)
 	}
