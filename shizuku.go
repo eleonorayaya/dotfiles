@@ -2,6 +2,7 @@ package shizuku
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -406,22 +407,26 @@ func (b *Builder) Install(ctx context.Context) error {
 		return nil
 	}
 
+	var errs []error
 	for _, l := range profile.Languages {
 		if err := install(l); err != nil {
-			return err
+			slog.Error("install failed", "appName", l.Name(), "err", err)
+			errs = append(errs, err)
 		}
 	}
 	for _, p := range profile.Programs {
 		if err := install(p); err != nil {
-			return err
+			slog.Error("install failed", "appName", p.Name(), "err", err)
+			errs = append(errs, err)
 		}
 	}
 	for _, a := range profile.Agents {
 		if err := install(a); err != nil {
-			return err
+			slog.Error("install failed", "appName", a.Name(), "err", err)
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type AppStatus struct {

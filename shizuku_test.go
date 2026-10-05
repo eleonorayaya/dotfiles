@@ -1,6 +1,8 @@
 package shizuku
 
 import (
+	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -101,3 +103,33 @@ func TestActiveProfile_Cycle(t *testing.T) {
 }
 
 var _ app.Program = fakeProgram{}
+
+type failingInstaller struct {
+	name  string
+	calls *[]string
+}
+
+func (f failingInstaller) Name() string { return f.name }
+
+func (f failingInstaller) Install(ctx *app.Context) error {
+	*f.calls = append(*f.calls, f.name)
+	return fmt.Errorf("%s broke", f.name)
+}
+
+func TestInstall_ContinuesAndJoinsErrors(t *testing.T) {
+	calls := []string{}
+	b := New(
+		WithOutDir(t.TempDir()),
+		WithPrograms(failingInstaller{name: "a", calls: &calls}, failingInstaller{name: "b", calls: &calls}),
+	)
+	err := b.Install(context.Background())
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if strings.Join(calls, ",") != "a,b" {
+		t.Errorf("expected both installers to run, got %v", calls)
+	}
+	if !strings.Contains(err.Error(), "a broke") || !strings.Contains(err.Error(), "b broke") {
+		t.Errorf("expected both errors, got %v", err)
+	}
+}
