@@ -34,8 +34,9 @@ type PathDir struct {
 }
 
 type Alias struct {
-	Name    string
-	Command string
+	Name     string
+	Command  string
+	Requires string
 }
 
 type ShellFunction struct {
@@ -48,7 +49,7 @@ func GenerateEnvFiles(envSetups []*EnvSetup, outDir string) (map[string]string, 
 	vars := make(map[string]string)
 	pathDirs := []PathDir{}
 	initScripts := []string{}
-	aliases := make(map[string]string)
+	aliases := make(map[string]Alias)
 	functions := make(map[string]string)
 	postInitScripts := []string{}
 
@@ -64,7 +65,7 @@ func GenerateEnvFiles(envSetups []*EnvSetup, outDir string) (map[string]string, 
 		pathDirs = append(pathDirs, setup.PathDirs...)
 
 		for _, a := range setup.Aliases {
-			aliases[a.Name] = a.Command
+			aliases[a.Name] = a
 		}
 
 		for _, f := range setup.Functions {
@@ -156,7 +157,12 @@ func GenerateEnvFiles(envSetups []*EnvSetup, outDir string) (map[string]string, 
 		sort.Strings(sortedAliasKeys)
 
 		for _, k := range sortedAliasKeys {
-			sh.WriteString(fmt.Sprintf("alias %s='%s'\n", k, aliases[k]))
+			a := aliases[k]
+			if a.Requires != "" {
+				sh.WriteString(fmt.Sprintf("command -v %s >/dev/null 2>&1 && alias %s='%s'\n", a.Requires, a.Name, a.Command))
+			} else {
+				sh.WriteString(fmt.Sprintf("alias %s='%s'\n", a.Name, a.Command))
+			}
 		}
 		sh.WriteString("\n")
 	}
