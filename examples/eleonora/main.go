@@ -17,6 +17,7 @@ import (
 	"github.com/eleonorayaya/shizuku/languages/swift"
 	"github.com/eleonorayaya/shizuku/languages/typescript"
 	"github.com/eleonorayaya/shizuku/languages/zig"
+	"github.com/eleonorayaya/shizuku/pkg"
 	"github.com/eleonorayaya/shizuku/programs/acli"
 	"github.com/eleonorayaya/shizuku/programs/aerospace"
 	"github.com/eleonorayaya/shizuku/programs/bat"
@@ -51,7 +52,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const sourceDir = "~/.local/src/shizuku"
+const (
+	sourceDir   = "~/.local/src/shizuku"
+	releaseRepo = "eleonorayaya/dotfiles"
+)
 
 var (
 	desktopGaps = styles.Gaps{
@@ -153,7 +157,10 @@ func main() {
 }
 
 func upgradeCmd() *cobra.Command {
-	var branch string
+	var (
+		branch      string
+		fromRelease bool
+	)
 
 	cmd := &cobra.Command{
 		Use:   "upgrade",
@@ -164,8 +171,9 @@ func upgradeCmd() *cobra.Command {
 				return fmt.Errorf("failed to resolve source directory: %w", err)
 			}
 
-			if _, err := os.Stat(repoDir); os.IsNotExist(err) {
-				return fmt.Errorf("shizuku repo not found at %s, run 'shizuku install' first", repoDir)
+			if _, err := os.Stat(repoDir); fromRelease || os.IsNotExist(err) {
+				slog.Info("upgrading from latest github release", "repo", releaseRepo)
+				return pkg.SelfUpdate(releaseRepo, "shizuku")
 			}
 
 			slog.Info("pulling latest changes", "branch", branch)
@@ -189,6 +197,7 @@ func upgradeCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVarP(&branch, "branch", "b", "main", "Branch to pull from")
+	cmd.Flags().BoolVar(&fromRelease, "from-release", false, "Download the latest release binary instead of building from source")
 	return cmd
 }
 
