@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/eleonorayaya/shizuku/app"
-	"github.com/eleonorayaya/shizuku/util"
+	"github.com/eleonorayaya/shizuku/pkg"
 )
 
 //go:embed all:contents
@@ -21,8 +21,19 @@ func (a *App) Name() string {
 	return "helix"
 }
 
+var spec = pkg.Spec{
+	Brew: "helix",
+	Apt:  "hx",
+	Bin:  "hx",
+	Release: &pkg.Release{
+		Repo:  "helix-editor/helix",
+		Asset: `helix-.*-{arch}-linux\.tar\.xz`,
+		Dirs:  map[string]string{"runtime": "~/.config/helix/runtime"},
+	},
+}
+
 func (a *App) Install(ctx *app.Context) error {
-	if err := util.InstallBrewPackage("helix", false); err != nil {
+	if err := pkg.Install(spec); err != nil {
 		return fmt.Errorf("failed to install helix: %w", err)
 	}
 
