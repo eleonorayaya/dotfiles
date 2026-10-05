@@ -4,7 +4,7 @@
 
 **Goal:** Make the shizuku base profile a minimal, server-safe set (git, terminal/zsh, helix, bat, lsd, tuios) installable on Debian/Ubuntu via apt or GitHub release binaries, move desktop apps into an extendable `desktop` profile, and ship the binary through auto-cut GitHub releases with a release-aware `shizuku upgrade`.
 
-**Architecture:** A new `pkg/` package owns installation: one `Spec` per tool lists brew/apt/release sources, and an `Installer` picks the first method that applies on the current OS. Profiles gain single-parent `Extends` so `work`/`personal` → `desktop` → base. Env generation gains `Requires` guards so a failed optional install never breaks `ls`/`cat`/`$EDITOR`.
+**Architecture:** A new `pkg/` package owns installation: one `Spec` per tool lists brew/apt/release sources, and an `Installer` picks the first method that applies on the current OS. Profiles gain single-parent `Extends` so `work`/`personal` → `desktop` → base. Aliases gain a `Requires` guard so a failed optional install never breaks `ls`/`cat`.
 
 **Tech Stack:** Go 1.25 stdlib (`net/http`, `regexp`, `os.CopyFS`, `crypto/sha256`), system `tar`, Cobra, GoReleaser v2, GitHub Actions.
 
@@ -25,7 +25,9 @@
   ```
   Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
   ```
-- Deviation from the design doc: `Release.Bin` is dropped; `Spec.Bin` names both the binary inside the archive and the installed name (one field instead of two that must agree).
+- Deviations from the design doc:
+  - `Release.Bin` is dropped; `Spec.Bin` names both the binary inside the archive and the installed name.
+  - Only aliases get `Requires`, not env vars. Guarded exports would live in `shizuku.zshenv`, which on macOS runs before `~/.zprofile` puts `/opt/homebrew/bin` on PATH, so `command -v hx` would fail and `EDITOR` would silently disappear. An `EDITOR` pointing at a missing binary doesn't break the shell; broken `ls`/`cat` aliases do.
 
 ---
 
@@ -1466,7 +1468,7 @@ git commit -m "refactor: route brew installs through pkg"
 
 ---
 
-### Task 8: Guarded aliases and env vars (`Requires`)
+### Task 8: Guarded aliases (`Requires`)
 
 **Files:**
 - Modify: `app/env.go`
@@ -1483,28 +1485,19 @@ import (
 	"testing"
 )
 
-func generateEnv(t *testing.T, setups ...*EnvSetup) (zshenv, sh string) {
-	t.Helper()
-	files, err := GenerateEnvFiles(setups, t.TempDir())
+func TestGenerateEnv_GuardedAlias(t *testing.T) {
+	files, err := GenerateEnvFiles([]*EnvSetup{{Aliases: []Alias{
+		{Name: "ls", Command: "lsd", Requires: "lsd"},
+		{Name: "c", Command: "clear"},
+	}}}, t.TempDir())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	a, err := os.ReadFile(files["shizuku.zshenv"])
+	data, err := os.ReadFile(files["shizuku.sh"])
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err := os.ReadFile(files["shizuku.sh"])
-	if err != nil {
-		t.Fatal(err)
-	}
-	return string(a), string(b)
-}
-
-func TestGenerateEnv_GuardedAlias(t *testing.T) {
-	_, sh := generateEnv(t, &EnvSetup{Aliases: []Alias{
-		{Name: "ls", Command: "lsd", Requires: "lsd"},
-		{Name: "c", Command: "clear"},
-	}})
+	sh := string(data)
 	if !strings.Contains(sh, "command -v lsd >/dev/null 2>&1 && alias ls='lsd'\n") {
 		t.Errorf("missing guarded alias:\n%s", sh)
 	}
@@ -1512,84 +1505,18 @@ func TestGenerateEnv_GuardedAlias(t *testing.T) {
 		t.Errorf("missing plain alias:\n%s", sh)
 	}
 }
-
-func TestGenerateEnv_GuardedVarAfterPath(t *testing.T) {
-	zshenv, _ := generateEnv(t, &EnvSetup{
-		Variables: []EnvVar{
-			{Key: "EDITOR", Value: "hx", Requires: "hx"},
-			{Key: "GOPATH", Value: "/go"},
-		},
-		PathDirs: []PathDir{{Path: "$HOME/.local/bin", Priority: 5}},
-	})
-	guarded := strings.Index(zshenv, `command -v hx >/dev/null 2>&1 && export EDITOR="hx"`)
-	path := strings.Index(zshenv, `export PATH=`)
-	plain := strings.Index(zshenv, `export GOPATH="/go"`)
-	if guarded < 0 || path < 0 || plain < 0 {
-		t.Fatalf("missing lines:\n%s", zshenv)
-	}
-	if !(plain < path && path < guarded) {
-		t.Errorf("want plain vars < PATH < guarded vars, got %d %d %d:\n%s", plain, path, guarded, zshenv)
-	}
-}
 ```
 
 **Step 2: Run to verify failure**
 
 Run: `task test --force -- -run TestGenerateEnv`
-Expected: build failure — `unknown field Requires`.
+Expected: build failure — `unknown field Requires in struct literal of type Alias`.
 
 **Step 3: Implement** in `app/env.go`:
 
-1. Add `Requires string` to both `EnvVar` and `Alias`.
-2. Change the accumulators: `vars := make(map[string]EnvVar)` (store `vars[v.Key] = v`) and `aliases := make(map[string]Alias)` (store `aliases[a.Name] = a`).
-3. Replace the zshenv variables + PATH sections with:
-
-```go
-	sortedVarKeys := make([]string, 0, len(vars))
-	for k := range vars {
-		sortedVarKeys = append(sortedVarKeys, k)
-	}
-	sort.Strings(sortedVarKeys)
-
-	plainVars := []EnvVar{}
-	guardedVars := []EnvVar{}
-	for _, k := range sortedVarKeys {
-		if vars[k].Requires == "" {
-			plainVars = append(plainVars, vars[k])
-		} else {
-			guardedVars = append(guardedVars, vars[k])
-		}
-	}
-
-	if len(plainVars) > 0 {
-		writeSectionHeader(&zshenv, "Environment Variables")
-		for _, v := range plainVars {
-			zshenv.WriteString(fmt.Sprintf("export %s=\"%s\"\n", v.Key, v.Value))
-		}
-		zshenv.WriteString("\n")
-	}
-
-	if len(pathDirs) > 0 {
-		writeSectionHeader(&zshenv, "PATH Configuration")
-		pathParts := []string{}
-		for _, pd := range pathDirs {
-			pathParts = append(pathParts, pd.Path)
-		}
-		pathParts = append(pathParts, "$PATH")
-		zshenv.WriteString(fmt.Sprintf("export PATH=\"%s\"\n", strings.Join(pathParts, ":")))
-		zshenv.WriteString("\n")
-	}
-
-	if len(guardedVars) > 0 {
-		writeSectionHeader(&zshenv, "Conditional Environment Variables")
-		for _, v := range guardedVars {
-			zshenv.WriteString(fmt.Sprintf("command -v %s >/dev/null 2>&1 && export %s=\"%s\"\n", v.Requires, v.Key, v.Value))
-		}
-		zshenv.WriteString("\n")
-	}
-```
-
-4. In the aliases section write each entry as:
+1. Add `Requires string` to `Alias` only.
+2. Change the accumulator to `aliases := make(map[string]Alias)` and store `aliases[a.Name] = a`.
+3. In the aliases section write each entry as:
 
 ```go
 		for _, k := range sortedAliasKeys {
@@ -1602,16 +1529,6 @@ Expected: build failure — `unknown field Requires`.
 		}
 ```
 
-5. Add the helper and use it for the existing section headers too (they're all the same three lines):
-
-```go
-func writeSectionHeader(b *strings.Builder, title string) {
-	b.WriteString("# ============================================================\n")
-	b.WriteString("# " + title + "\n")
-	b.WriteString("# ============================================================\n")
-}
-```
-
 **Step 4: Run tests**
 
 Run: `task test --force`
@@ -1621,7 +1538,7 @@ Expected: PASS (including existing `agents/claude` and `config` tests).
 
 ```bash
 git add app/
-git commit -m "feat(env): guard aliases and env vars on binary presence"
+git commit -m "feat(env): guard aliases on binary presence"
 ```
 
 ---
@@ -1688,7 +1605,7 @@ var spec = pkg.Spec{
 	},
 }
 ```
-Env vars become `{Key: "EDITOR", Value: "hx", Requires: "hx"}` and `{Key: "VISUAL", Value: "hx", Requires: "hx"}`.
+Env vars stay unguarded (see Conventions).
 
 **Step 4: tuios**
 
@@ -2555,31 +2472,51 @@ git commit -m "docs: document server bootstrap, pkg installs and profile layerin
 Run: `task lint && task test --force && task build && task build:linux`
 Expected: all pass.
 
-**Step 2: Linux containers** (requires a running Docker daemon, e.g. `colima start`; if unavailable, report that and skip)
+**Step 2: Existing suite on Linux** (CI will run it there; any macOS-only assumption would block the first release)
 
-Mac is arm64, so use the arm64 binary:
+```bash
+docker run --rm -v "$PWD:/src" -w /src golang:1.25 go test ./...
+```
+Expected: PASS. If something fails only on Linux, fix it before merging (use superpowers:systematic-debugging).
+
+**Step 3: Linux containers** (requires a running Docker daemon, e.g. `colima start`; if unavailable, report that and skip)
+
+Mac is arm64, so use the arm64 binary. Pass a GitHub token to avoid the 60 req/hour anonymous API limit (4 release installs × 2 images × 2 runs):
 
 ```bash
 for image in debian:bookworm ubuntu:24.04; do
-  docker run --rm -v "$PWD/out/shizuku-linux-arm64:/usr/local/bin/shizuku:ro" -w /root "$image" bash -c '
+  docker run --rm -e GITHUB_TOKEN="$(gh auth token)" \
+    -v "$PWD/out/shizuku-linux-arm64:/usr/local/bin/shizuku:ro" -w /root "$image" bash -c '
     set -e
     shizuku install
     shizuku sync
     zsh -i -c "command -v hx bat lsd tuios oh-my-posh && ls ~/.config/helix/runtime >/dev/null && echo OK"
+    shizuku install 2>&1 | tee /tmp/second.log
+    ! grep -q "installed from github release" /tmp/second.log && echo IDEMPOTENT
   '
 done
 ```
-Expected per image: five paths printed, then `OK`; no errors from `zsh -i`. On Ubuntu 24.04, `bat` resolves to `~/.local/bin/bat` (symlink to `batcat`).
+Expected per image: five paths, `OK`, then `IDEMPOTENT`; no errors from `zsh -i`. On Ubuntu 24.04, `bat` resolves to `~/.local/bin/bat` (symlink to `batcat`).
 
-Re-run `shizuku install` in the same container (chain it twice in the `bash -c`) and confirm no re-downloads (`installed from github release` should not appear the second time).
-
-**Step 3: Mac regression**
+**Step 4: Mac diff** (safe, read-only)
 
 Run: `task run -- diff --profile personal`
-Expected: only `shizuku (env)` changes — the antigen init replaced by the zsh-vi-mode block, oh-my-posh init wrapped in a guard, guarded `cat`/`ls` aliases and `EDITOR`/`VISUAL`. Nothing else.
+Expected changes, all in `shizuku (env)`:
+- antigen init replaced by the zsh-vi-mode block; oh-my-posh init wrapped in a guard
+- guarded `cat`/`ls` aliases
+- init-script blocks reordered (base programs now register before desktop ones, and init scripts aren't sorted) — expected, not a regression
 
-Then: `task run -- install --profile personal` — expect zsh-vi-mode cloned to `~/.local/share/shizuku/plugins/zsh-vi-mode`, no duplicate lines added to an existing `~/.zshrc`/`~/.zshenv` that already sources shizuku.
+Anything else changing is a bug.
 
-**Step 4: Confirm config** — ensure `~/.config/shizuku/shizuku.yml` has `profile: personal` (or `work`); otherwise the Mac gets only the base set.
+**Step 5: Mac install — hand to the user.** Do **not** run this yourself: it brew-installs and appends to `~/.zshrc`/`~/.zshenv` (the sandbox blocks those writes anyway). Ask the user to review the diff, then run:
 
-**Step 5:** Use superpowers:finishing-a-development-branch.
+```
+! task run -- install --profile personal
+! task run -- sync --profile personal
+! zsh -lic 'echo EDITOR=$EDITOR; alias ls cat'
+```
+Expected: zsh-vi-mode cloned to `~/.local/share/shizuku/plugins/zsh-vi-mode`; no duplicate source lines in an rc file that already sources shizuku; `EDITOR=hx`; `ls=lsd`, `cat=bat`.
+
+**Step 6: Confirm config** — `~/.config/shizuku/shizuku.yml` must have `profile: personal` (or `work`); otherwise the Mac gets only the base set.
+
+**Step 7:** Use superpowers:finishing-a-development-branch.

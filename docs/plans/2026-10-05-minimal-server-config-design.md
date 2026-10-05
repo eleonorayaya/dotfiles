@@ -93,16 +93,15 @@ The Mac must have `profile: personal` or `work` set in `~/.config/shizuku/shizuk
 | lsd | apt `lsd` + release fallback. |
 | tuios | release fallback (not in apt). Config dest becomes `os.UserConfigDir()/tuios/` — matches tuios's `adrg/xdg` resolution on both OSes. |
 
-### Guarded env
+### Guarded aliases
 
-Apps whose install can fail per-app must not break the shell. Aliases and editor vars that point at an optional binary are emitted guarded:
+Aliases pointing at an optional binary are emitted guarded so a failed install never breaks `ls`/`cat`:
 
 ```zsh
-command -v lsd >/dev/null && alias ls='lsd'
-command -v hx  >/dev/null && export EDITOR=hx VISUAL=hx
+command -v lsd >/dev/null 2>&1 && alias ls='lsd'
 ```
 
-Implemented as an optional `Requires string` field on `app.Alias` and `app.EnvVar`; `GenerateEnvFiles` wraps entries that set it.
+Implemented as an optional `Requires string` on `app.Alias`. Env vars are **not** guarded: they live in `shizuku.zshenv`, which on macOS runs before `~/.zprofile` adds Homebrew to PATH, so a `command -v hx` guard would wrongly drop `EDITOR`. A dangling `EDITOR` is harmless by comparison.
 
 ## 3. Shell, distribution, upgrade
 
@@ -155,7 +154,7 @@ Unit:
 - manager selection with OS/apt/uid detection injected
 - idempotency check honoring `~/.local/bin`
 - `Extends` resolution: override-by-name, multi-level chain, cycle, unknown profile
-- guarded alias/env generation
+- guarded alias generation
 - idempotent rc-file appends
 - checksum verification and upgrade mode selection
 
