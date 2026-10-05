@@ -76,22 +76,41 @@ func TestActiveProfile_LaterLayerOverridesByName(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+	found := false
 	for _, prog := range p.Programs {
-		if prog.Name() == "notion" && prog.(fakeProgram).tag != "work" {
-			t.Errorf("notion not overridden, tag=%q", prog.(fakeProgram).tag)
+		if prog.Name() != "notion" {
+			continue
 		}
+		found = true
+		if tag := prog.(fakeProgram).tag; tag != "work" {
+			t.Errorf("notion not overridden, tag=%q", tag)
+		}
+	}
+	if !found {
+		t.Fatal("notion missing from merged profile")
 	}
 }
 
 func TestActiveProfile_UnknownProfile(t *testing.T) {
-	if _, err := newTestBuilder("nope").activeProfile(); err == nil {
+	_, err := newTestBuilder("nope").activeProfile()
+	if err == nil {
 		t.Fatal("expected error for unknown profile")
+	}
+	if !strings.Contains(err.Error(), `"nope"`) {
+		t.Errorf("error does not name missing profile: %v", err)
+	}
+	if !strings.Contains(err.Error(), "known: desktop, loop-a, loop-b, orphan, work") {
+		t.Errorf("error does not list known profiles: %v", err)
 	}
 }
 
 func TestActiveProfile_UnknownParent(t *testing.T) {
-	if _, err := newTestBuilder("orphan").activeProfile(); err == nil {
+	_, err := newTestBuilder("orphan").activeProfile()
+	if err == nil {
 		t.Fatal("expected error for unknown parent profile")
+	}
+	if !strings.Contains(err.Error(), `"missing"`) {
+		t.Errorf("error does not name missing parent: %v", err)
 	}
 }
 

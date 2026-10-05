@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/eleonorayaya/shizuku/app"
@@ -137,7 +138,7 @@ func (b *Builder) activeProfile() (Profile, error) {
 		seen[name] = true
 		p, ok := b.profiles[name]
 		if !ok {
-			return Profile{}, fmt.Errorf("unknown profile %q", name)
+			return Profile{}, fmt.Errorf("unknown profile %q (known: %s)", name, strings.Join(b.profileNames(), ", "))
 		}
 		chain = append(chain, p)
 		name = p.Extends
@@ -152,6 +153,15 @@ func (b *Builder) activeProfile() (Profile, error) {
 		}
 	}
 	return out, nil
+}
+
+func (b *Builder) profileNames() []string {
+	names := make([]string, 0, len(b.profiles))
+	for name := range b.profiles {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
 }
 
 func (b *Builder) makeContext(outDir string) *app.Context {
