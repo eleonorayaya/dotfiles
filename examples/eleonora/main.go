@@ -164,7 +164,7 @@ func upgradeCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "upgrade",
-		Short: "Pull latest changes and rebuild the shizuku binary",
+		Short: "Upgrade shizuku from the source checkout or the latest GitHub release",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			repoDir, err := util.NormalizeFilePath(sourceDir)
 			if err != nil {
@@ -173,7 +173,11 @@ func upgradeCmd() *cobra.Command {
 
 			if _, err := os.Stat(repoDir); fromRelease || os.IsNotExist(err) {
 				slog.Info("upgrading from latest github release", "repo", releaseRepo)
-				return pkg.SelfUpdate(releaseRepo, "shizuku")
+				if err := pkg.SelfUpdate(releaseRepo, "shizuku"); err != nil {
+					return fmt.Errorf("failed to upgrade from release: %w", err)
+				}
+				slog.Info("upgrade complete, run 'shizuku install' and 'shizuku sync' to apply changes")
+				return nil
 			}
 
 			slog.Info("pulling latest changes", "branch", branch)
