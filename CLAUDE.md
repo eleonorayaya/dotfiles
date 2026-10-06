@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Shizuku is a Go library for managing dotfiles. It generates files from templates, downloads remote resources, and syncs everything to the appropriate destinations. Consumers compose their own personal binary by instantiating a `shizuku.Builder`, registering apps from the shared library (or their own), and supplying their own user data.
 
-Apps are organized into three categories — `apps/languages/` (toolchains), `apps/programs/` (regular programs), and `apps/agents/` (agentic coding tools) — and synced in that order so later categories can consume outputs from earlier ones.
+Apps are organized into three categories — `languages/` (toolchains), `programs/` (regular programs), and `agents/` (agentic coding tools) — and synced in that order so later categories can consume outputs from earlier ones.
 
 The canonical consumer lives at `examples/eleonora/` and compiles to the `shizuku` binary. Other users can `go get github.com/eleonorayaya/shizuku` and build their own entry point.
 
@@ -69,10 +69,10 @@ This ensures consistent build processes and proper dependency management.
 
 4. **util/** - File operations (copy, path normalization, directory creation, templates, homebrew helpers).
 
-5. **apps/** - Pre-built library of apps
-   - `apps/languages/` — language toolchains (e.g. `golang`, `rust`, `typescript`)
-   - `apps/programs/` — regular programs (e.g. `nvim`, `kitty`, `git`)
-   - `apps/agents/` — agentic coding tools (e.g. `claude`)
+5. **languages/, programs/, agents/** - Pre-built library of apps
+   - `languages/` — language toolchains (e.g. `golang`, `rust`, `typescript`)
+   - `programs/` — regular programs (e.g. `nvim`, `kitty`, `git`)
+   - `agents/` — agentic coding tools (e.g. `claude`)
 
    Each app implements `Generate(outDir, cfg) (*app.GenerateResult, error)` and `Sync(outDir, cfg) error` (or the contextual variants — see below). Apps embed their `contents/` directory with `//go:embed all:contents` so the library is consumable without vendoring template files.
 
@@ -89,11 +89,11 @@ Load config from ~/.config/shizuku/shizuku.yml
   ↓
 Create build directory: out/{timestamp}/
   ↓
-Phase 1: Sync enabled languages (apps/languages/{name}/)
-Phase 2: Sync enabled programs (apps/programs/{name}/)
+Phase 1: Sync enabled languages (languages/{name}/)
+Phase 2: Sync enabled programs (programs/{name}/)
 Phase 3: Build SyncContext from all enabled languages + programs that
          implement AgentConfigProvider
-Phase 4: Sync enabled agents (apps/agents/{name}/) — agents implementing
+Phase 4: Sync enabled agents (agents/{name}/) — agents implementing
          ContextualSyncer receive the SyncContext
   ↓
 For each app in a phase:
@@ -158,7 +158,7 @@ func (a *App) AgentConfig() app.AgentConfig {
 }
 ```
 
-The builder collects every enabled app's `AgentConfig()` into a `SyncContext` before agents run. Agents that need this data implement `ContextualSyncer` / `ContextualGenerator` and receive the context as a parameter — see `apps/agents/claude/claude.go` for an example. This keeps language- and tool-specific data out of agent code.
+The builder collects every enabled app's `AgentConfig()` into a `SyncContext` before agents run. Agents that need this data implement `ContextualSyncer` / `ContextualGenerator` and receive the context as a parameter — see `agents/claude/claude.go` for an example. This keeps language- and tool-specific data out of agent code.
 
 ### Configuration System
 
@@ -201,10 +201,10 @@ out/{unix_timestamp}/
 ## Adding a New App
 
 1. Pick a category for the new app:
-   - `apps/languages/` — language toolchains
-   - `apps/programs/` — regular programs
-   - `apps/agents/` — agentic coding tools
-2. Create directory: `apps/{category}/{appName}/`
+   - `languages/` — language toolchains
+   - `programs/` — regular programs
+   - `agents/` — agentic coding tools
+2. Create directory: `{category}/{appName}/`
 3. Create `{appName}.go` implementing `Generate()` and `Sync()` (see App Implementation Pattern above). Embed the contents directory with `//go:embed all:contents` and pass the embedded FS to `app.GenerateAppFiles`.
 4. Add source files to `contents/` directory (if needed).
 5. Optionally implement `AgentConfig()` to declare LSP plugins, sandbox hosts, or sandbox write paths that agents should pick up.
@@ -216,6 +216,23 @@ out/{unix_timestamp}/
            appName.New(),
        )
    ```
+
+## Installing Packages
+
+Use `pkg.Install(pkg.Spec{...})` in an app's `Install()`. A spec lists every source; the first that applies wins (brew on macOS; apt, then GitHub release on Linux):
+
+```go
+pkg.Spec{
+    Brew: "lsd", Apt: "lsd", Bin: "lsd",
+    Release: &pkg.Release{Repo: "lsd-rs/lsd", Asset: `lsd-v[0-9.]+-{arch}-unknown-linux-gnu\.tar\.gz`},
+}
+```
+
+`util.InstallBrewPackage` remains for macOS-only apps. Aliases that depend on an optional binary should set `Requires` so the shell stays usable if the install failed.
+
+## Profiles
+
+The base profile is server-safe. `desktop` holds macOS apps, languages and agents; `work` and `personal` use `shizuku.Extends("desktop")`. Only add apps to the base if they work on Debian/Ubuntu.
 
 ## Adding a New Language
 

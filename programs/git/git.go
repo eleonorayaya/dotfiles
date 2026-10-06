@@ -3,11 +3,13 @@ package git
 import (
 	"embed"
 	"fmt"
+	"log/slog"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/eleonorayaya/shizuku/app"
+	"github.com/eleonorayaya/shizuku/pkg"
 	"github.com/eleonorayaya/shizuku/util"
 	"gopkg.in/ini.v1"
 )
@@ -40,8 +42,13 @@ var ghExtensions = []string{
 }
 
 func (a *App) Install(ctx *app.Context) error {
+	if err := pkg.Install(pkg.Spec{Brew: "git", Apt: "git", Bin: "git"}); err != nil {
+		return fmt.Errorf("failed to install git: %w", err)
+	}
+
 	if !util.BinaryExists("gh") {
-		return fmt.Errorf("gh not found in PATH; install the GitHub CLI before installing gh extensions")
+		slog.Info("gh not found in PATH, skipping gh extensions")
+		return nil
 	}
 
 	for _, repo := range ghExtensions {

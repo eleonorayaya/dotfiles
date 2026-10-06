@@ -3,9 +3,11 @@ package tuios
 import (
 	"embed"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/eleonorayaya/shizuku/app"
-	"github.com/eleonorayaya/shizuku/util"
+	"github.com/eleonorayaya/shizuku/pkg"
 )
 
 //go:embed all:contents
@@ -21,8 +23,18 @@ func (a *App) Name() string {
 	return "tuios"
 }
 
+var spec = pkg.Spec{
+	Brew: "tuios",
+	Bin:  "tuios",
+	Release: &pkg.Release{
+		Repo:  "Gaurav-Gosain/tuios",
+		Asset: `tuios_[0-9.]+_Linux_{arch}\.tar\.gz`,
+		Arch:  map[string]string{"amd64": "x86_64", "arm64": "arm64"},
+	},
+}
+
 func (a *App) Install(ctx *app.Context) error {
-	if err := util.InstallBrewPackage("tuios", false); err != nil {
+	if err := pkg.Install(spec); err != nil {
 		return fmt.Errorf("failed to install tuios: %w", err)
 	}
 
@@ -37,9 +49,14 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 		return nil, fmt.Errorf("failed to generate app files: %w", err)
 	}
 
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve user config dir: %w", err)
+	}
+
 	return &app.GenerateResult{
 		FileMap: fileMap,
-		DestDir: "~/Library/Application Support/tuios/",
+		DestDir: filepath.Join(configDir, "tuios"),
 	}, nil
 }
 

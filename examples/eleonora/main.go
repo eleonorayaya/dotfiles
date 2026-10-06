@@ -17,6 +17,7 @@ import (
 	"github.com/eleonorayaya/shizuku/languages/swift"
 	"github.com/eleonorayaya/shizuku/languages/typescript"
 	"github.com/eleonorayaya/shizuku/languages/zig"
+	"github.com/eleonorayaya/shizuku/pkg"
 	"github.com/eleonorayaya/shizuku/programs/acli"
 	"github.com/eleonorayaya/shizuku/programs/aerospace"
 	"github.com/eleonorayaya/shizuku/programs/bat"
@@ -51,7 +52,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const sourceDir = "~/.local/src/shizuku"
+const (
+	sourceDir   = "~/.local/src/shizuku"
+	releaseRepo = "eleonorayaya/dotfiles"
+)
 
 var (
 	desktopGaps = styles.Gaps{
@@ -80,40 +84,45 @@ func main() {
 			styles.WithGaps(desktopGaps),
 			styles.WithGapOverride("built-in retina", laptopGaps),
 		)),
-		shizuku.WithLanguages(
-			golang.New(),
-			lua.New(),
-			python.New(),
-			rust.New(),
-			typescript.New(),
-		),
 		shizuku.WithPrograms(
-			aerospace.New(),
-			bat.New(),
-			desktoppr.New(),
-			fastfetch.New(),
 			git.New(),
-			glow.New(),
-			helix.New(),
-			jankyborders.New(),
-			kitty.New(),
-			lsd.New(),
-			notion.New(notion.Options{DisableClaudeMCP: true}),
-			nvim.New(),
-			rtk.New(),
-			sfsymbols.New(),
-			sketchybar.New(),
 			terminal.New(),
-			terminalbrowser.New(),
-			terraform.New(),
-			tmux.New(),
+			helix.New(),
+			bat.New(),
+			lsd.New(),
 			tuios.New(),
-			utena.New(),
 		),
-		shizuku.WithAgents(
-			claude.New(data.ClaudeOptions()),
+		shizuku.WithProfile("desktop",
+			shizuku.WithLanguages(
+				golang.New(),
+				lua.New(),
+				python.New(),
+				rust.New(),
+				typescript.New(),
+			),
+			shizuku.WithPrograms(
+				aerospace.New(),
+				desktoppr.New(),
+				fastfetch.New(),
+				glow.New(),
+				jankyborders.New(),
+				kitty.New(),
+				notion.New(notion.Options{DisableClaudeMCP: true}),
+				nvim.New(),
+				rtk.New(),
+				sfsymbols.New(),
+				sketchybar.New(),
+				terminalbrowser.New(),
+				terraform.New(),
+				tmux.New(),
+				utena.New(),
+			),
+			shizuku.WithAgents(
+				claude.New(data.ClaudeOptions()),
+			),
 		),
 		shizuku.WithProfile("work",
+			shizuku.Extends("desktop"),
 			shizuku.WithLanguages(
 				ruby.New(),
 			),
@@ -126,6 +135,7 @@ func main() {
 			),
 		),
 		shizuku.WithProfile("personal",
+			shizuku.Extends("desktop"),
 			shizuku.WithLanguages(
 				swift.New(),
 				zig.New(),
@@ -147,19 +157,27 @@ func main() {
 }
 
 func upgradeCmd() *cobra.Command {
-	var branch string
+	var (
+		branch      string
+		fromRelease bool
+	)
 
 	cmd := &cobra.Command{
 		Use:   "upgrade",
-		Short: "Pull latest changes and rebuild the shizuku binary",
+		Short: "Upgrade shizuku from the source checkout or the latest GitHub release",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			repoDir, err := util.NormalizeFilePath(sourceDir)
 			if err != nil {
 				return fmt.Errorf("failed to resolve source directory: %w", err)
 			}
 
-			if _, err := os.Stat(repoDir); os.IsNotExist(err) {
-				return fmt.Errorf("shizuku repo not found at %s, run 'shizuku install' first", repoDir)
+			if _, err := os.Stat(repoDir); fromRelease || os.IsNotExist(err) {
+				slog.Info("upgrading from latest github release", "repo", releaseRepo)
+				if err := pkg.SelfUpdate(releaseRepo, "shizuku"); err != nil {
+					return fmt.Errorf("failed to upgrade from release: %w", err)
+				}
+				slog.Info("upgrade complete, run 'shizuku install' and 'shizuku sync' to apply changes")
+				return nil
 			}
 
 			slog.Info("pulling latest changes", "branch", branch)
@@ -183,6 +201,7 @@ func upgradeCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVarP(&branch, "branch", "b", "main", "Branch to pull from")
+	cmd.Flags().BoolVar(&fromRelease, "from-release", false, "Download the latest release binary instead of building from source")
 	return cmd
 }
 

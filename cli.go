@@ -105,7 +105,10 @@ func (b *Builder) Command() *cobra.Command {
 		Use:   "list",
 		Short: "List apps active in the current profile",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			statuses := b.List()
+			statuses, err := b.List()
+			if err != nil {
+				return err
+			}
 
 			if b.opts.Profile != "" {
 				fmt.Printf("Profile: %s\n\n", b.opts.Profile)

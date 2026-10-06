@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"os/exec"
 	"strings"
+
+	"github.com/eleonorayaya/shizuku/pkg"
 )
 
 func GetBrewAppPrefix(appName string) (string, error) {
@@ -17,44 +19,7 @@ func GetBrewAppPrefix(appName string) (string, error) {
 }
 
 func InstallBrewPackage(name string, isCask bool) error {
-	if BrewPackageExists(name, isCask) {
-		slog.Debug("brew package already installed, skipping", "package", name)
-		return nil
-	}
-
-	args := []string{
-		"install",
-		name,
-	}
-
-	if isCask {
-		args = append(args, "--cask")
-	}
-
-	slog.Debug("installing brew package", "package", name, "isCask", isCask)
-
-	_, err := runBrewCommand(args...)
-	if err != nil {
-		return fmt.Errorf("brew install %s failed: %w", name, err)
-	}
-
-	slog.Debug("brew package installed", "package", name, "isCask", isCask)
-
-	return nil
-}
-
-func BrewPackageExists(name string, isCask bool) bool {
-	args := []string{
-		"list",
-		name,
-	}
-
-	if isCask {
-		args = append(args, "--cask")
-	}
-
-	_, err := runBrewCommand(args...)
-	return err == nil
+	return pkg.Install(pkg.Spec{Brew: name, BrewCask: isCask})
 }
 
 func AddTap(tapName string) error {
