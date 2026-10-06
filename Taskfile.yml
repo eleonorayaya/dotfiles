@@ -1,18 +1,28 @@
 version: '3'
 
 vars:
-  GO_SOURCES: '{agents,programs,languages,examples,app,config,util}/**/*.go'
+  GO_SOURCES: '{agents,programs,languages,examples,app,config,util,pkg}/**/*.go'
   MAIN: examples/eleonora/main.go
 
 tasks:
   build:
     sources:
       - "{{.GO_SOURCES}}"
-      - shizuku.go
+      - "*.go"
     generates:
       - out/shizuku
     cmds:
       - go build -o out/shizuku {{.MAIN}}
+  build:linux:
+    sources:
+      - "{{.GO_SOURCES}}"
+      - "*.go"
+    generates:
+      - out/shizuku-linux-amd64
+      - out/shizuku-linux-arm64
+    cmds:
+      - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o out/shizuku-linux-amd64 {{.MAIN}}
+      - GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o out/shizuku-linux-arm64 {{.MAIN}}
   configmax:
     watch: true
     sources:
@@ -25,11 +35,13 @@ tasks:
   lint:
     sources:
       - "{{.GO_SOURCES}}"
+      - "*.go"
     cmds:
       - go fmt ./...
   test:
     sources:
       - "{{.GO_SOURCES}}"
+      - "*.go"
     cmds:
       - go test {{.CLI_ARGS}} ./...
   install:
