@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/eleonorayaya/shizuku/app"
+	"github.com/eleonorayaya/shizuku/styles"
 )
 
 func testOptions() Options {
@@ -171,7 +172,7 @@ func TestMergeSettingsWritesDisabledMcpServers(t *testing.T) {
 	}
 
 	outDir := t.TempDir()
-	resultPath, err := a.mergeSettings(outDir, ctx)
+	resultPath, err := a.mergeSettings(outDir, styles.Theme{}, ctx)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -205,7 +206,7 @@ func TestMergeSettingsOmitsDisabledMcpServersWhenEmpty(t *testing.T) {
 	a := New(testOptions())
 
 	outDir := t.TempDir()
-	resultPath, err := a.mergeSettings(outDir, app.AgentContext{})
+	resultPath, err := a.mergeSettings(outDir, styles.Theme{}, app.AgentContext{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -233,7 +234,7 @@ func TestMergeSettingsMarketplaces(t *testing.T) {
 	t.Run("adds all desired marketplaces", func(t *testing.T) {
 		outDir := t.TempDir()
 
-		result, err := a.mergeSettings(outDir, ctx)
+		result, err := a.mergeSettings(outDir, styles.Theme{}, ctx)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -278,7 +279,7 @@ func TestMergeSettingsMarketplaces(t *testing.T) {
 	t.Run("marketplace count matches desired", func(t *testing.T) {
 		outDir := t.TempDir()
 
-		result, err := a.mergeSettings(outDir, ctx)
+		result, err := a.mergeSettings(outDir, styles.Theme{}, ctx)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -325,7 +326,7 @@ func TestMergeSettingsWritesAllowedDomainsAndStripsLegacyKey(t *testing.T) {
 	}
 
 	outDir := t.TempDir()
-	result, err := a.mergeSettings(outDir, ctx)
+	result, err := a.mergeSettings(outDir, styles.Theme{}, ctx)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -564,7 +565,7 @@ func TestMergeSettingsHooksFromAgentConfig(t *testing.T) {
 	}
 
 	outDir := t.TempDir()
-	resultPath, err := a.mergeSettings(outDir, ctx)
+	resultPath, err := a.mergeSettings(outDir, styles.Theme{}, ctx)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -639,7 +640,7 @@ func TestMergeSettingsWritesDeniedCommands(t *testing.T) {
 	a := New(opts)
 
 	outDir := t.TempDir()
-	resultPath, err := a.mergeSettings(outDir, app.AgentContext{})
+	resultPath, err := a.mergeSettings(outDir, styles.Theme{}, app.AgentContext{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -672,5 +673,155 @@ func TestMergeSettingsWritesDeniedCommands(t *testing.T) {
 		if !contains(deny, want) {
 			t.Errorf("expected %q in permissions.deny, got %v", want, deny)
 		}
+	}
+}
+
+func TestModPluginIDDefaultsMarketplaceToName(t *testing.T) {
+	if got := (app.Mod{Name: "prismantis"}).PluginID(); got != "prismantis@prismantis" {
+		t.Errorf("expected prismantis@prismantis, got %q", got)
+	}
+	if got := (app.Mod{Name: "foo", Marketplace: "bar"}).PluginID(); got != "foo@bar" {
+		t.Errorf("expected foo@bar, got %q", got)
+	}
+}
+
+func TestCollectPluginsIncludesMods(t *testing.T) {
+	opts := testOptions()
+	opts.Mods = []app.Mod{{Name: "test-mod", Repo: "example/test-mod"}}
+	a := New(opts)
+
+	plugins := a.collectPlugins(app.AgentContext{})
+
+	if !contains(plugins, "test-mod@test-mod") {
+		t.Errorf("expected mod plugin to be enabled, got %v", plugins)
+	}
+}
+
+func TestCollectMarketplacesIncludesMods(t *testing.T) {
+	opts := testOptions()
+	opts.Mods = []app.Mod{
+		{Name: "test-mod", Repo: "example/test-mod"},
+		{Name: "other-mod", Marketplace: "test-marketplace", Repo: "example/ignored"},
+	}
+	a := New(opts)
+
+	marketplaces := a.collectMarketplaces(app.AgentContext{})
+
+	if got := marketplaces["test-mod"]; got.Repo != "example/test-mod" {
+		t.Errorf("expected test-mod marketplace from mod repo, got %+v", got)
+	}
+	if got := marketplaces["test-marketplace"]; got.Repo != "example/test-marketplace" {
+		t.Errorf("expected explicit marketplace to win over mod, got %+v", got)
+	}
+}
+
+func TestMergePluginConfigsSetsDeclaredOptionsAndPreservesOthers(t *testing.T) {
+	existing := map[string]any{
+		"other@market": map[string]any{"options": map[string]any{"a": 1}},
+		"test-mod@test-mod": map[string]any{
+			"options": map[string]any{"theme": "nord", "clock": "24h"},
+			"extra":   "kept",
+		},
+	}
+	mods := []app.Mod{
+		{Name: "test-mod", Options: map[string]any{"theme": "dracula"}},
+		{Name: "no-options"},
+	}
+
+	merged := mergePluginConfigs(existing, mods, styles.Theme{})
+
+	entry := merged["test-mod@test-mod"].(map[string]any)
+	options := entry["options"].(map[string]any)
+	if options["theme"] != "dracula" {
+		t.Errorf("expected theme to be overridden, got %v", options["theme"])
+	}
+	if options["clock"] != "24h" {
+		t.Errorf("expected unmanaged option to be preserved, got %v", options["clock"])
+	}
+	if entry["extra"] != "kept" {
+		t.Errorf("expected sibling key to be preserved, got %v", entry["extra"])
+	}
+	if _, ok := merged["other@market"]; !ok {
+		t.Error("expected other plugin config to be preserved")
+	}
+	if _, ok := merged["no-options@no-options"]; ok {
+		t.Error("expected mod without options to be skipped")
+	}
+}
+
+func TestMergeSettingsWritesMods(t *testing.T) {
+	opts := testOptions()
+	opts.Mods = []app.Mod{{Name: "test-mod", Repo: "example/test-mod", Options: map[string]any{"theme": "nord"}}}
+	a := New(opts)
+
+	result, err := a.mergeSettings(t.TempDir(), styles.Theme{}, app.AgentContext{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, err := os.ReadFile(result)
+	if err != nil {
+		t.Fatalf("failed to read output: %v", err)
+	}
+
+	var settings map[string]any
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatalf("failed to parse output: %v", err)
+	}
+
+	plugins := settings["enabledPlugins"].(map[string]any)
+	if plugins["test-mod@test-mod"] != true {
+		t.Error("expected mod to be enabled")
+	}
+
+	marketplaces := settings["extraKnownMarketplaces"].(map[string]any)
+	if _, ok := marketplaces["test-mod"]; !ok {
+		t.Error("expected mod marketplace to be registered")
+	}
+
+	pluginConfigs := settings["pluginConfigs"].(map[string]any)
+	options := pluginConfigs["test-mod@test-mod"].(map[string]any)["options"].(map[string]any)
+	if options["theme"] != "nord" {
+		t.Errorf("expected mod options to be written, got %v", options)
+	}
+}
+
+func TestMergePluginConfigsUsesThemeOptionsWithExplicitOverride(t *testing.T) {
+	theme := styles.Theme{Type: "dark", Colors: styles.ThemeColors{Accent: "#e6537a", Link: "#a87bb7"}}
+	mods := []app.Mod{{
+		Name:    "test-mod",
+		Options: map[string]any{"linkColor": "#ffffff"},
+		ThemeOptions: func(th styles.Theme) map[string]any {
+			return map[string]any{"accentColor": th.Colors.Accent, "linkColor": th.Colors.Link}
+		},
+	}}
+
+	merged := mergePluginConfigs(nil, mods, theme)
+
+	options := merged["test-mod@test-mod"].(map[string]any)["options"].(map[string]any)
+	if options["accentColor"] != "#e6537a" {
+		t.Errorf("expected theme-derived accent, got %v", options["accentColor"])
+	}
+	if options["linkColor"] != "#ffffff" {
+		t.Errorf("expected explicit option to override theme, got %v", options["linkColor"])
+	}
+}
+
+func TestPrismantisThemeOptions(t *testing.T) {
+	theme := styles.Theme{Type: "light", Colors: styles.ThemeColors{Primary: "#e6537a", SurfaceBorder: "#4a3830"}}
+
+	options := Prismantis().ResolveOptions(theme)
+
+	if options["theme"] != "catppuccin-latte" {
+		t.Errorf("expected light base theme, got %v", options["theme"])
+	}
+	if options["headingColor"] != "#e6537a" {
+		t.Errorf("expected heading from primary, got %v", options["headingColor"])
+	}
+	if options["tableRuleColor"] != "#4a3830" {
+		t.Errorf("expected table rule from surface border, got %v", options["tableRuleColor"])
+	}
+	if _, ok := options["linkColor"]; ok {
+		t.Error("expected empty theme colors to be omitted")
 	}
 }
