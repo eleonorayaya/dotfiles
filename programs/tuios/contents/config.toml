@@ -9,6 +9,9 @@ dim_unfocused = 30
 position = "left"
 sections = "sessions:41,files:25,agents:34"
 
+[appearance.sidebar.agent_row]
+tokens = ["$session", "need", "harness", "elapsed", "context", "subagents", "meta", "now", "message"]
+
 [keybindings.prefix_mode]
 prefix_new_window = []
 prefix_window = []

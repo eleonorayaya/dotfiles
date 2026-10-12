@@ -21,7 +21,7 @@ func ClaudeOptions() claude.Options {
 		},
 		StatusLine: map[string]any{
 			"type":    "command",
-			"command": "npx -y ccstatusline@latest",
+			"command": "tuios agent-statusline claude-code --integration 1 --then 'npx -y ccstatusline@latest'",
 			"padding": 0,
 		},
 		SandboxAllowedDomains: []string{
