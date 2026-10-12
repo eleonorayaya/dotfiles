@@ -128,7 +128,7 @@ func (a *App) Sync(ctx *app.Context) error {
 }
 
 var gitHookConfig = [][]string{
-	{"config", "--global", "hook.utena.command", "utena hook post-checkout"},
+	{"config", "--global", "--replace-all", "hook.utena.command", `utena hook post-checkout "$@" >/dev/null 2>&1 || :`},
 	{"config", "--global", "--replace-all", "hook.utena.event", "post-checkout"},
 }
 
