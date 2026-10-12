@@ -1,8 +1,43 @@
 package app
 
+import (
+	"maps"
+
+	"github.com/eleonorayaya/shizuku/styles"
+)
+
 type Marketplace struct {
 	Repo string
 	Path string
+}
+
+type Mod struct {
+	Name         string
+	Marketplace  string
+	Repo         string
+	Path         string
+	Options      map[string]any
+	ThemeOptions func(styles.Theme) map[string]any
+}
+
+func (m Mod) ResolveOptions(theme styles.Theme) map[string]any {
+	resolved := map[string]any{}
+	if m.ThemeOptions != nil {
+		maps.Copy(resolved, m.ThemeOptions(theme))
+	}
+	maps.Copy(resolved, m.Options)
+	return resolved
+}
+
+func (m Mod) MarketplaceName() string {
+	if m.Marketplace != "" {
+		return m.Marketplace
+	}
+	return m.Name
+}
+
+func (m Mod) PluginID() string {
+	return m.Name + "@" + m.MarketplaceName()
 }
 
 type Hook struct {

@@ -3,9 +3,11 @@ package claude
 import (
 	"embed"
 	"fmt"
+	"maps"
 	"path/filepath"
 
 	"github.com/eleonorayaya/shizuku/app"
+	"github.com/eleonorayaya/shizuku/styles"
 	"github.com/eleonorayaya/shizuku/util"
 )
 
@@ -15,6 +17,7 @@ var contents embed.FS
 type Options struct {
 	Marketplaces            map[string]app.Marketplace
 	AlwaysOnPlugins         []string
+	Mods                    []app.Mod
 	DisabledMcpJsonServers  []string
 	Env                     map[string]string
 	StatusLine              map[string]any
@@ -55,7 +58,7 @@ func (a *App) Generate(ctx *app.Context, agents app.AgentContext) (*app.Generate
 		return nil, fmt.Errorf("failed to generate app files: %w", err)
 	}
 
-	mergedPath, err := a.mergeSettings(ctx.OutDir, agents)
+	mergedPath, err := a.mergeSettings(ctx.OutDir, ctx.Styles.Theme, agents)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge settings: %w", err)
 	}
@@ -121,7 +124,11 @@ var baselineSandboxAllowWrite = []string{
 }
 
 func (a *App) collectPlugins(agents app.AgentContext) []string {
-	sources := [][]string{a.opts.AlwaysOnPlugins}
+	modPlugins := make([]string, 0, len(a.opts.Mods))
+	for _, m := range a.opts.Mods {
+		modPlugins = append(modPlugins, m.PluginID())
+	}
+	sources := [][]string{a.opts.AlwaysOnPlugins, modPlugins}
 	for _, ac := range agents.AgentConfigs {
 		sources = append(sources, ac.Plugins)
 	}
@@ -173,6 +180,13 @@ func (a *App) collectMarketplaces(agents app.AgentContext) map[string]app.Market
 	merged := make(map[string]app.Marketplace, len(a.opts.Marketplaces))
 	for name, m := range a.opts.Marketplaces {
 		merged[name] = m
+	}
+	for _, mod := range a.opts.Mods {
+		name := mod.MarketplaceName()
+		if _, exists := merged[name]; exists {
+			continue
+		}
+		merged[name] = app.Marketplace{Repo: mod.Repo, Path: mod.Path}
 	}
 	for _, ac := range agents.AgentConfigs {
 		for name, m := range ac.Marketplaces {
@@ -285,7 +299,32 @@ func mergeHooks(existing map[string]any, hooks []app.Hook) map[string]any {
 	return existing
 }
 
-func (a *App) mergeSettings(outDir string, agents app.AgentContext) (string, error) {
+func mergePluginConfigs(existing map[string]any, mods []app.Mod, theme styles.Theme) map[string]any {
+	if existing == nil {
+		existing = map[string]any{}
+	}
+	for _, m := range mods {
+		resolved := m.ResolveOptions(theme)
+		if len(resolved) == 0 {
+			continue
+		}
+		id := m.PluginID()
+		entry, _ := existing[id].(map[string]any)
+		if entry == nil {
+			entry = map[string]any{}
+		}
+		options, _ := entry["options"].(map[string]any)
+		if options == nil {
+			options = map[string]any{}
+		}
+		maps.Copy(options, resolved)
+		entry["options"] = options
+		existing[id] = entry
+	}
+	return existing
+}
+
+func (a *App) mergeSettings(outDir string, theme styles.Theme, agents app.AgentContext) (string, error) {
 	settings, err := util.ReadJSONMap("~/.claude/settings.json")
 	if err != nil {
 		return "", fmt.Errorf("failed to read settings.json: %w", err)
@@ -300,6 +339,11 @@ func (a *App) mergeSettings(outDir string, agents app.AgentContext) (string, err
 		plugins[plugin] = true
 	}
 	settings["enabledPlugins"] = plugins
+
+	pluginConfigs, _ := settings["pluginConfigs"].(map[string]any)
+	if merged := mergePluginConfigs(pluginConfigs, a.opts.Mods, theme); len(merged) > 0 {
+		settings["pluginConfigs"] = merged
+	}
 
 	permissions, _ := settings["permissions"].(map[string]any)
 	if permissions == nil {
