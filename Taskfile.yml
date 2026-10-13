@@ -1,7 +1,7 @@
 version: '3'
 
 vars:
-  GO_SOURCES: '{agents,programs,languages,examples,app,config,util,pkg}/**/*.go'
+  GO_SOURCES: '{agents,programs,languages,examples,app,config,util,pkg,styles,cmd}/**/*.go'
   MAIN: examples/eleonora/main.go
 
 tasks:
@@ -32,6 +32,10 @@ tasks:
   run:
     cmds:
       - go run {{.MAIN}} {{.CLI_ARGS}}
+  theme:import:
+    desc: Convert iTerm2 .itermcolors files or URLs into shizuku themes
+    cmds:
+      - go run ./cmd/itermtheme {{.CLI_ARGS}}
   lint:
     sources:
       - "{{.GO_SOURCES}}"

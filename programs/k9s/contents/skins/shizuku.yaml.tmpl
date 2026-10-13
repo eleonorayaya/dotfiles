@@ -6,7 +6,7 @@ k9s:
   prompt:
     fgColor: "{{.Styles.Theme.Colors.TextOnSurface}}"
     bgColor: default
-    suggestColor: "{{.Styles.Theme.Colors.AccentGold}}"
+    suggestColor: "{{.Styles.Theme.Colors.Palette.BrightYellow}}"
   info:
     fgColor: "{{.Styles.Theme.Colors.Primary}}"
     sectionColor: "{{.Styles.Theme.Colors.TextOnSurface}}"
@@ -17,7 +17,7 @@ k9s:
     buttonBgColor: "{{.Styles.Theme.Colors.Primary}}"
     buttonFocusFgColor: "{{.Styles.Theme.Colors.TextOnPrimary}}"
     buttonFocusBgColor: "{{.Styles.Theme.Colors.Primary}}"
-    labelFgColor: "{{.Styles.Theme.Colors.AccentGold}}"
+    labelFgColor: "{{.Styles.Theme.Colors.Palette.BrightYellow}}"
     fieldFgColor: "{{.Styles.Theme.Colors.TextOnSurface}}"
   frame:
     border:
@@ -32,20 +32,20 @@ k9s:
       bgColor: "{{.Styles.Theme.Colors.Primary}}"
       activeColor: "{{.Styles.Theme.Colors.PrimaryVariant}}"
     status:
-      newColor: "{{.Styles.Theme.Colors.AccentBlue}}"
-      modifyColor: "{{.Styles.Theme.Colors.AccentGold}}"
-      addColor: "{{.Styles.Theme.Colors.AccentMint}}"
-      pendingColor: "{{.Styles.Theme.Colors.AccentYellow}}"
+      newColor: "{{.Styles.Theme.Colors.Palette.Blue}}"
+      modifyColor: "{{.Styles.Theme.Colors.Modified}}"
+      addColor: "{{.Styles.Theme.Colors.Added}}"
+      pendingColor: "{{.Styles.Theme.Colors.Palette.Yellow}}"
       errorColor: "{{.Styles.Theme.Colors.Error}}"
-      highlightColor: "{{.Styles.Theme.Colors.AccentBlue}}"
+      highlightColor: "{{.Styles.Theme.Colors.Palette.Blue}}"
       killColor: "{{.Styles.Theme.Colors.TextOnSurfaceMuted}}"
       completedColor: "{{.Styles.Theme.Colors.TextOnSurfaceMuted}}"
     title:
       fgColor: "{{.Styles.Theme.Colors.Primary}}"
       bgColor: default
-      highlightColor: "{{.Styles.Theme.Colors.AccentGold}}"
+      highlightColor: "{{.Styles.Theme.Colors.Palette.BrightYellow}}"
       counterColor: "{{.Styles.Theme.Colors.Primary}}"
-      filterColor: "{{.Styles.Theme.Colors.AccentMint}}"
+      filterColor: "{{.Styles.Theme.Colors.Palette.Green}}"
   views:
     charts:
       bgColor: default
@@ -60,11 +60,11 @@ k9s:
       bgColor: default
       cursorFgColor: "{{.Styles.Theme.Colors.SelectionForeground}}"
       cursorBgColor: "{{.Styles.Theme.Colors.Selection}}"
-      markColor: "{{.Styles.Theme.Colors.AccentYellow}}"
+      markColor: "{{.Styles.Theme.Colors.Palette.Yellow}}"
       header:
         fgColor: "{{.Styles.Theme.Colors.TextOnSurfaceEmphasis}}"
         bgColor: default
-        sorterColor: "{{.Styles.Theme.Colors.AccentGold}}"
+        sorterColor: "{{.Styles.Theme.Colors.Palette.BrightYellow}}"
     xray:
       fgColor: "{{.Styles.Theme.Colors.TextOnSurface}}"
       bgColor: default
@@ -74,7 +74,7 @@ k9s:
         - "{{.Styles.Theme.Colors.Primary}}"
         - "{{.Styles.Theme.Colors.Secondary}}"
         - "{{.Styles.Theme.Colors.Tertiary}}"
-        - "{{.Styles.Theme.Colors.AccentMint}}"
+        - "{{.Styles.Theme.Colors.Palette.Green}}"
     yaml:
       keyColor: "{{.Styles.Theme.Colors.Primary}}"
       colonColor: "{{.Styles.Theme.Colors.TextOnSurfaceMuted}}"
