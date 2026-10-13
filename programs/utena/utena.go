@@ -120,5 +120,24 @@ func (a *App) Sync(ctx *app.Context) error {
 		return fmt.Errorf("failed to sync utena files: %w", err)
 	}
 
+	if err := configureGitHook(); err != nil {
+		return fmt.Errorf("failed to configure utena git hook: %w", err)
+	}
+
+	return nil
+}
+
+var gitHookConfig = [][]string{
+	{"config", "--global", "--replace-all", "hook.utena.command", `utena hook post-checkout "$@" >/dev/null 2>&1 || :`},
+	{"config", "--global", "--replace-all", "hook.utena.event", "post-checkout"},
+}
+
+func configureGitHook() error {
+	for _, args := range gitHookConfig {
+		cmd := exec.Command("git", args...)
+		if output, err := cmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("failed to set git hook config %v: %s: %w", args, string(output), err)
+		}
+	}
 	return nil
 }
