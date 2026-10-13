@@ -78,8 +78,8 @@ var (
 func main() {
 	cmd := shizuku.New(
 		shizuku.WithStyles(styles.New(
-			styles.WithTheme(themes.MonadeDark),
-			styles.WithWindowOpacity(65),
+			styles.WithTheme(themes.Sylveon),
+			styles.WithWindowOpacity(100),
 			styles.WithGaps(desktopGaps),
 			styles.WithGapOverride("built-in retina", laptopGaps),
 		)),
