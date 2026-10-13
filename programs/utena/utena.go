@@ -90,6 +90,7 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 		"Selection":             colors.Selection,
 		"TextOnSurface":         colors.TextOnSurface,
 		"TextOnSurfaceEmphasis": colors.TextOnSurfaceEmphasis,
+		"TextOnSurfaceVariant":  colors.TextOnSurfaceVariant,
 		"TextOnSurfaceMuted":    colors.TextOnSurfaceMuted,
 		"TextOnPrimary":         colors.TextOnPrimary,
 		"AccentBlue":            colors.AccentBlue,
