@@ -21,6 +21,7 @@ func ClaudeOptions() claude.Options {
 		Env: map[string]string{
 			"CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
 			"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS":  "1",
+			"JEST_WATCHMAN":                         "false",
 		},
 		StatusLine: map[string]any{
 			"type":    "command",
