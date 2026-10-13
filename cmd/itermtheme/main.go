@@ -98,6 +98,18 @@ func importScheme(src string, opts iterm.Options, outDir string) error {
 	return nil
 }
 
+func rawGitHubURL(u *url.URL) *url.URL {
+	parts := strings.SplitN(strings.TrimPrefix(u.Path, "/"), "/", 4)
+	if u.Host != "github.com" || len(parts) < 4 || parts[2] != "blob" {
+		return u
+	}
+	raw := *u
+	raw.Host = "raw.githubusercontent.com"
+	raw.Path = "/" + parts[0] + "/" + parts[1] + "/" + parts[3]
+	raw.RawPath = ""
+	return &raw
+}
+
 func open(src string) (io.ReadCloser, string, error) {
 	stem := func(p string) string { return strings.TrimSuffix(p, path.Ext(p)) }
 
@@ -106,7 +118,8 @@ func open(src string) (io.ReadCloser, string, error) {
 		if err != nil {
 			return nil, "", fmt.Errorf("invalid url: %w", err)
 		}
-		resp, err := http.Get(src)
+		u = rawGitHubURL(u)
+		resp, err := http.Get(u.String())
 		if err != nil {
 			return nil, "", fmt.Errorf("failed to fetch scheme: %w", err)
 		}
