@@ -203,6 +203,7 @@ func TestMergeSettingsWritesDisabledMcpServers(t *testing.T) {
 }
 
 func TestMergeSettingsOmitsDisabledMcpServersWhenEmpty(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
 	a := New(testOptions())
 
 	outDir := t.TempDir()
