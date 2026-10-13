@@ -3,8 +3,6 @@ package themes
 import (
 	"reflect"
 	"testing"
-
-	"github.com/eleonorayaya/shizuku/styles"
 )
 
 func emptyFields(prefix string, v reflect.Value) []string {
@@ -24,9 +22,9 @@ func emptyFields(prefix string, v reflect.Value) []string {
 }
 
 func TestShippedThemesSetEveryColor(t *testing.T) {
-	for _, theme := range []styles.Theme{Monade, MonadeDark} {
+	for _, theme := range All {
 		t.Run(theme.Name, func(t *testing.T) {
-			for _, field := range emptyFields("", reflect.ValueOf(theme.Colors)) {
+			for _, field := range emptyFields("", reflect.ValueOf(theme.WithDefaults().Colors)) {
 				t.Errorf("%s is empty", field)
 			}
 		})
