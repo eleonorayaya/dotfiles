@@ -93,10 +93,11 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 		"TextOnSurfaceVariant":  colors.TextOnSurfaceVariant,
 		"TextOnSurfaceMuted":    colors.TextOnSurfaceMuted,
 		"TextOnPrimary":         colors.TextOnPrimary,
-		"AccentBlue":            colors.AccentBlue,
-		"AccentLavender":        colors.AccentLavender,
-		"AccentMint":            colors.AccentMint,
-		"AccentGold":            colors.AccentGold,
+		"Blue":                  colors.Palette.Blue,
+		"BrightMagenta":         colors.Palette.BrightMagenta,
+		"Green":                 colors.Palette.Green,
+		"BrightYellow":          colors.Palette.BrightYellow,
+		"Path":                  colors.Path,
 		"Error":                 colors.Error,
 	}
 
