@@ -24,7 +24,7 @@ type Styles struct {
 type Option func(*Styles)
 
 func WithTheme(t Theme) Option {
-	return func(s *Styles) { s.Theme = t }
+	return func(s *Styles) { s.Theme = t.WithDefaults() }
 }
 
 func WithWindowOpacity(opacity int) Option {

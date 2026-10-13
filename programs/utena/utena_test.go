@@ -1,11 +1,16 @@
 package utena
 
 import (
+	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/eleonorayaya/shizuku/app"
+	"github.com/eleonorayaya/shizuku/styles"
+	"github.com/eleonorayaya/shizuku/styles/themes"
 )
 
 const hookCommand = `utena hook post-checkout "$@" >/dev/null 2>&1 || :`
@@ -75,4 +80,32 @@ func TestConfigureGitHook_CheckoutSucceedsWithoutBinary(t *testing.T) {
 	run("init", "-q")
 	run("-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "--allow-empty", "-m", "init")
 	run("checkout", "-q", "-b", "x")
+}
+
+func TestGenerate_ThemeHasNoEmptyColors(t *testing.T) {
+	ctx := &app.Context{
+		OutDir: t.TempDir(),
+		Styles: styles.New(styles.WithTheme(themes.MonadeDark)),
+	}
+
+	result, err := New().Generate(ctx)
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+
+	raw, err := os.ReadFile(result.FileMap["theme.json"])
+	if err != nil {
+		t.Fatalf("read theme.json: %v", err)
+	}
+
+	var theme map[string]string
+	if err := json.Unmarshal(raw, &theme); err != nil {
+		t.Fatalf("parse theme.json: %v", err)
+	}
+
+	for key, value := range theme {
+		if value == "" {
+			t.Errorf("theme.json key %q is empty", key)
+		}
+	}
 }
