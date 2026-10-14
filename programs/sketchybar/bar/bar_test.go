@@ -747,3 +747,21 @@ func TestLayoutFollowsWindowGaps(t *testing.T) {
 		t.Fatalf("mixed monitors should use the default gap: %v", b.Args())
 	}
 }
+
+func TestSystemPushesGraphAndMeter(t *testing.T) {
+	r := newFakeRunner(map[string]string{
+		"ps":      "40.0\n",
+		"sysctl":  "1000\n",
+		"vm_stat": "Mach Virtual Memory Statistics: (page size of 10 bytes)\nAnonymous pages: 50.\nPages wired down: 0.\n",
+	})
+	s := NewSystem(r, Colors{}, NewMood())
+	s.ncpu = 2
+	b := &Batch{}
+	s.Poll(context.Background())(b)
+	if !containsSeq(b.Args(), "--push", cpuGraphItem, "0.200") {
+		t.Fatalf("cpu should be pushed to the graph: %v", b.Args())
+	}
+	if !containsSeq(b.Args(), "--set", memoryBar, "slider.percentage=50") {
+		t.Fatalf("memory should fill the meter: %v", b.Args())
+	}
+}
