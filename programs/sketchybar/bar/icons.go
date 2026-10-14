@@ -14,8 +14,6 @@ const (
 	iconWifi     = "\U00100647"
 	iconOffline  = "\U00100648"
 	iconEthernet = "\U00100906"
-	iconCPU      = "\U00100AE5"
-	iconMemory   = "\U00100AE6"
 	iconHeart    = "♥"
 
 	appIconDefault   = ":default:"

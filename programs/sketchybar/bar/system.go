@@ -14,12 +14,15 @@ import (
 const (
 	cpuItem      = "cpu"
 	cpuGraphItem = "cpu.graph"
+	sparkleItem  = "cpu.sparkle"
 	memoryItem   = "memory"
 	memoryBar    = "memory.bar"
 	graphWidth   = 44
 	meterWidth   = 44
 	meterHeight  = 8
 )
+
+var twinkle = []string{"✦", "✧", "⋆", "✧"}
 
 var pageSizeRe = regexp.MustCompile(`page size of (\d+) bytes`)
 
@@ -31,6 +34,7 @@ type System struct {
 	mood     *Mood
 	ncpu     int
 	memBytes uint64
+	ticks    int
 }
 
 func NewSystem(runner Runner, colors Colors, mood *Mood) *System {
@@ -43,18 +47,22 @@ func (s *System) Setup(ctx context.Context, b *Batch) error {
 	b.Raw("--add", "slider", memoryBar, "right", strconv.Itoa(meterWidth))
 	b.Set(memoryBar,
 		P("slider.width", meterWidth),
-		P("slider.highlight_color", c.Hot),
+		P("slider.highlight_color", faded(c.Hot)),
 		P("slider.background.color", c.IslandBorder),
 		P("slider.background.height", meterHeight),
 		P("slider.background.corner_radius", meterHeight/2),
-		"slider.knob.drawing=off",
+		"slider.knob.drawing=on",
+		P("slider.knob", iconHeart),
+		P("slider.knob.font", symbolFont+":Bold:12.0"),
+		P("slider.knob.color", c.Hot),
 		"icon.drawing=off",
 		"label.drawing=off",
 		P("padding_left", 0),
 		P("padding_right", itemPadding+islandPadding),
 		click,
 	)
-	b.Add(memoryItem, "right", P("icon", iconMemory), "label.drawing=off", "icon.padding_left=0", "icon.padding_right=6", "padding_left=0", "padding_right=0", click)
+	b.Add(memoryItem, "right", P("icon", "mem"), P("icon.font", font("ExtraBold", 11)), P("icon.color", c.Hot), "label.drawing=off", "icon.padding_left=0", "icon.padding_right=6", "padding_left=0", "padding_right=0", click)
+	b.Add(sparkleItem, "right", P("icon", twinkle[0]), P("icon.color", c.Hot), "icon.font=SF Pro:Bold:10.0", "icon.padding_left=0", "icon.padding_right=0", "label.drawing=off", "y_offset=5", "padding_left=-4", "padding_right=12", click)
 	b.Raw("--add", "graph", cpuGraphItem, "right", strconv.Itoa(graphWidth))
 	b.Set(cpuGraphItem,
 		P("graph.color", c.Hot),
@@ -66,11 +74,11 @@ func (s *System) Setup(ctx context.Context, b *Batch) error {
 		"icon.drawing=off",
 		"label.drawing=off",
 		"padding_left=0",
-		"padding_right=12",
+		"padding_right=0",
 		click,
 	)
-	b.Add(cpuItem, "right", P("icon", iconCPU), "label.drawing=off", P("icon.padding_left", islandPadding), "icon.padding_right=6", P("padding_left", itemPadding), "padding_right=0", click)
-	b.Raw("--add", "bracket", systemBracket, cpuItem, cpuGraphItem, memoryItem, memoryBar)
+	b.Add(cpuItem, "right", P("icon", "cpu"), P("icon.font", font("ExtraBold", 11)), P("icon.color", c.Hot), "label.drawing=off", P("icon.padding_left", islandPadding), "icon.padding_right=6", P("padding_left", itemPadding), "padding_right=0", click)
+	b.Raw("--add", "bracket", systemBracket, cpuItem, cpuGraphItem, sparkleItem, memoryItem, memoryBar)
 	b.Set(systemBracket, bracketIsland(s.colors)...)
 	return nil
 }
@@ -86,6 +94,8 @@ func (s *System) Poll(ctx context.Context) Update {
 	} else {
 		s.mood.SetCPU(cpu)
 	}
+	sparkle := twinkle[s.ticks%len(twinkle)]
+	s.ticks++
 	mem, memErr := s.memoryPercent(ctx)
 	if memErr != nil {
 		slog.Debug("bar: memory lookup failed", "error", memErr)
@@ -94,6 +104,7 @@ func (s *System) Poll(ctx context.Context) Update {
 		if cpuErr == nil {
 			b.Raw("--push", cpuGraphItem, fmt.Sprintf("%.3f", cpu/100))
 		}
+		b.Set(sparkleItem, P("icon", sparkle))
 		if memErr == nil {
 			b.Set(memoryBar, P("slider.percentage", fmt.Sprintf("%.0f", mem)))
 		}
