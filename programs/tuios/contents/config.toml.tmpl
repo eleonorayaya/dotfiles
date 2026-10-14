@@ -87,12 +87,7 @@ command = "$HOME/.local/bin/utena workspace prev"
 description = "previous workspace"
 
 [dock]
-right = ["custom/utena", "notifications", "clock"]
-
-[dock.custom.utena]
-command = "$HOME/.local/bin/utena status-line"
-refresh = "5s"
-max-width = 60
+right = ["notifications", "clock"]
 
 [hooks]
 after-attach = '''curl -sf --max-time 1 -X PUT -H 'Content-Type: application/json' -d "{\"session_name\":\"$TUIOS_SESSION_ID\"}" http://localhost:3333/tmux/hooks/client-session-changed'''
