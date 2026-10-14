@@ -143,17 +143,18 @@ func sessionChips(sessions []utenaSession) []sessionChip {
 }
 
 type Sessions struct {
-	utena  utenaClient
-	colors Colors
-	shelf  *Shelf
-	mu     sync.Mutex
-	chips  []sessionChip
-	agents map[uint]string
-	last   lastValue
+	utena   utenaClient
+	colors  Colors
+	shelf   *Shelf
+	mu      sync.Mutex
+	chips   []sessionChip
+	hovered int
+	agents  map[uint]string
+	last    lastValue
 }
 
 func NewSessions(baseURL string, colors Colors, shelf *Shelf) *Sessions {
-	return &Sessions{utena: newUtenaClient(baseURL), colors: colors, shelf: shelf, agents: map[uint]string{}}
+	return &Sessions{utena: newUtenaClient(baseURL), colors: colors, shelf: shelf, hovered: -1, agents: map[uint]string{}}
 }
 
 func sessionItem(i int) string { return fmt.Sprintf("%s%d", sessionPrefix, i) }
@@ -174,6 +175,7 @@ func (s *Sessions) Poll(ctx context.Context) Update {
 	sessions, err := s.utena.sessions(ctx)
 	if err != nil {
 		slog.Debug("bar: utena sessions unavailable", "error", err)
+		return nil
 	}
 	sessions = liveSessions(sessions)
 	chips := sessionChips(sessions)
@@ -181,6 +183,7 @@ func (s *Sessions) Poll(ctx context.Context) Update {
 
 	s.mu.Lock()
 	s.chips = chips
+	hovered := s.hovered
 	s.mu.Unlock()
 
 	var bounce []int
@@ -193,7 +196,10 @@ func (s *Sessions) Poll(ctx context.Context) Update {
 		return nil
 	}
 	return func(b *Batch) {
-		renderSessions(b, s.colors, chips)
+		renderSessions(b, s.colors, chips, hovered)
+		if hovered >= 0 && hovered < len(chips) {
+			renderAgentPopup(b, sessionItem(hovered), chips[hovered])
+		}
 		for _, i := range bounce {
 			b.Bounce(sessionItem(i), sessionBounce)
 		}
@@ -233,13 +239,13 @@ func chipProps(c Colors, chip sessionChip, hovered bool) []string {
 	return append(props, "drawing=on", P("label", chip.label()))
 }
 
-func renderSessions(b *Batch, c Colors, chips []sessionChip) {
+func renderSessions(b *Batch, c Colors, chips []sessionChip, hovered int) {
 	for i := range sessionSlots {
 		if i >= len(chips) {
 			b.Set(sessionItem(i), "drawing=off")
 			continue
 		}
-		b.Set(sessionItem(i), chipProps(c, chips[i], false)...)
+		b.Set(sessionItem(i), chipProps(c, chips[i], i == hovered)...)
 	}
 }
 
@@ -258,6 +264,14 @@ func (s *Sessions) Click(ctx context.Context, ev Event, b *Batch) {
 		return
 	}
 	chip := s.chips[i]
+	switch ev.Sender {
+	case "mouse.entered":
+		s.hovered = i
+	case "mouse.exited", "mouse.exited.global":
+		if s.hovered == i {
+			s.hovered = -1
+		}
+	}
 	s.mu.Unlock()
 
 	item := sessionItem(i)
@@ -304,6 +318,7 @@ type SpaceTiles struct {
 	colors  Colors
 	mu      sync.Mutex
 	current map[string]bool
+	known   map[string]bool
 	last    lastValue
 }
 
@@ -319,6 +334,10 @@ func (t *SpaceTiles) Setup(ctx context.Context, b *Batch) error {
 	if err != nil {
 		slog.Warn("bar: list workspaces failed, retrying on next update", "error", err)
 		return nil
+	}
+	t.known = map[string]bool{}
+	for _, s := range spaces {
+		t.known[s.Workspace] = true
 	}
 	slices.Reverse(spaces)
 	members := []string{"--add", "bracket", tilesBracket}
@@ -359,16 +378,24 @@ func (t *SpaceTiles) Events() []string {
 }
 
 func (t *SpaceTiles) Handle(ctx context.Context, ev Event, b *Batch) {
+	var windows []aerospaceWindow
+	var windowsErr error
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		windows, windowsErr = listWindows(ctx, t.runner)
+	}()
 	spaces, err := listWorkspaces(ctx, t.runner)
+	<-done
 	if err != nil {
 		slog.Warn("bar: list workspaces failed", "error", err)
 		return
 	}
-	windows, err := listWindows(ctx, t.runner)
-	if err != nil {
-		slog.Warn("bar: list windows failed", "error", err)
+	if windowsErr != nil {
+		slog.Warn("bar: list windows failed", "error", windowsErr)
 		return
 	}
+	spaces = slices.DeleteFunc(spaces, func(s aerospaceWorkspace) bool { return !t.known[s.Workspace] })
 	rendered := &Batch{}
 	current := renderTiles(rendered, t.colors, spaces, windows, ev.Env["FOCUSED_WORKSPACE"])
 	t.mu.Lock()

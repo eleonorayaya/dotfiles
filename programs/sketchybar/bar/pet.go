@@ -12,6 +12,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -157,6 +158,7 @@ type Pet struct {
 	shelf  *Shelf
 	frames map[string]string
 	idle   time.Duration
+	reset  atomic.Bool
 }
 
 func NewPet(runner Runner, colors Colors, shelf *Shelf) *Pet {
@@ -172,11 +174,14 @@ func (p *Pet) Setup(ctx context.Context, b *Batch) error {
 	if err != nil {
 		return fmt.Errorf("failed to find cache dir: %w", err)
 	}
-	frames, err := writePetFrames(filepath.Join(cache, "shizuku", "pet"))
-	if err != nil {
-		return err
+	if p.frames == nil {
+		frames, err := writePetFrames(filepath.Join(cache, "shizuku", "pet"))
+		if err != nil {
+			return err
+		}
+		p.frames = frames
 	}
-	p.frames = frames
+	frames := p.frames
 	b.Add(petItem, "center", append([]string{
 		"background.drawing=on",
 		P("background.color", transparent),
@@ -207,8 +212,12 @@ func (p *Pet) Stream(ctx context.Context, updates chan<- Update) {
 	ticks, lastFrame, hopped, pos := 0, "", time.Time{}, petHome
 	for ctx.Err() == nil {
 		ticks++
+		if p.reset.Swap(false) {
+			lastFrame, pos = "", petHome
+		}
 		urgent, finishedAt := p.shelf.snapshot()
-		frame := p.frameFor(ctx, ticks, urgent, time.Now())
+		idle := p.userIdle(ctx, ticks)
+		frame := frameFor(ticks, urgent, idle, time.Now())
 		hop := time.Since(finishedAt) < petHopFor && finishedAt.After(hopped)
 		if hop {
 			hopped = finishedAt
@@ -253,14 +262,18 @@ func (p *Pet) stroll(ctx context.Context, updates chan<- Update, from, to int, r
 	})
 }
 
-func (p *Pet) frameFor(ctx context.Context, tick int, urgent bool, now time.Time) string {
+func (p *Pet) resetCache() {
+	p.reset.Store(true)
+}
+
+func frameFor(tick int, urgent bool, idle time.Duration, now time.Time) string {
 	switch {
 	case urgent:
 		if tick%2 == 0 {
 			return "wave"
 		}
 		return "awake"
-	case now.Hour() < petNightUntilHour || p.userIdle(ctx, tick) >= petIdleNap:
+	case now.Hour() < petNightUntilHour || idle >= petIdleNap:
 		return "sleep"
 	case tick%petBlinkGap == 0:
 		return "blink"

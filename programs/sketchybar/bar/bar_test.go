@@ -834,7 +834,7 @@ func TestPetFramesRender(t *testing.T) {
 func TestSessionChipResetsTextAfterDetach(t *testing.T) {
 	c := Colors{Text: "T", HotText: "W", Hot: "H"}
 	b := &Batch{}
-	renderSessions(b, c, []sessionChip{{id: 1, name: "new-bg"}})
+	renderSessions(b, c, []sessionChip{{id: 1, name: "new-bg"}}, -1)
 	if !containsSeq(b.Args(), P("label.color", "T")) {
 		t.Fatalf("detached chip should use normal text color: %v", b.Args())
 	}
@@ -972,6 +972,7 @@ func TestSpaceTilesSkipUnchangedRender(t *testing.T) {
 		"aerospace list-windows":    `[{"workspace":"1","app-name":"kitty"}]`,
 	})
 	tiles := NewSpaceTiles(r, Colors{})
+	tiles.known = map[string]bool{"1": true}
 	b := &Batch{}
 	tiles.Handle(context.Background(), Event{}, b)
 	if len(b.Args()) == 0 {
@@ -981,5 +982,40 @@ func TestSpaceTilesSkipUnchangedRender(t *testing.T) {
 	tiles.Handle(context.Background(), Event{}, b)
 	if len(b.Args()) != 0 {
 		t.Fatalf("unchanged tiles should not re-render: %v", b.Args())
+	}
+}
+
+func TestSessionsKeepStateWhenUtenaIsDown(t *testing.T) {
+	s := NewSessions("http://127.0.0.1:1", Colors{}, &Shelf{})
+	s.chips = []sessionChip{{id: 1, name: "new-bg"}}
+	if u := s.Poll(context.Background()); u != nil {
+		t.Fatal("a failed request should not re-render the shelf")
+	}
+	if len(s.chips) != 1 {
+		t.Fatalf("chips should be kept: %+v", s.chips)
+	}
+}
+
+func TestHoveredChipKeepsOutlineOnRerender(t *testing.T) {
+	b := &Batch{}
+	renderSessions(b, Colors{Hot: "H", IslandBorder: "B"}, []sessionChip{{id: 1, name: "a"}, {id: 2, name: "b"}}, 1)
+	args := b.Args()
+	idx := slices.Index(args, "sess.1")
+	if idx < 0 || !slices.Contains(args[idx:], "background.border_color=H") {
+		t.Fatalf("hovered chip should keep its outline: %v", args)
+	}
+}
+
+func TestSpaceTilesIgnoreUnknownWorkspaces(t *testing.T) {
+	r := newFakeRunner(map[string]string{
+		"aerospace list-workspaces": `[{"workspace":"1","workspace-is-visible":true},{"workspace":"X","workspace-is-visible":false}]`,
+		"aerospace list-windows":    `[{"workspace":"X","app-name":"kitty"}]`,
+	})
+	tiles := NewSpaceTiles(r, Colors{})
+	tiles.known = map[string]bool{"1": true}
+	b := &Batch{}
+	tiles.Handle(context.Background(), Event{}, b)
+	if slices.Contains(b.Args(), "tile.X") {
+		t.Fatalf("tiles created after setup should not be set: %v", b.Args())
 	}
 }

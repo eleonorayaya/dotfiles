@@ -46,10 +46,7 @@ func syncBottomBar() error {
 	if err := util.EnsureDirExists(filepath.Dir(plistPath)); err != nil {
 		return err
 	}
-	plist, err := bottomPlist(home, link)
-	if err != nil {
-		return err
-	}
+	plist := bottomPlist(home, link)
 	domain := "gui/" + strconv.Itoa(os.Getuid())
 	if current, err := os.ReadFile(plistPath); err == nil && bytes.Equal(current, plist) && exec.Command("launchctl", "print", domain+"/"+bottomLabel).Run() == nil {
 		if out, err := exec.Command(link, "--reload").CombinedOutput(); err != nil {
@@ -74,7 +71,7 @@ func syncBottomBar() error {
 	return fmt.Errorf("failed to start bottom bar: %w", lastErr)
 }
 
-func bottomPlist(home, binary string) ([]byte, error) {
+func bottomPlist(home, binary string) []byte {
 	path := strings.Join([]string{
 		filepath.Join(home, ".local", "bin"),
 		filepath.Join(home, "go", "bin"),
@@ -116,5 +113,5 @@ func bottomPlist(home, binary string) ([]byte, error) {
 	<string>%s</string>
 </dict>
 </plist>
-`, bottomLabel, esc(binary), esc(rc), esc(path), esc(logPath), esc(logPath))), nil
+`, bottomLabel, esc(binary), esc(rc), esc(path), esc(logPath), esc(logPath)))
 }

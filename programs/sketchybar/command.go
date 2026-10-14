@@ -20,6 +20,9 @@ func Command() *cobra.Command {
 		Use:   "bar",
 		Short: "Run the sketchybar daemon",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if root := cmd.Root(); root.PersistentPreRun != nil {
+				root.PersistentPreRun(cmd, args)
+			}
 			spec, err := bar.SpecFor(which)
 			if err != nil {
 				return err
