@@ -3,6 +3,7 @@ package jankyborders
 import (
 	"embed"
 	"fmt"
+	"log/slog"
 
 	"github.com/eleonorayaya/shizuku/app"
 	"github.com/eleonorayaya/shizuku/util"
@@ -58,6 +59,12 @@ func (a *App) Sync(ctx *app.Context) error {
 
 	if err := app.SyncAppFiles(result.FileMap, result.DestDir); err != nil {
 		return fmt.Errorf("failed to sync app files: %w", err)
+	}
+
+	if util.BinaryExists("borders") {
+		if _, err := util.EnsureBrewService("borders"); err != nil {
+			slog.Warn("failed to start borders", "error", err)
+		}
 	}
 
 	return nil
