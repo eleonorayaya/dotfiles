@@ -9,6 +9,7 @@ tasks:
     sources:
       - "{{.GO_SOURCES}}"
       - "*.go"
+      - "{agents,programs,languages}/**/contents/**/*"
     generates:
       - out/shizuku
     cmds:
