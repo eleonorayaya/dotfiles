@@ -44,7 +44,7 @@ func NewUtena(baseURL string, colors Colors) *Utena {
 }
 
 func (u *Utena) Setup(ctx context.Context, b *Batch) error {
-	b.Add(utenaItem, "right", append(island(u.colors), "icon.drawing=off", P("label.padding_left", islandPadding), "drawing=off")...)
+	b.Add(utenaItem, "left", append(island(u.colors), "icon.drawing=off", P("label.padding_left", islandPadding), "drawing=off")...)
 	return nil
 }
 
