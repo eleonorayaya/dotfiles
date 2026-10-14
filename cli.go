@@ -19,30 +19,33 @@ func defaultConfigPath() (string, error) {
 	return filepath.Join(home, ".config", "shizuku", "shizuku.yml"), nil
 }
 
+func (b *Builder) resolveProfile() error {
+	configPath, err := defaultConfigPath()
+	if err != nil {
+		return err
+	}
+	cfg, err := config.Load(configPath)
+	if err != nil {
+		return err
+	}
+	if b.opts.Profile != "" {
+		slog.Info("using profile", "profile", b.opts.Profile)
+	} else if cfg.Profile != "" {
+		b.opts.Profile = cfg.Profile
+		slog.Info("using profile", "profile", b.opts.Profile)
+	} else {
+		slog.Warn("no profile set, using base profile")
+	}
+	return nil
+}
+
 func (b *Builder) Command() *cobra.Command {
 	root := &cobra.Command{
 		Use: "shizuku",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			if b.opts.Verbose {
 				slog.SetLogLoggerLevel(slog.LevelDebug)
 			}
-			configPath, err := defaultConfigPath()
-			if err != nil {
-				return err
-			}
-			cfg, err := config.Load(configPath)
-			if err != nil {
-				return err
-			}
-			if b.opts.Profile != "" {
-				slog.Info("using profile", "profile", b.opts.Profile)
-			} else if cfg.Profile != "" {
-				b.opts.Profile = cfg.Profile
-				slog.Info("using profile", "profile", b.opts.Profile)
-			} else {
-				slog.Warn("no profile set, using base profile")
-			}
-			return nil
 		},
 	}
 	root.PersistentFlags().BoolVarP(&b.opts.Verbose, "verbose", "v", false, "Enable verbose output")
@@ -52,6 +55,9 @@ func (b *Builder) Command() *cobra.Command {
 		Use:   "sync",
 		Short: "Sync all application configurations",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := b.resolveProfile(); err != nil {
+				return err
+			}
 			return b.Sync(context.Background())
 		},
 	}
@@ -60,6 +66,9 @@ func (b *Builder) Command() *cobra.Command {
 		Use:   "diff",
 		Short: "Show what would change on next sync",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := b.resolveProfile(); err != nil {
+				return err
+			}
 			report, err := b.Diff(context.Background())
 			if err != nil {
 				return err
@@ -97,6 +106,9 @@ func (b *Builder) Command() *cobra.Command {
 		Use:   "install",
 		Short: "Install application dependencies",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := b.resolveProfile(); err != nil {
+				return err
+			}
 			return b.Install(context.Background())
 		},
 	}
@@ -105,6 +117,9 @@ func (b *Builder) Command() *cobra.Command {
 		Use:   "list",
 		Short: "List apps active in the current profile",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := b.resolveProfile(); err != nil {
+				return err
+			}
 			statuses, err := b.List()
 			if err != nil {
 				return err

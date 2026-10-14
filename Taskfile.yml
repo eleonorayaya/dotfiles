@@ -9,6 +9,7 @@ tasks:
     sources:
       - "{{.GO_SOURCES}}"
       - "*.go"
+      - "{agents,programs,languages}/**/contents/**/*"
     generates:
       - out/shizuku
     cmds:
@@ -52,4 +53,5 @@ tasks:
     deps:
       - build
     cmds:
+      - rm -f "$(go env GOPATH)/bin/shizuku"
       - cp out/shizuku "$(go env GOPATH)/bin/"
