@@ -59,6 +59,8 @@ func island(c Colors) []string {
 		"background.border_width=2",
 		P("background.height", islandHeight),
 		P("background.corner_radius", islandRadius),
+		P("icon.color", c.Text),
+		P("label.color", c.Text),
 		P("background.padding_left", 0),
 		P("background.padding_right", 0),
 		P("icon.padding_left", islandPadding),

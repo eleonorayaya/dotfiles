@@ -830,3 +830,15 @@ func TestPetFramesRender(t *testing.T) {
 		t.Fatalf("parseHIDIdle = %v", d)
 	}
 }
+
+func TestSessionChipResetsTextAfterDetach(t *testing.T) {
+	c := Colors{Text: "T", HotText: "W", Hot: "H"}
+	b := &Batch{}
+	renderSessions(b, c, []sessionChip{{id: 1, label: "new-bg"}})
+	if !containsSeq(b.Args(), P("label.color", "T")) {
+		t.Fatalf("detached chip should use normal text color: %v", b.Args())
+	}
+	if len(sessionChips([]utenaSession{{ID: 1, Name: "notion-app", Status: "broken"}})) != 0 {
+		t.Fatal("broken sessions should not show")
+	}
+}

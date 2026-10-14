@@ -23,7 +23,7 @@ const (
 	pipNeedsMe = "✦"
 )
 
-var liveSessionStatuses = []string{"active", "creating", "pending", "broken", "completed"}
+var liveSessionStatuses = []string{"active", "creating", "pending", "completed"}
 
 type claudeAgent struct {
 	ID     uint   `json:"ID"`
