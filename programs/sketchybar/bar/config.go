@@ -25,6 +25,7 @@ type Config struct {
 	Colors         Colors          `json:"colors"`
 	Badges         []string        `json:"badges,omitempty"`
 	Margin         int             `json:"margin"`
+	BottomGap      int             `json:"bottomGap"`
 	MarginOverride *MarginOverride `json:"marginOverride,omitempty"`
 }
 

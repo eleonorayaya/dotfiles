@@ -70,8 +70,9 @@ func (a *App) barConfig(ctx *app.Context) bar.Config {
 			PopupBackground: util.HexToARGB(colors.Surface, 100),
 			PopupBorder:     util.HexToARGB(colors.SurfaceBorder, 100),
 		},
-		Badges: a.opts.Badges,
-		Margin: ctx.Styles.Gaps.OuterLeft,
+		Badges:    a.opts.Badges,
+		Margin:    ctx.Styles.Gaps.OuterLeft,
+		BottomGap: ctx.Styles.Gaps.OuterBottom,
 	}
 	if o := ctx.Styles.GapOverride; o != nil {
 		cfg.MarginOverride = &bar.MarginOverride{Monitor: o.Pattern, Margin: o.Gaps.OuterLeft}
@@ -111,6 +112,10 @@ func (a *App) Sync(ctx *app.Context) error {
 		if out, err := exec.Command("sketchybar", "--reload").CombinedOutput(); err != nil {
 			slog.Warn("failed to reload sketchybar", "error", err, "output", string(out))
 		}
+		if err := syncBottomBar(); err != nil {
+			slog.Warn("failed to start bottom bar", "error", err)
+		}
+		hideDock()
 	}
 
 	return nil

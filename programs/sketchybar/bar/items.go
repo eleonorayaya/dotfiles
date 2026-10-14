@@ -4,7 +4,7 @@ func Items(cfg Config, runner Runner) []Item {
 	c := cfg.Colors
 	mood := NewMood()
 	items := []Item{
-		NewLayout(runner, cfg.Margin, cfg.MarginOverride),
+		NewLayout(runner, cfg.Margin, cfg.MarginOverride, false),
 		NewHeart(c),
 		NewWorkspace(runner, c),
 		NewFrontApp(runner, c),

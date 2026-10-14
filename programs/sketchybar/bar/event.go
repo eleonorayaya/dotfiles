@@ -9,7 +9,6 @@ import (
 	"log/slog"
 	"net"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -25,10 +24,6 @@ type Event struct {
 	Sender string            `json:"sender"`
 	Info   string            `json:"info,omitempty"`
 	Env    map[string]string `json:"env,omitempty"`
-}
-
-func DefaultSocketPath() string {
-	return filepath.Join(os.TempDir(), "shizuku-bar.sock")
 }
 
 func EventFromEnv() Event {

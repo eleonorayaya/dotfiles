@@ -13,13 +13,13 @@ func font(style string, size int) string {
 	return fmt.Sprintf("%s:%s:%d.0", textFont, style, size)
 }
 
-func barProps() []string {
+func barProps(place Placement) []string {
 	return []string{
 		"height=40",
-		"position=top",
+		P("position", place.Position),
 		"padding_left=0",
 		"padding_right=0",
-		"y_offset=6",
+		P("y_offset", place.YOffset),
 		"color=0x00000000",
 		"border_width=0",
 		"blur_radius=0",

@@ -33,6 +33,7 @@ func (ExecRunner) Run(ctx context.Context, name string, args ...string) ([]byte,
 }
 
 type Batch struct {
+	bin  string
 	emit string
 	args []string
 }
@@ -87,7 +88,11 @@ func (b *Batch) apply(ctx context.Context, r Runner) error {
 	if len(b.args) == 0 {
 		return nil
 	}
-	if _, err := r.Run(ctx, "sketchybar", b.args...); err != nil {
+	bin := b.bin
+	if bin == "" {
+		bin = topBinary
+	}
+	if _, err := r.Run(ctx, bin, b.args...); err != nil {
 		return fmt.Errorf("failed to apply sketchybar batch: %w", err)
 	}
 	return nil

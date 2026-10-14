@@ -19,9 +19,12 @@ const (
 )
 
 type utenaSession struct {
-	Name       string    `json:"name"`
-	IsAttached bool      `json:"is_attached"`
-	LastUsedAt time.Time `json:"last_used_at"`
+	ID             uint          `json:"ID"`
+	Status         string        `json:"status"`
+	ClaudeSessions []claudeAgent `json:"claude_sessions"`
+	Name           string        `json:"name"`
+	IsAttached     bool          `json:"is_attached"`
+	LastUsedAt     time.Time     `json:"last_used_at"`
 }
 
 type Utena struct {

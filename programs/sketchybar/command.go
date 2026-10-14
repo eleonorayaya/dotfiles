@@ -14,20 +14,26 @@ import (
 )
 
 func Command() *cobra.Command {
-	socketPath := bar.DefaultSocketPath()
+	var socketPath, which string
 
 	cmd := &cobra.Command{
 		Use:   "bar",
 		Short: "Run the sketchybar daemon",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			if socketPath == "" {
+				socketPath = bar.DefaultSocketPath(which)
+			}
+		},
 	}
-	cmd.PersistentFlags().StringVar(&socketPath, "socket", socketPath, "Unix socket the daemon listens on")
+	cmd.PersistentFlags().StringVar(&socketPath, "socket", "", "Unix socket the daemon listens on (default depends on --bar)")
+	cmd.PersistentFlags().StringVar(&which, "bar", bar.BarTop, "Which bar to drive: top or bottom")
 
 	configPath := configDir + configName
 	runCmd := &cobra.Command{
 		Use:   "run",
 		Short: "Configure sketchybar and serve its events",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runDaemon(configPath, socketPath)
+			return runDaemon(configPath, socketPath, which)
 		},
 	}
 	runCmd.Flags().StringVar(&configPath, "config", configPath, "Path to the generated bar config")
@@ -45,12 +51,16 @@ func Command() *cobra.Command {
 	return cmd
 }
 
-func runDaemon(configPath, socketPath string) error {
+func runDaemon(configPath, socketPath, which string) error {
 	path, err := util.NormalizeFilePath(configPath)
 	if err != nil {
 		return fmt.Errorf("failed to expand config path: %w", err)
 	}
 	cfg, err := bar.LoadConfig(path)
+	if err != nil {
+		return err
+	}
+	place, err := bar.PlacementFor(which, cfg)
 	if err != nil {
 		return err
 	}
@@ -74,5 +84,5 @@ func runDaemon(configPath, socketPath string) error {
 	go bar.Serve(ctx, server, events)
 
 	runner := bar.ExecRunner{}
-	return bar.NewDaemon(cfg, runner, emit, bar.Items(cfg, runner)).Run(ctx, events)
+	return bar.NewDaemon(cfg, runner, emit, place, bar.ItemsFor(which, cfg, runner)).Run(ctx, events)
 }

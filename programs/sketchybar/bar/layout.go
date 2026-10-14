@@ -10,13 +10,14 @@ import (
 const itemPadding = 6
 
 type Layout struct {
-	runner   Runner
-	margin   int
-	override *MarginOverride
+	runner         Runner
+	margin         int
+	override       *MarginOverride
+	hideOnOverride bool
 }
 
-func NewLayout(runner Runner, margin int, override *MarginOverride) *Layout {
-	return &Layout{runner: runner, margin: margin, override: override}
+func NewLayout(runner Runner, margin int, override *MarginOverride, hideOnOverride bool) *Layout {
+	return &Layout{runner: runner, margin: margin, override: override, hideOnOverride: hideOnOverride}
 }
 
 func (l *Layout) Setup(ctx context.Context, b *Batch) error {
@@ -28,16 +29,20 @@ func (l *Layout) Events() []string {
 }
 
 func (l *Layout) Handle(ctx context.Context, ev Event, b *Batch) {
-	margin := l.margin
+	margin, overridden := l.margin, false
 	if l.override != nil {
 		out, err := l.runner.Run(ctx, "aerospace", "list-monitors", "--format", "%{monitor-name}")
 		if err != nil {
 			slog.Warn("bar: list monitors failed", "error", err)
 		} else if allMonitorsMatch(string(out), l.override.Monitor) {
-			margin = l.override.Margin
+			margin, overridden = l.override.Margin, true
 		}
 	}
-	b.Raw("--bar", P("margin", max(margin-itemPadding, 0)))
+	props := []string{P("margin", max(margin-itemPadding, 0))}
+	if l.hideOnOverride {
+		props = append(props, onOff("hidden", overridden))
+	}
+	b.Raw(append([]string{"--bar"}, props...)...)
 }
 
 func allMonitorsMatch(out, pattern string) bool {

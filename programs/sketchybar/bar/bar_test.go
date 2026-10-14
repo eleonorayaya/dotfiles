@@ -487,7 +487,7 @@ func TestDaemonSetupSubscribesSinkOnce(t *testing.T) {
 	r := newFakeRunner(nil)
 	a := &recordingItem{events: []string{"front_app_switched", "system_woke"}}
 	c := &recordingItem{events: []string{"system_woke"}}
-	d := NewDaemon(Config{}, r, "emit", []Item{a, c})
+	d := NewDaemon(Config{}, r, "emit", TopPlacement(), []Item{a, c})
 	if err := d.Setup(context.Background()); err != nil {
 		t.Fatal(err)
 	}
@@ -509,7 +509,7 @@ func TestDaemonSetupSubscribesSinkOnce(t *testing.T) {
 
 func TestDaemonDispatchCoalescesEvents(t *testing.T) {
 	a := &recordingItem{events: []string{"front_app_switched", "space_windows_change"}}
-	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", []Item{a})
+	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", TopPlacement(), []Item{a})
 
 	d.dispatch(context.Background(), []Event{
 		{Name: sinkItem, Sender: "front_app_switched", Info: "kitty"},
@@ -528,7 +528,7 @@ func TestDaemonDispatchCoalescesEvents(t *testing.T) {
 
 func TestDaemonClicksRunOffLoop(t *testing.T) {
 	a := &recordingItem{}
-	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", []Item{a})
+	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", TopPlacement(), []Item{a})
 
 	d.dispatch(context.Background(), []Event{{Name: "rec.child", Sender: "mouse.clicked"}, {Name: "other", Sender: "mouse.clicked"}})
 	select {
@@ -544,7 +544,7 @@ func TestDaemonClicksRunOffLoop(t *testing.T) {
 func TestDaemonRenderHandlesEveryItem(t *testing.T) {
 	a := &recordingItem{events: []string{"front_app_switched"}}
 	c := &recordingItem{events: []string{"system_woke"}}
-	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", []Item{a, c})
+	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", TopPlacement(), []Item{a, c})
 	d.render(context.Background())
 	if len(a.handled) != 1 || len(c.handled) != 1 {
 		t.Fatalf("render should handle every item once: %+v %+v", a.handled, c.handled)
@@ -691,7 +691,7 @@ func TestDaemonReconfiguresWhenItemsGoMissing(t *testing.T) {
 	r := &failingRunner{fakeRunner: newFakeRunner(nil), failures: 1}
 	m := NewKaomoji(NewMood(), Colors{})
 	m.last.changed("x")
-	d := NewDaemon(Config{}, r, "emit", []Item{&recordingItem{events: []string{"system_woke"}}, m})
+	d := NewDaemon(Config{}, r, "emit", TopPlacement(), []Item{&recordingItem{events: []string{"system_woke"}}, m})
 
 	b := d.newBatch()
 	b.Set("rec", "label=x")
@@ -728,21 +728,21 @@ func TestLayoutFollowsWindowGaps(t *testing.T) {
 
 	r := newFakeRunner(map[string]string{"aerospace list-monitors": "U32J59x (2)\nU32J59x (1)\n"})
 	b := &Batch{}
-	NewLayout(r, 64, override).Handle(ctx, Event{}, b)
+	NewLayout(r, 64, override, false).Handle(ctx, Event{}, b)
 	if !slices.Equal(b.Args(), []string{"--bar", P("margin", 64-itemPadding)}) {
 		t.Fatalf("external monitors should use the default gap: %v", b.Args())
 	}
 
 	r = newFakeRunner(map[string]string{"aerospace list-monitors": "Built-in Retina Display\n"})
 	b = &Batch{}
-	NewLayout(r, 64, override).Handle(ctx, Event{}, b)
+	NewLayout(r, 64, override, false).Handle(ctx, Event{}, b)
 	if !slices.Equal(b.Args(), []string{"--bar", P("margin", 8-itemPadding)}) {
 		t.Fatalf("laptop-only should use the override gap: %v", b.Args())
 	}
 
 	r = newFakeRunner(map[string]string{"aerospace list-monitors": "Built-in Retina Display\nU32J59x (1)\n"})
 	b = &Batch{}
-	NewLayout(r, 64, override).Handle(ctx, Event{}, b)
+	NewLayout(r, 64, override, false).Handle(ctx, Event{}, b)
 	if !slices.Equal(b.Args(), []string{"--bar", P("margin", 64-itemPadding)}) {
 		t.Fatalf("mixed monitors should use the default gap: %v", b.Args())
 	}
@@ -763,5 +763,70 @@ func TestSystemPushesGraphAndMeter(t *testing.T) {
 	}
 	if !containsSeq(b.Args(), "--set", memoryBar, "slider.percentage=50") {
 		t.Fatalf("memory should fill the meter: %v", b.Args())
+	}
+}
+
+func TestBottomPlacementCentersInWindowGap(t *testing.T) {
+	p := BottomPlacement(Config{BottomGap: 128})
+	if p.Bin != BottomBinary || p.Position != "bottom" || p.YOffset != 22 {
+		t.Fatalf("unexpected bottom placement: %+v", p)
+	}
+	if BottomPlacement(Config{BottomGap: 8}).YOffset != 0 {
+		t.Fatal("small gaps should not push the bar off-screen")
+	}
+}
+
+func TestSessionChips(t *testing.T) {
+	sessions := []utenaSession{
+		{ID: 5, Name: "sayo", Status: "active", ClaudeSessions: []claudeAgent{{ID: 1, Status: "ready_for_review"}}},
+		{ID: 3, Name: "new-bg", Status: "active", IsAttached: true, ClaudeSessions: []claudeAgent{{ID: 2, Status: "working"}, {ID: 3, Status: "idle"}}},
+		{ID: 4, Name: "old", Status: "archived"},
+	}
+	chips := sessionChips(sessions)
+	if len(chips) != 2 || chips[0].label != "new-bg ●○" || !chips[0].attached || chips[1].label != "sayo ✦" || !chips[1].needsMe {
+		t.Fatalf("unexpected chips: %+v", chips)
+	}
+}
+
+func TestSessionsTrackFinishedAgents(t *testing.T) {
+	shelf := &Shelf{}
+	s := NewSessions("http://unused", Colors{}, shelf)
+	s.trackAgents([]utenaSession{{Status: "active", ClaudeSessions: []claudeAgent{{ID: 1, Status: "working"}}}})
+	if _, finished := shelf.snapshot(); !finished.IsZero() {
+		t.Fatal("nothing has finished yet")
+	}
+	s.trackAgents([]utenaSession{{Status: "active", ClaudeSessions: []claudeAgent{{ID: 1, Status: "ready_for_review"}, {ID: 2, Status: "needs_attention"}}}})
+	needsYou, finished := shelf.snapshot()
+	if finished.IsZero() || !needsYou {
+		t.Fatalf("expected a finished agent and one needing attention: %v %v", needsYou, finished)
+	}
+}
+
+func TestRenderTiles(t *testing.T) {
+	spaces := []aerospaceWorkspace{{Workspace: "1", Display: 1}, {Workspace: "2", Display: 1, Focused: true}, {Workspace: "9", Display: 1}}
+	windows := []aerospaceWindow{{Workspace: "1", AppName: "Finder"}, {Workspace: "1", AppName: "Finder"}, {Workspace: "2", AppName: "kitty"}}
+	b := &Batch{}
+	renderTiles(b, Colors{Hot: "H", HotText: "W", Text: "T"}, spaces, windows, "")
+	args := b.Args()
+	for _, want := range [][]string{
+		{"--set", "tile.1", "drawing=on", "label=:finder:"},
+		{"--set", "tile.2", "drawing=on", "label=:kitty:", "label.drawing=on", "background.color=H"},
+		{"--set", "tile.9", "drawing=off"},
+	} {
+		if !containsSeq(args, want...) {
+			t.Errorf("missing %v in %v", want, args)
+		}
+	}
+}
+
+func TestPetFramesRender(t *testing.T) {
+	for name, rows := range petFrames() {
+		img := renderSprite(rows, 2)
+		if img.Bounds().Dx() != (len(rows)+2)*2 {
+			t.Fatalf("%s: unexpected size %v", name, img.Bounds())
+		}
+	}
+	if d := parseHIDIdle(`    |   "HIDIdleTime" = 3000000000` + "\n"); d != 3*time.Second {
+		t.Fatalf("parseHIDIdle = %v", d)
 	}
 }

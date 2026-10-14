@@ -45,7 +45,14 @@ const (
 	resetupBackoff = 5 * time.Second
 )
 
+type Placement struct {
+	Bin      string
+	Position string
+	YOffset  int
+}
+
 type Daemon struct {
+	place       Placement
 	runner      Runner
 	cfg         Config
 	emit        string
@@ -55,12 +62,12 @@ type Daemon struct {
 	lastSetup   time.Time
 }
 
-func NewDaemon(cfg Config, runner Runner, emit string, items []Item) *Daemon {
-	return &Daemon{runner: runner, cfg: cfg, emit: emit, items: items, updates: make(chan Update, 32)}
+func NewDaemon(cfg Config, runner Runner, emit string, place Placement, items []Item) *Daemon {
+	return &Daemon{place: place, runner: runner, cfg: cfg, emit: emit, items: items, updates: make(chan Update, 32)}
 }
 
 func (d *Daemon) newBatch() *Batch {
-	return &Batch{emit: d.emit}
+	return &Batch{bin: d.place.Bin, emit: d.emit}
 }
 
 func (d *Daemon) Setup(ctx context.Context) error {
@@ -68,7 +75,7 @@ func (d *Daemon) Setup(ctx context.Context) error {
 	b := d.newBatch()
 	b.Remove("/.*/")
 	b.Raw("--bar")
-	b.Raw(barProps()...)
+	b.Raw(barProps(d.place)...)
 	b.Raw("--default")
 	b.Raw(defaultProps(d.cfg.Colors)...)
 
@@ -154,7 +161,7 @@ func (d *Daemon) Run(ctx context.Context, events <-chan Event) error {
 				missed = 0
 				continue
 			}
-			if _, err := d.runner.Run(ctx, "sketchybar", "--query", "bar"); err != nil {
+			if _, err := d.runner.Run(ctx, d.place.Bin, "--query", "bar"); err != nil {
 				missed++
 				if missed >= maxMissedPings {
 					return fmt.Errorf("sketchybar stopped responding: %w", err)
