@@ -45,6 +45,7 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/tmux"
 	"github.com/eleonorayaya/shizuku/programs/tuios"
 	"github.com/eleonorayaya/shizuku/programs/utena"
+	"github.com/eleonorayaya/shizuku/programs/vesktop"
 	"github.com/eleonorayaya/shizuku/styles"
 	"github.com/eleonorayaya/shizuku/styles/themes"
 	"github.com/eleonorayaya/shizuku/util"
@@ -114,6 +115,7 @@ func main() {
 				terraform.New(),
 				tmux.New(),
 				utena.New(),
+				vesktop.New(),
 			),
 			shizuku.WithAgents(
 				claude.New(data.ClaudeOptions()),
