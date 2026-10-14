@@ -16,9 +16,16 @@ type Colors struct {
 	PopupBorder     string `json:"popupBorder"`
 }
 
+type MarginOverride struct {
+	Monitor string `json:"monitor"`
+	Margin  int    `json:"margin"`
+}
+
 type Config struct {
-	Colors Colors   `json:"colors"`
-	Badges []string `json:"badges,omitempty"`
+	Colors         Colors          `json:"colors"`
+	Badges         []string        `json:"badges,omitempty"`
+	Margin         int             `json:"margin"`
+	MarginOverride *MarginOverride `json:"marginOverride,omitempty"`
 }
 
 func LoadConfig(path string) (Config, error) {

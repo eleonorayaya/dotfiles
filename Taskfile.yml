@@ -52,4 +52,5 @@ tasks:
     deps:
       - build
     cmds:
+      - rm -f "$(go env GOPATH)/bin/shizuku"
       - cp out/shizuku "$(go env GOPATH)/bin/"

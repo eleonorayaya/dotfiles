@@ -60,7 +60,7 @@ func (a *App) Install(ctx *app.Context) error {
 
 func (a *App) barConfig(ctx *app.Context) bar.Config {
 	colors := ctx.Styles.Theme.Colors
-	return bar.Config{
+	cfg := bar.Config{
 		Colors: bar.Colors{
 			Island:          util.HexToARGB(colors.Surface, ctx.Styles.WindowOpacity),
 			IslandBorder:    util.HexToARGB(colors.SurfaceBorder, 100),
@@ -71,7 +71,12 @@ func (a *App) barConfig(ctx *app.Context) bar.Config {
 			PopupBorder:     util.HexToARGB(colors.SurfaceBorder, 100),
 		},
 		Badges: a.opts.Badges,
+		Margin: ctx.Styles.Gaps.OuterLeft,
 	}
+	if o := ctx.Styles.GapOverride; o != nil {
+		cfg.MarginOverride = &bar.MarginOverride{Monitor: o.Pattern, Margin: o.Gaps.OuterLeft}
+	}
+	return cfg
 }
 
 func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {

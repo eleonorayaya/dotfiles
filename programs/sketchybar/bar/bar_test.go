@@ -782,3 +782,29 @@ func TestDaemonReconfiguresWhenItemsGoMissing(t *testing.T) {
 		t.Fatal("re-setup should back off")
 	}
 }
+
+func TestLayoutFollowsWindowGaps(t *testing.T) {
+	ctx := context.Background()
+	override := &MarginOverride{Monitor: "built-in retina", Margin: 8}
+
+	r := newFakeRunner(map[string]string{"aerospace list-monitors": "U32J59x (2)\nU32J59x (1)\n"})
+	b := &Batch{}
+	NewLayout(r, 64, override).Handle(ctx, Event{}, b)
+	if !slices.Equal(b.Args(), []string{"--bar", P("margin", 64-itemPadding)}) {
+		t.Fatalf("external monitors should use the default gap: %v", b.Args())
+	}
+
+	r = newFakeRunner(map[string]string{"aerospace list-monitors": "Built-in Retina Display\n"})
+	b = &Batch{}
+	NewLayout(r, 64, override).Handle(ctx, Event{}, b)
+	if !slices.Equal(b.Args(), []string{"--bar", P("margin", 8-itemPadding)}) {
+		t.Fatalf("laptop-only should use the override gap: %v", b.Args())
+	}
+
+	r = newFakeRunner(map[string]string{"aerospace list-monitors": "Built-in Retina Display\nU32J59x (1)\n"})
+	b = &Batch{}
+	NewLayout(r, 64, override).Handle(ctx, Event{}, b)
+	if !slices.Equal(b.Args(), []string{"--bar", P("margin", 64-itemPadding)}) {
+		t.Fatalf("mixed monitors should use the default gap: %v", b.Args())
+	}
+}

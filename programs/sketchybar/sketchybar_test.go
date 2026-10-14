@@ -14,7 +14,7 @@ import (
 func TestGenerateWritesBarConfig(t *testing.T) {
 	ctx := &app.Context{
 		OutDir: t.TempDir(),
-		Styles: styles.New(styles.WithTheme(themes.Sylveon), styles.WithWindowOpacity(80)),
+		Styles: styles.New(styles.WithTheme(themes.Sylveon), styles.WithWindowOpacity(80), styles.WithGaps(styles.Gaps{OuterLeft: 64}), styles.WithGapOverride("built-in retina", styles.Gaps{OuterLeft: 8})),
 	}
 
 	result, err := New(Options{Badges: []string{"Proton Mail", "Discord"}}).Generate(ctx)
@@ -36,6 +36,9 @@ func TestGenerateWritesBarConfig(t *testing.T) {
 	}
 	if len(cfg.Badges) != 2 || cfg.Badges[1] != "Discord" {
 		t.Errorf("Badges = %v", cfg.Badges)
+	}
+	if cfg.Margin != 64 || cfg.MarginOverride == nil || cfg.MarginOverride.Margin != 8 {
+		t.Errorf("margins should follow window gaps: %d %+v", cfg.Margin, cfg.MarginOverride)
 	}
 	if !strings.HasPrefix(cfg.Colors.Island, "0xCC") {
 		t.Errorf("bar color should carry 80%% opacity, got %q", cfg.Colors.Island)
