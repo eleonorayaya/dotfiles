@@ -94,6 +94,7 @@ func TestAppIcon(t *testing.T) {
 		"Firefox":          ":firefox:",
 		"kitty":            ":kitty:",
 		"Proton Mail":      ":proton_mail:",
+		"Vesktop":          ":discord:",
 		"MAIL":             ":mail:",
 		"Some Unknown App": appIconDefault,
 	}

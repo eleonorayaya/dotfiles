@@ -147,7 +147,7 @@ func main() {
 				protonpass.New(),
 				protonvpn.New(),
 				notion.New(notion.Options{DisableClaudeMCP: false}),
-				sketchybar.New(sketchybar.Options{Badges: []string{"Proton Mail", "Discord"}}),
+				sketchybar.New(sketchybar.Options{Badges: []string{"Proton Mail", "Vesktop"}}),
 			),
 		),
 	).Command()

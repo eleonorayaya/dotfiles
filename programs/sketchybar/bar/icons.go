@@ -40,7 +40,14 @@ var appIcons = sync.OnceValue(func() map[string]string {
 	return icons
 })
 
+var appIconOverrides = map[string]string{
+	"vesktop": ":discord:",
+}
+
 func appIcon(app string) string {
+	if icon, ok := appIconOverrides[strings.ToLower(app)]; ok {
+		return icon
+	}
 	if icon, ok := appIcons()[strings.ToLower(app)]; ok {
 		return icon
 	}
