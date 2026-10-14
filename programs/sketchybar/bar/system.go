@@ -33,8 +33,8 @@ func NewSystem(runner Runner, colors Colors, mood *Mood) *System {
 }
 
 func (s *System) Setup(ctx context.Context, b *Batch) error {
-	b.Add(memoryItem, "right", P("icon", iconMemory), "label.padding_right=12", "click_script=open -a 'Activity Monitor'")
-	b.Add(cpuItem, "right", P("icon", iconCPU), "icon.padding_left=12", "padding_right=6", "click_script=open -a 'Activity Monitor'")
+	b.Add(memoryItem, "right", P("icon", iconMemory), "label.padding_right=12", "padding_left=0", P("padding_right", itemPadding), "click_script=open -a 'Activity Monitor'")
+	b.Add(cpuItem, "right", P("icon", iconCPU), "icon.padding_left=12", P("padding_left", itemPadding), "padding_right=10", "click_script=open -a 'Activity Monitor'")
 	b.Raw("--add", "bracket", systemBracket, cpuItem, memoryItem)
 	b.Set(systemBracket, bracketIsland(s.colors)...)
 	return nil

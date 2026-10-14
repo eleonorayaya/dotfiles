@@ -46,12 +46,17 @@ func (bg *Badges) Setup(ctx context.Context, b *Batch) error {
 			"padding_left=-12",
 			"padding_right=8",
 		)
+		if i == 0 {
+			b.Set(badgeCountItem(i), "padding_right=14")
+		}
 		b.Add(badgeIconItem(i), "right",
 			"drawing=off",
 			P("icon", appIcon(app)),
 			P("icon.font", appFont),
 			"icon.padding_left=10",
 			"icon.padding_right=4",
+			P("padding_left", itemPadding),
+			"padding_right=0",
 			"label.drawing=off",
 			P("click_script", fmt.Sprintf("open -a %q", app)),
 		)

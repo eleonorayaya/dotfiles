@@ -63,6 +63,8 @@ func island(c Colors) []string {
 		P("background.padding_right", 0),
 		P("icon.padding_left", islandPadding),
 		P("label.padding_right", islandPadding),
+		P("padding_left", itemPadding),
+		P("padding_right", itemPadding),
 	}
 }
 
