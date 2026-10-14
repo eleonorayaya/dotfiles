@@ -4,6 +4,23 @@ theme = 'monade'
 dockbar_position = 'bottom'
 click_to_type = 'single'
 dim_unfocused = 30
+border_focused_color = "{{.Colors.Primary}}"
+border_unfocused_color = "{{.Colors.SurfaceBorder}}"
+background = "off"
+
+[appearance.scrollbar]
+tint = "{{.Colors.TextOnSurfaceMuted}}"
+
+[appearance.selection]
+bg = "{{.Colors.Selection}}"
+fg = "{{.Colors.SelectionForeground}}"
+cursor_bg = "{{.Colors.Cursor}}"
+cursor_fg = "{{.Colors.CursorText}}"
+match_bg = "{{.Colors.Warning}}"
+match_fg = "{{.Colors.TextOnWarning}}"
+search_bg = "{{.Colors.SurfaceHighlight}}"
+search_fg = "{{.Colors.TextOnSurface}}"
+flash_color = "{{.Colors.Accent}}"
 
 [appearance.sidebar]
 position = "left"
