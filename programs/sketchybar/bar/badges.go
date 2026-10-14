@@ -13,6 +13,7 @@ const (
 	badgesBracket  = "badges"
 	badgeDot       = "•"
 	badgeIconInset = 10
+	bubbleReach    = 5
 	bubbleOverlap  = 18
 	bubbleDigit    = 6
 	bubblePadding  = 8
@@ -52,7 +53,7 @@ func (bg *Badges) Setup(ctx context.Context, b *Batch) error {
 			"drawing=off",
 			P("icon", appIcon(app)),
 			P("icon.font", appFont),
-			P("icon.padding_left", badgeIconInset),
+			P("icon.padding_left", badgeIconInset-bubbleReach),
 			P("icon.padding_right", badgeIconInset),
 			P("padding_left", itemPadding),
 			"padding_right=0",
