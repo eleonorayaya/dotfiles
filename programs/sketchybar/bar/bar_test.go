@@ -226,92 +226,31 @@ func TestKaomojiOnlyUpdatesOnChange(t *testing.T) {
 	}
 }
 
-const netstatOut = `Name       Mtu   Network       Address            Ipkts Ierrs     Ibytes    Opkts Oerrs     Obytes  Coll
-en1        1500  <Link#17>   ea:05:5a:1c:de:78 1436070176     0 1909630884971 297217818     0 62728020035     0
-en1        1500  fe80::181d: fe80:11::181d:b4b 1436070176     - 1909630884971 297217818     - 62728020035     -
-`
-
-const netstatNoAddress = `Name       Mtu   Network       Address            Ipkts Ierrs     Ibytes    Opkts Oerrs     Obytes  Coll
-utun3      1380  <Link#25>                       100     0       5000      200     0       7000     0
-`
-
-func TestParseNetstat(t *testing.T) {
-	got, err := parseNetstat(netstatOut, "en1")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got.in != 1909630884971 || got.out != 62728020035 {
-		t.Fatalf("unexpected counters: %+v", got)
-	}
-
-	got, err = parseNetstat(netstatNoAddress, "utun3")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got.in != 5000 || got.out != 7000 {
-		t.Fatalf("unexpected counters without address: %+v", got)
-	}
-
-	if _, err := parseNetstat(netstatOut, "en0"); err == nil {
-		t.Fatal("expected error for missing interface")
-	}
-}
-
-func TestNetworkRates(t *testing.T) {
-	now := time.Unix(0, 0)
+func TestNetworkIcon(t *testing.T) {
 	r := newFakeRunner(map[string]string{
 		"route":    "   route to: default\n  interface: en1\n",
 		"ipconfig": "  InterfaceType : WiFi\n",
-		"netstat":  "Name Mtu Network Address Ipkts Ierrs Ibytes Opkts Oerrs Obytes Coll\nen1 1500 <Link#17> aa 1 0 1000 1 0 2000 0\n",
 	})
-	n := NewNetwork(r, Colors{}, NewMood())
-	n.now = func() time.Time { return now }
-
+	mood := NewMood()
+	n := NewNetwork(r, Colors{}, mood)
 	b := &Batch{}
 	n.Poll(context.Background())(b)
-	if !slices.Contains(b.Args(), "icon="+iconWifi) {
+	if !slices.Equal(b.Args(), []string{"--set", networkItem, "icon=" + iconWifi}) {
 		t.Fatalf("expected wifi icon: %v", b.Args())
 	}
+	if n.Poll(context.Background()) != nil {
+		t.Fatal("unchanged network should not update")
+	}
 
-	r.outputs["netstat"] = "Name Mtu Network Address Ipkts Ierrs Ibytes Opkts Oerrs Obytes Coll\nen1 1500 <Link#17> aa 1 0 3001000 1 0 2500 0\n"
-	now = now.Add(3 * time.Second)
+	n = NewNetwork(newFakeRunner(map[string]string{}), Colors{}, mood)
 	b = &Batch{}
 	n.Poll(context.Background())(b)
-	if !slices.Contains(b.Args(), "label=↓1.0M ↑167B") {
-		t.Fatalf("unexpected rate label: %v", b.Args())
-	}
-}
-
-func TestNetworkOffline(t *testing.T) {
-	mood := NewMood()
-	n := NewNetwork(newFakeRunner(map[string]string{}), Colors{}, mood)
-	b := &Batch{}
-	n.Poll(context.Background())(b)
-	if !slices.Contains(b.Args(), "label=offline") {
-		t.Fatalf("expected offline label: %v", b.Args())
+	if !slices.Equal(b.Args(), []string{"--set", networkItem, "icon=" + iconOffline}) {
+		t.Fatalf("expected offline icon: %v", b.Args())
 	}
 	mood.now = func() time.Time { return time.Date(2026, 10, 13, 14, 0, 0, 0, time.Local) }
 	if mood.Face() != faceLost {
 		t.Fatalf("offline network should make the face lost, got %q", mood.Face())
-	}
-}
-
-func TestFormatRate(t *testing.T) {
-	cases := []struct {
-		bytes uint64
-		secs  float64
-		want  string
-	}{
-		{0, 1, "0B"},
-		{999, 1, "999B"},
-		{1500, 1, "1.5K"},
-		{25_000_000, 1, "25M"},
-		{100, 0, "0B"},
-	}
-	for _, c := range cases {
-		if got := formatRate(c.bytes, c.secs); got != c.want {
-			t.Errorf("formatRate(%d, %v) = %q, want %q", c.bytes, c.secs, got, c.want)
-		}
 	}
 }
 

@@ -5,12 +5,13 @@ func Items(cfg Config, runner Runner) []Item {
 	mood := NewMood()
 	items := []Item{
 		NewLayout(runner, cfg.Margin, cfg.MarginOverride),
-		NewBluetooth(runner, c),
+		NewHeart(c),
 		NewWorkspace(runner, c),
 		NewFrontApp(runner, c),
 		NewKaomoji(mood, c),
 		NewClock(c),
 		NewSystem(runner, c, mood),
+		NewBluetooth(runner, c),
 		NewNetwork(runner, c, mood),
 	}
 	if len(cfg.Badges) > 0 {

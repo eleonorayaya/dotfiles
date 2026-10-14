@@ -17,7 +17,6 @@ const (
 	iconCPU      = "\U00100AE5"
 	iconMemory   = "\U00100AE6"
 	iconHeart    = "♥"
-	iconHeartOff = "♡"
 
 	appIconDefault   = ":default:"
 	appIconBluetooth = ":bluetooth:"

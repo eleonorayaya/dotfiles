@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	bluetoothItem         = "heart"
+	bluetoothItem         = "bluetooth"
+	connectBracket        = "connect"
 	bluetoothDevicePrefix = "bluetooth.device."
 	bluetoothDevicesRegex = `/bluetooth\.device\..*/`
 )
@@ -36,14 +37,16 @@ func NewBluetooth(runner Runner, colors Colors) *Bluetooth {
 }
 
 func (bt *Bluetooth) Setup(ctx context.Context, b *Batch) error {
-	b.Add(bluetoothItem, "left", append(island(bt.colors),
-		P("icon", iconHeart),
-		P("icon.font", font("ExtraBold", 15)),
-		P("icon.color", bt.colors.Hot),
+	b.Add(bluetoothItem, "right",
+		P("icon", appIconBluetooth),
+		P("icon.font", appFont),
+		"icon.padding_left=6",
 		P("icon.padding_right", islandPadding),
 		"label.drawing=off",
-		"popup.align=left",
-	)...)
+		"padding_left=0",
+		P("padding_right", itemPadding),
+		"popup.align=right",
+	)
 	b.OnClick(bluetoothItem, "mouse.exited.global")
 	return nil
 }
@@ -62,12 +65,12 @@ func (bt *Bluetooth) Poll(ctx context.Context) Update {
 	if !bt.power.changed(power) {
 		return nil
 	}
-	icon := iconHeart
+	color := bt.colors.Text
 	if power != "1" {
-		icon = iconHeartOff
+		color = faded(color)
 	}
 	return func(b *Batch) {
-		b.Set(bluetoothItem, P("icon", icon))
+		b.Set(bluetoothItem, P("icon.color", color))
 	}
 }
 

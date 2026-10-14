@@ -77,6 +77,13 @@ func hotIsland(c Colors) []string {
 	)
 }
 
+func faded(argb string) string {
+	if len(argb) != 10 {
+		return argb
+	}
+	return "0x55" + argb[4:]
+}
+
 func bracketIsland(c Colors) []string {
 	return []string{
 		"background.drawing=on",
