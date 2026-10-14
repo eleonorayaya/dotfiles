@@ -10,14 +10,17 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/eleonorayaya/shizuku/programs/sketchybar/bar"
 	"github.com/eleonorayaya/shizuku/util"
 )
 
 const (
-	bottomLabel   = "sh.shizuku.bottombar"
-	dockHideDelay = "1000"
+	bottomLabel         = "sh.shizuku.bottombar"
+	dockHideDelay       = "1000"
+	bootstrapAttempts   = 20
+	bootstrapRetryDelay = 250 * time.Millisecond
 )
 
 func syncBottomBar() error {
@@ -55,10 +58,16 @@ func syncBottomBar() error {
 
 	domain := "gui/" + strconv.Itoa(os.Getuid())
 	exec.Command("launchctl", "bootout", domain+"/"+bottomLabel).Run()
-	if out, err := exec.Command("launchctl", "bootstrap", domain, plistPath).CombinedOutput(); err != nil {
-		return fmt.Errorf("failed to start bottom bar: %w: %s", err, strings.TrimSpace(string(out)))
+	var lastErr error
+	for range bootstrapAttempts {
+		out, err := exec.Command("launchctl", "bootstrap", domain, plistPath).CombinedOutput()
+		if err == nil {
+			return nil
+		}
+		lastErr = fmt.Errorf("%w: %s", err, strings.TrimSpace(string(out)))
+		time.Sleep(bootstrapRetryDelay)
 	}
-	return nil
+	return fmt.Errorf("failed to start bottom bar: %w", lastErr)
 }
 
 func bottomPlist(home, binary string) ([]byte, error) {
@@ -73,6 +82,7 @@ func bottomPlist(home, binary string) ([]byte, error) {
 		return b.String()
 	}
 	rc := filepath.Join(home, ".config", "sketchybar", "bottombarrc")
+	logPath := filepath.Join(home, "Library", "Logs", "shizuku-bottombar.log")
 	return []byte(fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -96,9 +106,13 @@ func bottomPlist(home, binary string) ([]byte, error) {
 	<true/>
 	<key>ProcessType</key>
 	<string>Interactive</string>
+	<key>StandardOutPath</key>
+	<string>%s</string>
+	<key>StandardErrorPath</key>
+	<string>%s</string>
 </dict>
 </plist>
-`, bottomLabel, esc(binary), esc(rc), esc(path))), nil
+`, bottomLabel, esc(binary), esc(rc), esc(path), esc(logPath), esc(logPath))), nil
 }
 
 func hideDock() {

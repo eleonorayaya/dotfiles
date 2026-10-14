@@ -18,8 +18,8 @@ const (
 	bottomOffsetDivisor = 4
 )
 
-func TopPlacement() Placement {
-	return Placement{Bin: topBinary, Position: "top", Height: topBarHeight, YOffset: 6}
+func TopPlacement(cfg Config) Placement {
+	return Placement{Bin: topBinary, Position: "top", Height: topBarHeight, YOffset: max((cfg.TopGap-topBarHeight)/2, 0)}
 }
 
 func BottomPlacement(cfg Config) Placement {
@@ -29,7 +29,7 @@ func BottomPlacement(cfg Config) Placement {
 func PlacementFor(bar string, cfg Config) (Placement, error) {
 	switch bar {
 	case BarTop:
-		return TopPlacement(), nil
+		return TopPlacement(cfg), nil
 	case BarBottom:
 		return BottomPlacement(cfg), nil
 	}

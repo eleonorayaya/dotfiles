@@ -72,6 +72,7 @@ func (a *App) barConfig(ctx *app.Context) bar.Config {
 		},
 		Badges:    a.opts.Badges,
 		Margin:    ctx.Styles.Gaps.OuterLeft,
+		TopGap:    ctx.Styles.Gaps.OuterTop,
 		BottomGap: ctx.Styles.Gaps.OuterBottom,
 	}
 	if o := ctx.Styles.GapOverride; o != nil {

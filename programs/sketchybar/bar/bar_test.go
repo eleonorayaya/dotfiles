@@ -487,7 +487,7 @@ func TestDaemonSetupSubscribesSinkOnce(t *testing.T) {
 	r := newFakeRunner(nil)
 	a := &recordingItem{events: []string{"front_app_switched", "system_woke"}}
 	c := &recordingItem{events: []string{"system_woke"}}
-	d := NewDaemon(Config{}, r, "emit", TopPlacement(), []Item{a, c})
+	d := NewDaemon(Config{}, r, "emit", TopPlacement(Config{}), []Item{a, c})
 	if err := d.Setup(context.Background()); err != nil {
 		t.Fatal(err)
 	}
@@ -509,7 +509,7 @@ func TestDaemonSetupSubscribesSinkOnce(t *testing.T) {
 
 func TestDaemonDispatchCoalescesEvents(t *testing.T) {
 	a := &recordingItem{events: []string{"front_app_switched", "space_windows_change"}}
-	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", TopPlacement(), []Item{a})
+	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", TopPlacement(Config{}), []Item{a})
 
 	d.dispatch(context.Background(), []Event{
 		{Name: sinkItem, Sender: "front_app_switched", Info: "kitty"},
@@ -528,7 +528,7 @@ func TestDaemonDispatchCoalescesEvents(t *testing.T) {
 
 func TestDaemonClicksRunOffLoop(t *testing.T) {
 	a := &recordingItem{}
-	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", TopPlacement(), []Item{a})
+	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", TopPlacement(Config{}), []Item{a})
 
 	d.dispatch(context.Background(), []Event{{Name: "rec.child", Sender: "mouse.clicked"}, {Name: "other", Sender: "mouse.clicked"}})
 	select {
@@ -544,7 +544,7 @@ func TestDaemonClicksRunOffLoop(t *testing.T) {
 func TestDaemonRenderHandlesEveryItem(t *testing.T) {
 	a := &recordingItem{events: []string{"front_app_switched"}}
 	c := &recordingItem{events: []string{"system_woke"}}
-	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", TopPlacement(), []Item{a, c})
+	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", TopPlacement(Config{}), []Item{a, c})
 	d.render(context.Background())
 	if len(a.handled) != 1 || len(c.handled) != 1 {
 		t.Fatalf("render should handle every item once: %+v %+v", a.handled, c.handled)
@@ -691,7 +691,7 @@ func TestDaemonReconfiguresWhenItemsGoMissing(t *testing.T) {
 	r := &failingRunner{fakeRunner: newFakeRunner(nil), failures: 1}
 	m := NewKaomoji(NewMood(), Colors{})
 	m.last.changed("x")
-	d := NewDaemon(Config{}, r, "emit", TopPlacement(), []Item{&recordingItem{events: []string{"system_woke"}}, m})
+	d := NewDaemon(Config{}, r, "emit", TopPlacement(Config{}), []Item{&recordingItem{events: []string{"system_woke"}}, m})
 
 	b := d.newBatch()
 	b.Set("rec", "label=x")
@@ -840,5 +840,11 @@ func TestSessionChipResetsTextAfterDetach(t *testing.T) {
 	}
 	if len(sessionChips([]utenaSession{{ID: 1, Name: "notion-app", Status: "broken"}})) != 0 {
 		t.Fatal("broken sessions should not show")
+	}
+}
+
+func TestTopPlacementCentersInWindowGap(t *testing.T) {
+	if p := TopPlacement(Config{TopGap: 64}); p.YOffset != 12 || p.Position != "top" {
+		t.Fatalf("unexpected top placement: %+v", p)
 	}
 }
