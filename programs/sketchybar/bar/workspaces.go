@@ -17,6 +17,7 @@ const (
 type Workspace struct {
 	runner Runner
 	colors Colors
+	last   string
 }
 
 func NewWorkspace(runner Runner, colors Colors) *Workspace {
@@ -50,4 +51,8 @@ func (w *Workspace) Handle(ctx context.Context, ev Event, b *Batch) {
 		focused = strings.TrimSpace(string(out))
 	}
 	b.Set(workspaceItem, P("label", focused))
+	if w.last != "" && focused != w.last {
+		b.Raw("--animate", "sin", "14", "--set", workspaceItem, "y_offset=5", "y_offset=0")
+	}
+	w.last = focused
 }

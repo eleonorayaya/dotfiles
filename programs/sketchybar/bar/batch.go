@@ -66,8 +66,12 @@ func (b *Batch) Subscribe(name string, events ...string) *Batch {
 }
 
 func (b *Batch) OnClick(name string, events ...string) *Batch {
+	return b.Listen(name, append([]string{"mouse.clicked"}, events...)...)
+}
+
+func (b *Batch) Listen(name string, events ...string) *Batch {
 	b.Set(name, P("script", b.emit))
-	return b.Subscribe(name, append([]string{"mouse.clicked"}, events...)...)
+	return b.Subscribe(name, events...)
 }
 
 func (b *Batch) Remove(name string) *Batch {

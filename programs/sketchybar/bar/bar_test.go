@@ -84,7 +84,7 @@ func TestWorkspaceShowsFocused(t *testing.T) {
 
 	b = &Batch{}
 	w.Handle(context.Background(), Event{}, b)
-	if !slices.Equal(b.Args(), []string{"--set", "space", "label=3"}) {
+	if !containsSeq(b.Args(), "--set", "space", "label=3") {
 		t.Fatalf("should fall back to aerospace: %v", b.Args())
 	}
 }
@@ -783,7 +783,7 @@ func TestSessionChips(t *testing.T) {
 		{ID: 4, Name: "old", Status: "archived"},
 	}
 	chips := sessionChips(sessions)
-	if len(chips) != 2 || chips[0].label != "new-bg ●○" || !chips[0].attached || chips[1].label != "sayo ✦" || !chips[1].needsMe {
+	if len(chips) != 2 || chips[0].label() != "new-bg ●○" || !chips[0].attached || chips[1].label() != "sayo ✦" || !chips[1].needsMe {
 		t.Fatalf("unexpected chips: %+v", chips)
 	}
 }
@@ -834,7 +834,7 @@ func TestPetFramesRender(t *testing.T) {
 func TestSessionChipResetsTextAfterDetach(t *testing.T) {
 	c := Colors{Text: "T", HotText: "W", Hot: "H"}
 	b := &Batch{}
-	renderSessions(b, c, []sessionChip{{id: 1, label: "new-bg"}})
+	renderSessions(b, c, []sessionChip{{id: 1, name: "new-bg"}})
 	if !containsSeq(b.Args(), P("label.color", "T")) {
 		t.Fatalf("detached chip should use normal text color: %v", b.Args())
 	}
@@ -846,5 +846,93 @@ func TestSessionChipResetsTextAfterDetach(t *testing.T) {
 func TestTopPlacementCentersInWindowGap(t *testing.T) {
 	if p := TopPlacement(Config{TopGap: 64}); p.YOffset != 12 || p.Position != "top" {
 		t.Fatalf("unexpected top placement: %+v", p)
+	}
+}
+
+func TestWritePetFrames(t *testing.T) {
+	dir := t.TempDir()
+	if out := os.Getenv("PET_PREVIEW_DIR"); out != "" {
+		dir = out
+	}
+	paths, err := writePetFrames(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"awake", "blink", "sleep", "wave", "walk1r", "walk2r", "walk1l", "walk2l"} {
+		if _, err := os.Stat(paths[name]); err != nil {
+			t.Errorf("missing frame %s: %v", name, err)
+		}
+	}
+}
+
+func TestSessionChipsTruncateAndOverflow(t *testing.T) {
+	var sessions []utenaSession
+	for i := range sessionSlots + 3 {
+		sessions = append(sessions, utenaSession{ID: uint(i + 1), Name: "homeassistant-notifications", Status: "active"})
+	}
+	chips := sessionChips(sessions)
+	if len(chips) != sessionSlots {
+		t.Fatalf("chips = %d, want %d", len(chips), sessionSlots)
+	}
+	if got := chips[0].label(); got != "homeassistant…" {
+		t.Fatalf("long names should truncate, got %q", got)
+	}
+	if got := chips[sessionSlots-1].label(); got != "+4" {
+		t.Fatalf("last chip should summarize overflow, got %q", got)
+	}
+}
+
+func TestSessionHoverShowsAgentPopup(t *testing.T) {
+	s := NewSessions("http://unused", Colors{Hot: "H"}, &Shelf{})
+	s.chips = []sessionChip{{id: 7, name: "sayo", agents: []string{"working", "needs_attention"}}}
+	b := &Batch{}
+	s.Click(context.Background(), Event{Name: "sess.0", Sender: "mouse.entered"}, b)
+	args := b.Args()
+	for _, want := range [][]string{
+		{"--add", "item", "sesspop.0", "popup.sess.0"},
+		{"label=agent 2 · needs you"},
+		{"--set", "sess.0", "popup.drawing=on"},
+	} {
+		if !containsSeq(args, want...) {
+			t.Errorf("missing %v in %v", want, args)
+		}
+	}
+	if !slices.Contains(args, "background.border_color=H") {
+		t.Errorf("hovered chip should get a raspberry outline: %v", args)
+	}
+
+	b = &Batch{}
+	s.Click(context.Background(), Event{Name: "sess.0", Sender: "mouse.exited"}, b)
+	if !slices.Contains(b.Args(), "popup.drawing=off") {
+		t.Fatalf("leaving should close the popup: %v", b.Args())
+	}
+}
+
+func TestTileHover(t *testing.T) {
+	tiles := NewSpaceTiles(nil, Colors{IslandBorder: "B"})
+	tiles.current = map[string]bool{"2": true}
+	b := &Batch{}
+	tiles.Click(context.Background(), Event{Name: "tile.1", Sender: "mouse.entered"}, b)
+	if !slices.Equal(b.Args(), []string{"--set", "tile.1", "background.color=B"}) {
+		t.Fatalf("hover should tint the tile: %v", b.Args())
+	}
+	b = &Batch{}
+	tiles.Click(context.Background(), Event{Name: "tile.2", Sender: "mouse.entered"}, b)
+	if len(b.Args()) != 0 {
+		t.Fatalf("current tile keeps its raspberry fill: %v", b.Args())
+	}
+}
+
+func TestWorkspaceBouncesOnSwitch(t *testing.T) {
+	w := NewWorkspace(nil, Colors{})
+	b := &Batch{}
+	w.Handle(context.Background(), Event{Env: map[string]string{"FOCUSED_WORKSPACE": "1"}}, b)
+	if slices.Contains(b.Args(), "--animate") {
+		t.Fatal("first render should not bounce")
+	}
+	b = &Batch{}
+	w.Handle(context.Background(), Event{Env: map[string]string{"FOCUSED_WORKSPACE": "2"}}, b)
+	if !slices.Contains(b.Args(), "--animate") {
+		t.Fatalf("switching should bounce the badge: %v", b.Args())
 	}
 }

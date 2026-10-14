@@ -9,6 +9,7 @@ import (
 	"math/rand/v2"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -16,17 +17,20 @@ import (
 )
 
 const (
-	petItem     = "petsprite"
-	petZzzItem  = "petzzz"
-	petBracket  = "petroom"
-	petPixel    = 5
-	petIdleNap  = 5 * time.Minute
-	petHopFor   = 4 * time.Second
-	petTick     = time.Second
-	petBlinkGap = 6
-	petRoam     = 72
-	petStroll   = 4
-	petEdge     = itemPadding + largePadding
+	petItem       = "petsprite"
+	petZzzItem    = "petzzz"
+	petBracket    = "petroom"
+	petPixel      = 5
+	petIdleNap    = 5 * time.Minute
+	petHopFor     = 4 * time.Second
+	petTick       = time.Second
+	petBlinkGap   = 6
+	petRoam       = 72
+	petStroll     = 4
+	petEdge       = itemPadding + largePadding
+	petWalkSteps  = 4
+	petStepGap    = 220 * time.Millisecond
+	petWalkFrames = 52
 )
 
 var petBase = []string{
@@ -57,12 +61,29 @@ var petColors = map[byte]color.NRGBA{
 
 func petFrames() map[string][]string {
 	closed := withRows(petBase, map[int]string{5: "cccccccccccc", 6: "ccooccccoocc"})
+	lookRight := withRows(petBase, map[int]string{5: "cccbbccccbbc", 6: "cccwbccccwbc"})
+	stepA := withRows(lookRight, map[int]string{9: ".R..cccc..R.", 10: "RR..cccc..RR", 11: "...c....c..."})
+	stepB := withRows(lookRight, map[int]string{9: "..R.cccc.R..", 10: ".RR.cccc.RR.", 11: "....c..c...."})
 	return map[string][]string{
-		"awake": petBase,
-		"blink": closed,
-		"sleep": withRows(closed, map[int]string{7: "ckcccccccckc"}),
-		"wave":  withRows(petBase, map[int]string{8: "RccccccccccR", 9: "R.R.cccc.R.R", 10: "....cccc...."}),
+		"awake":  petBase,
+		"blink":  closed,
+		"sleep":  withRows(closed, map[int]string{7: "ckcccccccckc"}),
+		"wave":   withRows(petBase, map[int]string{8: "RccccccccccR", 9: "R.R.cccc.R.R", 10: "....cccc...."}),
+		"walk1r": stepA,
+		"walk2r": stepB,
+		"walk1l": mirrored(stepA),
+		"walk2l": mirrored(stepB),
 	}
+}
+
+func mirrored(rows []string) []string {
+	out := make([]string, len(rows))
+	for i, row := range rows {
+		b := []byte(row)
+		slices.Reverse(b)
+		out[i] = string(b)
+	}
+	return out
 }
 
 func withRows(base []string, rows map[int]string) []string {
@@ -191,7 +212,7 @@ func (p *Pet) Setup(ctx context.Context, b *Batch) error {
 		"padding_right=0",
 	)
 	b.Raw("--add", "bracket", petBracket, petItem, petZzzItem)
-	b.Set(petBracket, append(bracketIsland(p.colors), P("background.height", largeHeight+4), P("background.corner_radius", largeRadius+2))...)
+	b.Set(petBracket, append(bracketIsland(p.colors), P("background.height", largeHeight+8), P("background.corner_radius", largeRadius+4))...)
 	return nil
 }
 
@@ -206,25 +227,45 @@ func (p *Pet) Stream(ctx context.Context, updates chan<- Update) {
 		if hop {
 			hopped = finishedAt
 		}
-		stroll := frame != "sleep" && !needsYou && ticks%petStroll == 0
-		if stroll {
-			pos = rand.IntN(petRoam + 1)
+		if frame != "sleep" && !needsYou && ticks%petStroll == 0 {
+			target := rand.IntN(petRoam + 1)
+			if target != pos {
+				p.stroll(ctx, updates, pos, target)
+				pos, lastFrame = target, ""
+			}
 		}
-		if frame != lastFrame || hop || stroll {
+		if frame != lastFrame || hop {
 			lastFrame = frame
-			target := pos
 			send(ctx, updates, func(b *Batch) {
 				b.Set(petItem, P("background.image", p.frames[frame]))
 				b.Set(petZzzItem, onOff("drawing", frame == "sleep"))
-				if stroll {
-					b.Raw("--animate", "sin", "45", "--set", petItem, P("padding_left", petEdge+target), P("padding_right", petEdge+petRoam-target))
-				}
 				if hop {
 					b.Raw("--animate", "sin", "12", "--set", petItem, "y_offset=10", "y_offset=0")
 				}
 			})
 		}
 		sleep(ctx, petTick)
+	}
+}
+
+func (p *Pet) stroll(ctx context.Context, updates chan<- Update, from, to int) {
+	dir := "r"
+	if to < from {
+		dir = "l"
+	}
+	send(ctx, updates, func(b *Batch) {
+		b.Set(petItem, P("background.image", p.frames["walk1"+dir]))
+		b.Raw("--animate", "linear", strconv.Itoa(petWalkFrames), "--set", petItem, P("padding_left", petEdge+to), P("padding_right", petEdge+petRoam-to))
+	})
+	for step := 1; step < petWalkSteps; step++ {
+		sleep(ctx, petStepGap)
+		frame := "walk1" + dir
+		if step%2 == 1 {
+			frame = "walk2" + dir
+		}
+		send(ctx, updates, func(b *Batch) {
+			b.Set(petItem, P("background.image", p.frames[frame]))
+		})
 	}
 }
 

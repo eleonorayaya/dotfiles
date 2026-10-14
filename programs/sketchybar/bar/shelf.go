@@ -13,10 +13,13 @@ import (
 )
 
 const (
-	sessionSlots  = 8
-	sessionPrefix = "sess."
-	tilePrefix    = "tile."
-	tilesBracket  = "spaces"
+	sessionSlots   = 8
+	sessionPrefix  = "sess."
+	sessionPopup   = "sesspop."
+	maxNameRunes   = 14
+	maxPopupAgents = 6
+	tilePrefix     = "tile."
+	tilesBracket   = "spaces"
 
 	pipWorking = "●"
 	pipIdle    = "○"
@@ -24,6 +27,14 @@ const (
 )
 
 var liveSessionStatuses = []string{"active", "creating", "pending", "completed"}
+
+var agentStatusLabels = map[string]string{
+	"working":          "working",
+	"idle":             "idle",
+	"needs_attention":  "needs you",
+	"ready_for_review": "ready for review",
+	"done":             "done",
+}
 
 type claudeAgent struct {
 	ID     uint   `json:"ID"`
@@ -43,9 +54,33 @@ func pip(status string) string {
 
 type sessionChip struct {
 	id       uint
-	label    string
+	name     string
+	agents   []string
 	attached bool
 	needsMe  bool
+	more     int
+}
+
+func (c sessionChip) label() string {
+	if c.more > 0 {
+		return fmt.Sprintf("+%d", c.more)
+	}
+	var pips strings.Builder
+	for _, status := range c.agents {
+		pips.WriteString(pip(status))
+	}
+	if pips.Len() == 0 {
+		return c.name
+	}
+	return c.name + " " + pips.String()
+}
+
+func truncateName(name string) string {
+	r := []rune(name)
+	if len(r) <= maxNameRunes {
+		return name
+	}
+	return string(r[:maxNameRunes-1]) + "…"
 }
 
 func sessionChips(sessions []utenaSession) []sessionChip {
@@ -54,22 +89,17 @@ func sessionChips(sessions []utenaSession) []sessionChip {
 		if !slices.Contains(liveSessionStatuses, s.Status) {
 			continue
 		}
-		var pips strings.Builder
-		needsMe := false
+		chip := sessionChip{id: s.ID, name: truncateName(s.Name), attached: s.IsAttached}
 		for _, a := range s.ClaudeSessions {
-			p := pip(a.Status)
-			needsMe = needsMe || p == pipNeedsMe
-			pips.WriteString(p)
+			chip.agents = append(chip.agents, a.Status)
+			chip.needsMe = chip.needsMe || pip(a.Status) == pipNeedsMe
 		}
-		label := s.Name
-		if pips.Len() > 0 {
-			label += " " + pips.String()
-		}
-		chips = append(chips, sessionChip{id: s.ID, label: label, attached: s.IsAttached, needsMe: needsMe})
+		chips = append(chips, chip)
 	}
 	slices.SortFunc(chips, func(a, b sessionChip) int { return int(a.id) - int(b.id) })
 	if len(chips) > sessionSlots {
-		chips = chips[:sessionSlots]
+		more := len(chips) - (sessionSlots - 1)
+		chips = append(chips[:sessionSlots-1], sessionChip{more: more})
 	}
 	return chips
 }
@@ -79,7 +109,7 @@ type Sessions struct {
 	colors Colors
 	shelf  *Shelf
 	mu     sync.Mutex
-	ids    []uint
+	chips  []sessionChip
 	agents map[uint]string
 	last   lastValue
 }
@@ -92,8 +122,8 @@ func sessionItem(i int) string { return fmt.Sprintf("%s%d", sessionPrefix, i) }
 
 func (s *Sessions) Setup(ctx context.Context, b *Batch) error {
 	for i := range sessionSlots {
-		b.Add(sessionItem(i), "left", append(append(island(s.colors), large()...), "drawing=off", "icon.drawing=off")...)
-		b.OnClick(sessionItem(i))
+		b.Add(sessionItem(i), "left", append(append(island(s.colors), large()...), "drawing=off", "icon.drawing=off", "popup.align=left")...)
+		b.OnClick(sessionItem(i), "mouse.entered", "mouse.exited", "mouse.exited.global")
 	}
 	return nil
 }
@@ -111,26 +141,32 @@ func (s *Sessions) Poll(ctx context.Context) Update {
 		body.Sessions = nil
 	}
 	chips := sessionChips(body.Sessions)
-	s.trackAgents(body.Sessions)
+	finished := s.trackAgents(body.Sessions)
 
 	s.mu.Lock()
-	s.ids = s.ids[:0]
-	for _, c := range chips {
-		s.ids = append(s.ids, c.id)
-	}
+	s.chips = chips
 	s.mu.Unlock()
 
-	key := fmt.Sprint(chips)
-	if !s.last.changed(key) {
+	var bounce []int
+	for i, c := range chips {
+		if slices.Contains(finished, c.id) {
+			bounce = append(bounce, i)
+		}
+	}
+	if !s.last.changed(fmt.Sprint(chips)) && len(bounce) == 0 {
 		return nil
 	}
 	return func(b *Batch) {
 		renderSessions(b, s.colors, chips)
+		for _, i := range bounce {
+			b.Raw("--animate", "sin", "14", "--set", sessionItem(i), "y_offset=6", "y_offset=0")
+		}
 	}
 }
 
-func (s *Sessions) trackAgents(sessions []utenaSession) {
-	needsMe, finished := false, false
+func (s *Sessions) trackAgents(sessions []utenaSession) []uint {
+	needsMe := false
+	var finished []uint
 	seen := map[uint]string{}
 	for _, sess := range sessions {
 		if !slices.Contains(liveSessionStatuses, sess.Status) {
@@ -139,13 +175,28 @@ func (s *Sessions) trackAgents(sessions []utenaSession) {
 		for _, a := range sess.ClaudeSessions {
 			seen[a.ID] = a.Status
 			needsMe = needsMe || a.Status == "needs_attention"
-			if s.agents[a.ID] == "working" && a.Status != "working" {
-				finished = true
+			if s.agents[a.ID] == "working" && a.Status != "working" && !slices.Contains(finished, sess.ID) {
+				finished = append(finished, sess.ID)
 			}
 		}
 	}
 	s.agents = seen
-	s.shelf.update(needsMe, finished, time.Now())
+	s.shelf.update(needsMe, len(finished) > 0, time.Now())
+	return finished
+}
+
+func chipProps(c Colors, chip sessionChip, hovered bool) []string {
+	props := island(c)
+	switch {
+	case chip.attached:
+		props = hotIsland(c)
+	case chip.needsMe:
+		props = append(props, P("background.color", c.IslandBorder), P("background.border_color", c.Hot))
+	}
+	if hovered && !chip.attached {
+		props = append(props, P("background.border_color", c.Hot))
+	}
+	return append(append(props, large()...), "drawing=on", "icon.drawing=off", P("label", chip.label()))
 }
 
 func renderSessions(b *Batch, c Colors, chips []sessionChip) {
@@ -154,16 +205,7 @@ func renderSessions(b *Batch, c Colors, chips []sessionChip) {
 			b.Set(sessionItem(i), "drawing=off")
 			continue
 		}
-		chip := chips[i]
-		props := island(c)
-		switch {
-		case chip.attached:
-			props = hotIsland(c)
-		case chip.needsMe:
-			props = append(props, P("background.color", c.IslandBorder), P("background.border_color", c.Hot))
-		}
-		props = append(props, large()...)
-		b.Set(sessionItem(i), append(props, "drawing=on", "icon.drawing=off", P("label", chip.label))...)
+		b.Set(sessionItem(i), chipProps(c, chips[i], false)...)
 	}
 }
 
@@ -177,13 +219,50 @@ func (s *Sessions) Click(ctx context.Context, ev Event, b *Batch) {
 		return
 	}
 	s.mu.Lock()
-	if i < 0 || i >= len(s.ids) {
+	if i < 0 || i >= len(s.chips) {
 		s.mu.Unlock()
 		return
 	}
-	id := s.ids[i]
+	chip := s.chips[i]
 	s.mu.Unlock()
 
+	item := sessionItem(i)
+	switch ev.Sender {
+	case "mouse.entered":
+		b.Set(item, chipProps(s.colors, chip, true)...)
+		renderAgentPopup(b, item, chip)
+	case "mouse.exited", "mouse.exited.global":
+		b.Set(item, append(chipProps(s.colors, chip, false), "popup.drawing=off")...)
+	case "mouse.clicked":
+		if chip.more == 0 {
+			s.activate(ctx, chip.id)
+		}
+	}
+}
+
+func renderAgentPopup(b *Batch, host string, chip sessionChip) {
+	b.Remove("/" + strings.ReplaceAll(sessionPopup, ".", `\.`) + ".*/")
+	if len(chip.agents) == 0 {
+		b.Set(host, "popup.drawing=off")
+		return
+	}
+	for j, status := range chip.agents[:min(len(chip.agents), maxPopupAgents)] {
+		label := agentStatusLabels[status]
+		if label == "" {
+			label = status
+		}
+		b.Add(fmt.Sprintf("%s%d", sessionPopup, j), "popup."+host,
+			P("icon", pip(status)),
+			"icon.padding_left=12",
+			"icon.padding_right=6",
+			P("label", fmt.Sprintf("agent %d · %s", j+1, label)),
+			"label.padding_right=14",
+		)
+	}
+	b.Set(host, "popup.drawing=on")
+}
+
+func (s *Sessions) activate(ctx context.Context, id uint) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, fmt.Sprintf("%s/sessions/%d/activate", s.utena.baseURL, id), nil)
 	if err != nil {
 		return
@@ -201,8 +280,10 @@ func (s *Sessions) resetCache() {
 }
 
 type SpaceTiles struct {
-	runner Runner
-	colors Colors
+	runner  Runner
+	colors  Colors
+	mu      sync.Mutex
+	current map[string]bool
 }
 
 func NewSpaceTiles(runner Runner, colors Colors) *SpaceTiles {
@@ -245,6 +326,7 @@ func (t *SpaceTiles) Setup(ctx context.Context, b *Batch) error {
 			P("padding_right", right),
 			P("click_script", "aerospace workspace "+s.Workspace),
 		)
+		b.Listen(tileItem(s.Workspace), "mouse.entered", "mouse.exited")
 	}
 	b.Raw(members...)
 	b.Set(tilesBracket, append(bracketIsland(t.colors), P("background.height", largeHeight), P("background.corner_radius", largeRadius))...)
@@ -271,7 +353,29 @@ func (t *SpaceTiles) Handle(ctx context.Context, ev Event, b *Batch) {
 		slog.Warn("bar: list windows failed", "error", err)
 		return
 	}
-	renderTiles(b, t.colors, spaces, windows, ev.Env["FOCUSED_WORKSPACE"])
+	current := renderTiles(b, t.colors, spaces, windows, ev.Env["FOCUSED_WORKSPACE"])
+	t.mu.Lock()
+	t.current = current
+	t.mu.Unlock()
+}
+
+func (t *SpaceTiles) Prefix() string {
+	return tilePrefix
+}
+
+func (t *SpaceTiles) Click(ctx context.Context, ev Event, b *Batch) {
+	ws := strings.TrimPrefix(ev.Name, tilePrefix)
+	t.mu.Lock()
+	current := t.current[ws]
+	t.mu.Unlock()
+	if current {
+		return
+	}
+	fill := "0x00000000"
+	if ev.Sender == "mouse.entered" {
+		fill = t.colors.IslandBorder
+	}
+	b.Set(ev.Name, P("background.color", fill))
 }
 
 type aerospaceWorkspace struct {
@@ -295,7 +399,8 @@ func listWorkspaces(ctx context.Context, r Runner) ([]aerospaceWorkspace, error)
 	return decodeJSON[[]aerospaceWorkspace](out, "aerospace workspaces")
 }
 
-func renderTiles(b *Batch, c Colors, spaces []aerospaceWorkspace, windows []aerospaceWindow, focused string) {
+func renderTiles(b *Batch, c Colors, spaces []aerospaceWorkspace, windows []aerospaceWindow, focused string) map[string]bool {
+	currents := map[string]bool{}
 	apps := map[string][]string{}
 	for _, win := range windows {
 		icon := appIcon(win.AppName)
@@ -310,6 +415,7 @@ func renderTiles(b *Batch, c Colors, spaces []aerospaceWorkspace, windows []aero
 		}
 		label := strings.Join(apps[s.Workspace], " ")
 		current := isFocused || (s.Visible && focused == "")
+		currents[s.Workspace] = current
 		fill, text := "0x00000000", c.Text
 		if current {
 			fill, text = c.Hot, c.HotText
@@ -324,6 +430,7 @@ func renderTiles(b *Batch, c Colors, spaces []aerospaceWorkspace, windows []aero
 			P("label.color", text),
 		)
 	}
+	return currents
 }
 
 func BottomItems(cfg Config, runner Runner) []Item {
