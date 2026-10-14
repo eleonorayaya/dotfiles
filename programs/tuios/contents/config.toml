@@ -40,12 +40,6 @@ command = "UTENA_POPUP=1 $HOME/.local/bin/utena"
 description = "utena sessions"
 
 [[keybindings.command]]
-key = "prefix+t"
-type = "popup"
-command = "UTENA_POPUP=1 $HOME/.local/bin/utena new-task"
-description = "utena new task"
-
-[[keybindings.command]]
 key = "prefix+n"
 type = "shell"
 command = "$HOME/.local/bin/utena workspace new"
