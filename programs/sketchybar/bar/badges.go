@@ -10,8 +10,12 @@ import (
 )
 
 const (
-	badgesBracket = "badges"
-	badgeDot      = "•"
+	badgesBracket  = "badges"
+	badgeDot       = "•"
+	badgeIconInset = 10
+	bubbleOverlap  = 18
+	bubbleDigit    = 6
+	bubblePadding  = 8
 )
 
 type Badges struct {
@@ -43,18 +47,13 @@ func (bg *Badges) Setup(ctx context.Context, b *Batch) error {
 			"background.height=14",
 			"background.corner_radius=7",
 			"y_offset=7",
-			"padding_left=-12",
-			"padding_right=8",
 		)
-		if i == 0 {
-			b.Set(badgeCountItem(i), "padding_right=14")
-		}
 		b.Add(badgeIconItem(i), "right",
 			"drawing=off",
 			P("icon", appIcon(app)),
 			P("icon.font", appFont),
-			"icon.padding_left=10",
-			"icon.padding_right=4",
+			P("icon.padding_left", badgeIconInset),
+			P("icon.padding_right", badgeIconInset),
 			P("padding_left", itemPadding),
 			"padding_right=0",
 			"label.drawing=off",
@@ -94,13 +93,21 @@ func renderBadges(b *Batch, labels []string) {
 		visible := label != "" && label != "0"
 		shown = shown || visible
 		b.Set(badgeIconItem(i), onOff("drawing", visible))
+		props := []string{onOff("drawing", visible), P("label", label), "background.height=14", "background.corner_radius=7", "y_offset=7"}
 		if label == badgeDot {
-			b.Set(badgeCountItem(i), onOff("drawing", visible), "label=", "background.height=8", "background.corner_radius=4", "y_offset=9")
-			continue
+			props = []string{onOff("drawing", visible), "label=", "background.height=8", "background.corner_radius=4", "y_offset=9"}
 		}
-		b.Set(badgeCountItem(i), onOff("drawing", visible), P("label", label), "background.height=14", "background.corner_radius=7", "y_offset=7")
+		b.Set(badgeCountItem(i), append(props, bubbleOffsets(label)...)...)
 	}
 	b.Set(badgesBracket, onOff("drawing", shown))
+}
+
+func bubbleOffsets(label string) []string {
+	width := bubblePadding
+	if label != badgeDot {
+		width += bubbleDigit * len([]rune(label))
+	}
+	return []string{P("padding_left", -bubbleOverlap), P("padding_right", bubbleOverlap-width)}
 }
 
 func unreadTotal(labels []string) int {
