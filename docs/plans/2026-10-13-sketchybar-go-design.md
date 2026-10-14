@@ -1,6 +1,6 @@
 # Sketchybar in Go: design
 
-Status: first cut implemented; styling and calendar deferred.
+Status: implemented; calendar/meetings deferred.
 
 ## Decisions
 
@@ -14,7 +14,7 @@ Status: first cut implemented; styling and calendar deferred.
   - Plain clicks use `click_script` directly.
   - Mach-port delivery (as SbarLua does it) could replace this later without touching items.
 - **Config.**
-  - `Generate()` writes `~/.config/sketchybar/bar.json`, holding the theme colors at `WindowOpacity` and the per-profile mail app. Layout values are literals in the daemon until styling is decided.
+  - `Generate()` writes `~/.config/sketchybar/bar.json`, holding the theme colors at `WindowOpacity`, the per-profile badge apps, and the window-gap margins.
   - The daemon reads only that file and never loads the shizuku builder.
   - Per-profile behaviour comes from `sketchybar.New(Options{...})` overlays.
 - **Lifecycle.**
@@ -28,21 +28,23 @@ Chosen from a moodboard of pastel and kawaii bars. Each group of items sits in i
 
 | Island | Contents | Source / update |
 |---|---|---|
-| ♥ | heart (♡ when Bluetooth is off); click opens paired devices, click a device to connect/disconnect | `blueutil` |
+| ♥ (left) | decorative heart | — |
 | ✿ n | current AeroSpace workspace only, raspberry | aerospace triggers, `aerospace list-workspaces --focused` |
 | front app | app-font icon + lowercase name | `front_app_switched` |
+| Utena (left) | `˚ ₊ session ₊ ˚` | `/sessions` + activation long-poll |
 | kaomoji (center) | reacting face | 5s; priority sleepy (0–6h) > lost (offline) > flustered (CPU ≥ 80% twice) > sparkly (new unread, 5 min) > happy |
-| Utena | `˚ ₊ session ₊ ˚` | `/sessions` + activation long-poll |
 | badges | app-font icons with raspberry count bubbles; "•" renders as a dot; hidden at zero | `lsappinfo` Dock badge, 15s |
-| network | Wi-Fi / globe / offline icon + ↓↑ rate | `route`, `ipconfig`, `netstat`, 3s |
-| cpu · mem | SF Symbols chips, one bracketed island | `ps`, `vm_stat`, 5s |
+| connect | Wi-Fi / wired / offline icon + Bluetooth icon (faded when off); Bluetooth click opens paired devices | `route`, `ipconfig`, `blueutil`, 5s |
+| cpu · mem | `cpu` label + pink sparkline with a twinkling ✦; `mem` label + meter with a heart knob | `ps`, `vm_stat`, 3s |
 | clock | raspberry: time + date | minute-aligned, `system_woke` |
+
+The bar's side margin follows `styles.Gaps.OuterLeft` (and the `GapOverride` when every monitor matches its pattern), so island edges line up with window edges. Islands are 12pt apart.
 
 Profiles set the badge apps: `work` uses Mail + Slack, and `personal` uses Proton Mail + Discord.
 
 ## Deferred
 
-- **Visual style.** This cut is a port of the previous floating pill. The islands vs pill vs full-width decision is still open.
+- **Per-monitor margins.** Sketchybar has one margin for all displays, so mixed built-in + external setups use the default gap everywhere.
 - **Meeting item.** It should appear 15 minutes before a meeting, stay until the meeting ends, and click to join. It needs an EventKit reader (a small Swift helper was proposed). The clock click opens Calendar for now.
 - **Calendar popup** on the clock.
 - **Wi-Fi SSID.** macOS redacts it without Location permission.
