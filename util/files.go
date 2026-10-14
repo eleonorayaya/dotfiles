@@ -139,6 +139,10 @@ func ReadJSONMap(path string) (map[string]any, error) {
 }
 
 func WriteJSONMap(path string, data map[string]any) error {
+	return WriteJSON(path, data)
+}
+
+func WriteJSON(path string, data any) error {
 	if err := os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
 		return fmt.Errorf("failed to create directory for %s: %w", path, err)
 	}

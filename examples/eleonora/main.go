@@ -24,6 +24,7 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/buildkite"
 	"github.com/eleonorayaya/shizuku/programs/datadog"
 	"github.com/eleonorayaya/shizuku/programs/desktoppr"
+	"github.com/eleonorayaya/shizuku/programs/dock"
 	"github.com/eleonorayaya/shizuku/programs/fastfetch"
 	"github.com/eleonorayaya/shizuku/programs/git"
 	"github.com/eleonorayaya/shizuku/programs/glow"
@@ -62,7 +63,7 @@ var (
 		InnerHorizontal: 16,
 		InnerVertical:   16,
 		OuterLeft:       64,
-		OuterBottom:     128,
+		OuterBottom:     64,
 		OuterTop:        64,
 		OuterRight:      64,
 	}
@@ -103,6 +104,7 @@ func main() {
 			shizuku.WithPrograms(
 				aerospace.New(),
 				desktoppr.New(),
+				dock.New(),
 				fastfetch.New(),
 				glow.New(),
 				jankyborders.New(),
@@ -110,7 +112,7 @@ func main() {
 				notion.New(notion.Options{DisableClaudeMCP: true}),
 				nvim.New(),
 				sfsymbols.New(),
-				sketchybar.New(),
+				sketchybar.New(sketchybar.Options{}),
 				terminalbrowser.New(),
 				terraform.New(),
 				tmux.New(),
@@ -132,6 +134,7 @@ func main() {
 				datadog.New(),
 				k9s.New(),
 				mise.New(),
+				sketchybar.New(sketchybar.Options{Badges: []string{"Mail", "Slack"}}),
 			),
 		),
 		shizuku.WithProfile("personal",
@@ -144,11 +147,12 @@ func main() {
 				protonpass.New(),
 				protonvpn.New(),
 				notion.New(notion.Options{DisableClaudeMCP: false}),
+				sketchybar.New(sketchybar.Options{Badges: []string{"Proton Mail", "Vesktop"}}),
 			),
 		),
 	).Command()
 
-	cmd.AddCommand(upgradeCmd())
+	cmd.AddCommand(upgradeCmd(), sketchybar.Command())
 
 	if err := cmd.Execute(); err != nil {
 		fmt.Println(err)
