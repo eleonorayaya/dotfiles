@@ -48,6 +48,7 @@ const (
 type Placement struct {
 	Bin      string
 	Position string
+	Height   int
 	YOffset  int
 }
 

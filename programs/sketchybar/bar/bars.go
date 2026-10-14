@@ -10,19 +10,20 @@ const (
 	BarTop    = "top"
 	BarBottom = "bottom"
 
-	topBinary    = "sketchybar"
-	BottomBinary = "bottombar"
-	barHeight    = 40
+	topBinary       = "sketchybar"
+	BottomBinary    = "bottombar"
+	topBarHeight    = 40
+	bottomBarHeight = 44
 
 	bottomOffsetDivisor = 4
 )
 
 func TopPlacement() Placement {
-	return Placement{Bin: topBinary, Position: "top", YOffset: 6}
+	return Placement{Bin: topBinary, Position: "top", Height: topBarHeight, YOffset: 6}
 }
 
 func BottomPlacement(cfg Config) Placement {
-	return Placement{Bin: BottomBinary, Position: "bottom", YOffset: max((cfg.BottomGap-barHeight)/bottomOffsetDivisor, 0)}
+	return Placement{Bin: BottomBinary, Position: "bottom", Height: bottomBarHeight, YOffset: max((cfg.BottomGap-bottomBarHeight)/bottomOffsetDivisor, 0)}
 }
 
 func PlacementFor(bar string, cfg Config) (Placement, error) {

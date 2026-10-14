@@ -7,6 +7,11 @@ const (
 	islandHeight  = 28
 	islandRadius  = 14
 	islandPadding = 12
+
+	largeHeight  = 36
+	largeRadius  = 18
+	largePadding = 14
+	largeAppFont = "sketchybar-app-font:Regular:19.0"
 )
 
 func font(style string, size int) string {
@@ -15,7 +20,7 @@ func font(style string, size int) string {
 
 func barProps(place Placement) []string {
 	return []string{
-		"height=40",
+		P("height", place.Height),
 		P("position", place.Position),
 		"padding_left=0",
 		"padding_right=0",
@@ -84,6 +89,17 @@ func faded(argb string) string {
 		return argb
 	}
 	return "0x55" + argb[4:]
+}
+
+func large() []string {
+	return []string{
+		P("background.height", largeHeight),
+		P("background.corner_radius", largeRadius),
+		P("label.font", font("Bold", 15)),
+		P("icon.padding_left", largePadding),
+		P("label.padding_left", largePadding),
+		P("label.padding_right", largePadding),
+	}
 }
 
 func bracketIsland(c Colors) []string {

@@ -185,7 +185,7 @@ func (p *Pet) Setup(ctx context.Context, b *Batch) error {
 		P("padding_right", itemPadding+islandPadding),
 	)
 	b.Raw("--add", "bracket", petBracket, petItem, petZzzItem)
-	b.Set(petBracket, append(bracketIsland(p.colors), P("background.height", islandHeight+8))...)
+	b.Set(petBracket, append(bracketIsland(p.colors), P("background.height", largeHeight+4), P("background.corner_radius", largeRadius+2))...)
 	return nil
 }
 

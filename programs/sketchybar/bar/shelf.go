@@ -92,7 +92,7 @@ func sessionItem(i int) string { return fmt.Sprintf("%s%d", sessionPrefix, i) }
 
 func (s *Sessions) Setup(ctx context.Context, b *Batch) error {
 	for i := range sessionSlots {
-		b.Add(sessionItem(i), "left", append(island(s.colors), "drawing=off", "icon.drawing=off", P("label.padding_left", islandPadding))...)
+		b.Add(sessionItem(i), "left", append(append(island(s.colors), large()...), "drawing=off", "icon.drawing=off")...)
 		b.OnClick(sessionItem(i))
 	}
 	return nil
@@ -162,7 +162,8 @@ func renderSessions(b *Batch, c Colors, chips []sessionChip) {
 		case chip.needsMe:
 			props = append(props, P("background.color", c.IslandBorder), P("background.border_color", c.Hot))
 		}
-		b.Set(sessionItem(i), append(props, "drawing=on", "icon.drawing=off", P("label.padding_left", islandPadding), P("label", chip.label))...)
+		props = append(props, large()...)
+		b.Set(sessionItem(i), append(props, "drawing=on", "icon.drawing=off", P("label", chip.label))...)
 	}
 }
 
@@ -231,22 +232,22 @@ func (t *SpaceTiles) Setup(ctx context.Context, b *Batch) error {
 		b.Add(tileItem(s.Workspace), "right",
 			"drawing=off",
 			P("icon", s.Workspace),
-			P("icon.font", font("ExtraBold", 12)),
-			"icon.padding_left=10",
-			"icon.padding_right=4",
-			P("label.font", appFont),
-			"label.padding_right=10",
+			P("icon.font", font("ExtraBold", 15)),
+			"icon.padding_left=12",
+			"icon.padding_right=5",
+			P("label.font", largeAppFont),
+			"label.padding_right=12",
 			"background.drawing=on",
 			"background.color=0x00000000",
-			"background.height=24",
-			"background.corner_radius=12",
+			"background.height=30",
+			"background.corner_radius=15",
 			P("padding_left", left),
 			P("padding_right", right),
 			P("click_script", "aerospace workspace "+s.Workspace),
 		)
 	}
 	b.Raw(members...)
-	b.Set(tilesBracket, bracketIsland(t.colors)...)
+	b.Set(tilesBracket, append(bracketIsland(t.colors), P("background.height", largeHeight), P("background.corner_radius", largeRadius))...)
 	return nil
 }
 

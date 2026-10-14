@@ -62,7 +62,7 @@ var (
 		InnerHorizontal: 16,
 		InnerVertical:   16,
 		OuterLeft:       64,
-		OuterBottom:     128,
+		OuterBottom:     64,
 		OuterTop:        64,
 		OuterRight:      64,
 	}

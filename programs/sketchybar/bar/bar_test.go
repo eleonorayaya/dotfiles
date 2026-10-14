@@ -767,8 +767,8 @@ func TestSystemPushesGraphAndMeter(t *testing.T) {
 }
 
 func TestBottomPlacementCentersInWindowGap(t *testing.T) {
-	p := BottomPlacement(Config{BottomGap: 128})
-	if p.Bin != BottomBinary || p.Position != "bottom" || p.YOffset != 22 {
+	p := BottomPlacement(Config{BottomGap: 64})
+	if p.Bin != BottomBinary || p.Position != "bottom" || p.YOffset != 5 || p.Height != bottomBarHeight {
 		t.Fatalf("unexpected bottom placement: %+v", p)
 	}
 	if BottomPlacement(Config{BottomGap: 8}).YOffset != 0 {
