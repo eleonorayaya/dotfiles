@@ -308,12 +308,14 @@ func renderTiles(b *Batch, c Colors, spaces []aerospaceWorkspace, windows []aero
 			isFocused = s.Workspace == focused
 		}
 		label := strings.Join(apps[s.Workspace], " ")
+		current := isFocused || (s.Visible && focused == "")
 		fill, text := "0x00000000", c.Text
-		if isFocused {
+		if current {
 			fill, text = c.Hot, c.HotText
 		}
 		b.Set(tileItem(s.Workspace),
-			onOff("drawing", isFocused || label != ""),
+			onOff("drawing", current || s.Visible || label != ""),
+			P("display", s.Display),
 			P("label", label),
 			onOff("label.drawing", label != ""),
 			P("background.color", fill),
