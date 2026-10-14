@@ -11,13 +11,13 @@ const (
 	symbolFont = "SF Pro"
 	appFont    = "sketchybar-app-font:Regular:16.0"
 
-	iconMail     = "\U00100355"
 	iconWifi     = "\U00100647"
 	iconOffline  = "\U00100648"
 	iconEthernet = "\U00100906"
 	iconCPU      = "\U00100AE5"
 	iconMemory   = "\U00100AE6"
-	iconSession  = "\U00100A8F"
+	iconHeart    = "♥"
+	iconHeartOff = "♡"
 
 	appIconDefault   = ":default:"
 	appIconBluetooth = ":bluetooth:"

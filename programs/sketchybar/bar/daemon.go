@@ -68,7 +68,7 @@ func (d *Daemon) Setup(ctx context.Context) error {
 	b := d.newBatch()
 	b.Remove("/.*/")
 	b.Raw("--bar")
-	b.Raw(barProps(d.cfg.Colors)...)
+	b.Raw(barProps()...)
 	b.Raw("--default")
 	b.Raw(defaultProps(d.cfg.Colors)...)
 
@@ -274,49 +274,5 @@ func sleep(ctx context.Context, d time.Duration) {
 	select {
 	case <-ctx.Done():
 	case <-time.After(d):
-	}
-}
-
-func barProps(c Colors) []string {
-	return []string{
-		"height=32",
-		"position=top",
-		"padding_left=16",
-		"padding_right=16",
-		"margin=12",
-		"y_offset=12",
-		P("color", c.Bar),
-		P("border_color", c.BarBorder),
-		"border_width=2",
-		"corner_radius=8",
-		"blur_radius=48",
-		"sticky=off",
-		"font_smoothing=on",
-	}
-}
-
-func defaultProps(c Colors) []string {
-	return []string{
-		P("icon.font", symbolFont+":Semibold:15.0"),
-		P("icon.color", c.Icon),
-		P("icon.highlight_color", c.IconHighlight),
-		"icon.padding_left=3",
-		"icon.padding_right=3",
-		"label.font=SF Pro Display:Thin:16.0",
-		P("label.color", c.Label),
-		P("label.highlight_color", c.LabelHighlight),
-		"label.padding_left=3",
-		"label.padding_right=3",
-		"padding_left=3",
-		"padding_right=3",
-		"background.height=30",
-		"background.corner_radius=9",
-		"popup.background.border_width=2",
-		"popup.background.corner_radius=9",
-		P("popup.background.border_color", c.PopupBorder),
-		P("popup.background.color", c.PopupBackground),
-		"popup.blur_radius=20",
-		"popup.background.shadow.drawing=on",
-		"updates=when_shown",
 	}
 }

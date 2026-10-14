@@ -17,7 +17,7 @@ func TestGenerateWritesBarConfig(t *testing.T) {
 		Styles: styles.New(styles.WithTheme(themes.Sylveon), styles.WithWindowOpacity(80)),
 	}
 
-	result, err := New(Options{MailApp: "Proton Mail"}).Generate(ctx)
+	result, err := New(Options{Badges: []string{"Proton Mail", "Discord"}}).Generate(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,10 +34,10 @@ func TestGenerateWritesBarConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.MailApp != "Proton Mail" {
-		t.Errorf("MailApp = %q", cfg.MailApp)
+	if len(cfg.Badges) != 2 || cfg.Badges[1] != "Discord" {
+		t.Errorf("Badges = %v", cfg.Badges)
 	}
-	if !strings.HasPrefix(cfg.Colors.Bar, "0xCC") {
-		t.Errorf("bar color should carry 80%% opacity, got %q", cfg.Colors.Bar)
+	if !strings.HasPrefix(cfg.Colors.Island, "0xCC") {
+		t.Errorf("bar color should carry 80%% opacity, got %q", cfg.Colors.Island)
 	}
 }

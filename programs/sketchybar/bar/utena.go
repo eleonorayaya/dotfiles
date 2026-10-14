@@ -25,6 +25,7 @@ type utenaSession struct {
 }
 
 type Utena struct {
+	colors     Colors
 	baseURL    string
 	client     *http.Client
 	pollWindow time.Duration
@@ -32,8 +33,9 @@ type Utena struct {
 	last       lastValue
 }
 
-func NewUtena(baseURL string) *Utena {
+func NewUtena(baseURL string, colors Colors) *Utena {
 	return &Utena{
+		colors:     colors,
 		baseURL:    baseURL,
 		client:     &http.Client{Timeout: 60 * time.Second},
 		pollWindow: utenaPollWindow,
@@ -42,7 +44,7 @@ func NewUtena(baseURL string) *Utena {
 }
 
 func (u *Utena) Setup(ctx context.Context, b *Batch) error {
-	b.Add(utenaItem, "right", P("icon", iconSession), "drawing=off")
+	b.Add(utenaItem, "right", append(island(u.colors), "icon.drawing=off", P("label.padding_left", islandPadding), "drawing=off")...)
 	return nil
 }
 
@@ -54,7 +56,7 @@ func (u *Utena) Stream(ctx context.Context, updates chan<- Update) {
 		}
 		if u.last.changed(name) {
 			send(ctx, updates, func(b *Batch) {
-				b.Set(utenaItem, onOff("drawing", name != ""), P("label", name))
+				b.Set(utenaItem, onOff("drawing", name != ""), P("label", sparkleFrame(name)))
 			})
 		}
 		if err != nil {
@@ -115,6 +117,10 @@ func (u *Utena) get(ctx context.Context, path string, into any) error {
 
 func (u *Utena) resetCache() {
 	u.last.reset()
+}
+
+func sparkleFrame(s string) string {
+	return "˚ ₊ " + s + " ₊ ˚"
 }
 
 func pickActiveSession(sessions []utenaSession) string {

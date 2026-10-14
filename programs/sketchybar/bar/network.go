@@ -22,6 +22,8 @@ type ifaceCounters struct {
 
 type Network struct {
 	runner   Runner
+	colors   Colors
+	mood     *Mood
 	now      func() time.Time
 	polls    int
 	iface    string
@@ -30,13 +32,13 @@ type Network struct {
 	lastSeen time.Time
 }
 
-func NewNetwork(runner Runner) *Network {
-	return &Network{runner: runner, now: time.Now}
+func NewNetwork(runner Runner, colors Colors, mood *Mood) *Network {
+	return &Network{runner: runner, colors: colors, mood: mood, now: time.Now}
 }
 
 func (n *Network) Setup(ctx context.Context, b *Batch) error {
-	b.Add(networkItem, "right",
-		P("click_script", "open 'x-apple.systempreferences:com.apple.Network-Settings.extension'"))
+	b.Add(networkItem, "right", append(island(n.colors),
+		P("click_script", "open 'x-apple.systempreferences:com.apple.Network-Settings.extension'"))...)
 	return nil
 }
 
@@ -49,6 +51,7 @@ func (n *Network) Poll(ctx context.Context) Update {
 		n.resolveInterface(ctx)
 	}
 	n.polls++
+	n.mood.SetOnline(n.iface != "")
 	if n.iface == "" {
 		return func(b *Batch) {
 			b.Set(networkItem, P("icon", iconOffline), "label=offline")

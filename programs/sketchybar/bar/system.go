@@ -18,19 +18,25 @@ const (
 
 var pageSizeRe = regexp.MustCompile(`page size of (\d+) bytes`)
 
+const systemBracket = "system"
+
 type System struct {
 	runner   Runner
+	colors   Colors
+	mood     *Mood
 	ncpu     int
 	memBytes uint64
 }
 
-func NewSystem(runner Runner) *System {
-	return &System{runner: runner, ncpu: runtime.NumCPU()}
+func NewSystem(runner Runner, colors Colors, mood *Mood) *System {
+	return &System{runner: runner, colors: colors, mood: mood, ncpu: runtime.NumCPU()}
 }
 
 func (s *System) Setup(ctx context.Context, b *Batch) error {
-	b.Add(memoryItem, "right", P("icon", iconMemory), "click_script=open -a 'Activity Monitor'")
-	b.Add(cpuItem, "right", P("icon", iconCPU), "click_script=open -a 'Activity Monitor'")
+	b.Add(memoryItem, "right", P("icon", iconMemory), "label.padding_right=12", "click_script=open -a 'Activity Monitor'")
+	b.Add(cpuItem, "right", P("icon", iconCPU), "icon.padding_left=12", "padding_right=6", "click_script=open -a 'Activity Monitor'")
+	b.Raw("--add", "bracket", systemBracket, cpuItem, memoryItem)
+	b.Set(systemBracket, bracketIsland(s.colors)...)
 	return nil
 }
 
@@ -42,6 +48,8 @@ func (s *System) Poll(ctx context.Context) Update {
 	cpu, cpuErr := s.cpuPercent(ctx)
 	if cpuErr != nil {
 		slog.Debug("bar: cpu lookup failed", "error", cpuErr)
+	} else {
+		s.mood.SetCPU(cpu)
 	}
 	mem, memErr := s.memoryPercent(ctx)
 	if memErr != nil {

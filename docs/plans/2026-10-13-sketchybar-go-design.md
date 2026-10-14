@@ -22,20 +22,23 @@ Status: first cut implemented; styling and calendar deferred.
   - The daemon exits after three failed `sketchybar --query bar` health checks. The check is skipped when an update was applied recently.
   - Every command has a 10s timeout.
 
-## Items
+## Look: ribbon islands
 
-| Item | Source | Update |
+Chosen from a moodboard of pastel and kawaii bars. Each group of items sits in its own floating rounded island: blush fill, rose outline, gaps between islands. The bar itself is transparent. Labels use M PLUS Rounded 1c ("Rounded Mplus 1c"). System icons are SF Symbols, and app icons come from sketchybar-app-font. Raspberry is reserved for the current workspace, the clock and badge bubbles.
+
+| Island | Contents | Source / update |
 |---|---|---|
-| Workspaces | `aerospace list-workspaces --all --json`, `list-windows --all --json` | aerospace triggers, `front_app_switched`, `space_windows_change`, `display_change`, `system_woke` |
-| Front app | `$INFO` from `front_app_switched` | event |
-| Clock | Go `time` | minute boundary, plus `system_woke` |
-| Mail unread | `lsappinfo info -only StatusLabel <app>` (Dock badge) | 30s, hidden at 0 |
-| Network | `route get default`, `ipconfig getsummary`, `netstat -ibn` | 3s, connection type + ↓/↑ rate |
-| CPU / memory | `ps -A -o %cpu=`, `vm_stat`, `hw.memsize` | 5s |
-| Utena session | `GET /sessions` (`is_attached`), long-poll `/tmux/activations/next` | push + 50s fallback |
-| Bluetooth | `blueutil --power`, `--paired --format json`, `--connect/--disconnect` | 30s icon; click opens a device popup |
+| ♥ | heart (♡ when Bluetooth is off); click opens paired devices, click a device to connect/disconnect | `blueutil` |
+| ✿ n | current AeroSpace workspace only, raspberry | aerospace triggers, `aerospace list-workspaces --focused` |
+| front app | app-font icon + lowercase name | `front_app_switched` |
+| kaomoji (center) | reacting face | 5s; priority sleepy (0–6h) > lost (offline) > flustered (CPU ≥ 80% twice) > sparkly (new unread, 5 min) > happy |
+| Utena | `˚ ₊ session ₊ ˚` | `/sessions` + activation long-poll |
+| badges | app-font icons with raspberry count bubbles; "•" renders as a dot; hidden at zero | `lsappinfo` Dock badge, 15s |
+| network | Wi-Fi / globe / offline icon + ↓↑ rate | `route`, `ipconfig`, `netstat`, 3s |
+| cpu · mem | SF Symbols chips, one bracketed island | `ps`, `vm_stat`, 5s |
+| clock | raspberry: time + date | minute-aligned, `system_woke` |
 
-Profiles: `work` uses `MailApp: "Mail"` and `personal` uses `MailApp: "Proton Mail"`. Calendar for both will come through Calendar.app, with Proton subscribed there via its ICS link.
+Profiles set the badge apps: `work` uses Mail + Slack, and `personal` uses Proton Mail + Discord.
 
 ## Deferred
 

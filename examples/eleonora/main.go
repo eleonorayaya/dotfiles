@@ -132,7 +132,7 @@ func main() {
 				datadog.New(),
 				k9s.New(),
 				mise.New(),
-				sketchybar.New(sketchybar.Options{MailApp: "Mail"}),
+				sketchybar.New(sketchybar.Options{Badges: []string{"Mail", "Slack"}}),
 			),
 		),
 		shizuku.WithProfile("personal",
@@ -145,7 +145,7 @@ func main() {
 				protonpass.New(),
 				protonvpn.New(),
 				notion.New(notion.Options{DisableClaudeMCP: false}),
-				sketchybar.New(sketchybar.Options{MailApp: "Proton Mail"}),
+				sketchybar.New(sketchybar.Options{Badges: []string{"Proton Mail", "Discord"}}),
 			),
 		),
 	).Command()

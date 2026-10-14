@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	bluetoothItem         = "bluetooth"
+	bluetoothItem         = "heart"
 	bluetoothDevicePrefix = "bluetooth.device."
 	bluetoothDevicesRegex = `/bluetooth\.device\..*/`
 )
@@ -24,18 +24,26 @@ type bluetoothDevice struct {
 
 type Bluetooth struct {
 	runner  Runner
+	colors  Colors
 	power   lastValue
 	mu      sync.Mutex
 	open    bool
 	devices []bluetoothDevice
 }
 
-func NewBluetooth(runner Runner) *Bluetooth {
-	return &Bluetooth{runner: runner}
+func NewBluetooth(runner Runner, colors Colors) *Bluetooth {
+	return &Bluetooth{runner: runner, colors: colors}
 }
 
 func (bt *Bluetooth) Setup(ctx context.Context, b *Batch) error {
-	b.Add(bluetoothItem, "right", P("icon", appIconBluetooth), P("icon.font", appFont), "label.drawing=off", "popup.align=right")
+	b.Add(bluetoothItem, "left", append(island(bt.colors),
+		P("icon", iconHeart),
+		P("icon.font", font("ExtraBold", 15)),
+		P("icon.color", bt.colors.Hot),
+		P("icon.padding_right", islandPadding),
+		"label.drawing=off",
+		"popup.align=left",
+	)...)
 	b.OnClick(bluetoothItem, "mouse.exited.global")
 	return nil
 }
@@ -54,9 +62,12 @@ func (bt *Bluetooth) Poll(ctx context.Context) Update {
 	if !bt.power.changed(power) {
 		return nil
 	}
-	off := power != "1"
+	icon := iconHeart
+	if power != "1" {
+		icon = iconHeartOff
+	}
 	return func(b *Batch) {
-		b.Set(bluetoothItem, onOff("label.drawing", off), "label=off")
+		b.Set(bluetoothItem, P("icon", icon))
 	}
 }
 
@@ -124,7 +135,10 @@ func (bt *Bluetooth) renderDevices(ctx context.Context, b *Batch) {
 	b.Remove(bluetoothDevicesRegex)
 	for i, d := range devices {
 		name := fmt.Sprintf("%s%d", bluetoothDevicePrefix, i)
-		props := []string{P("icon", appIconBluetooth), P("icon.font", appFont), P("label", d.Name)}
+		props := []string{
+			P("icon", appIconBluetooth), P("icon.font", appFont), "icon.padding_left=10", "icon.padding_right=6",
+			P("label", d.Name), "label.padding_right=12", P("icon.highlight_color", bt.colors.Hot), P("label.highlight_color", bt.colors.Hot),
+		}
 		b.Add(name, "popup."+bluetoothItem, append(props, highlight(d.Connected)...)...)
 		b.OnClick(name)
 	}

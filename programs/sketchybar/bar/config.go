@@ -7,19 +7,18 @@ import (
 )
 
 type Colors struct {
-	Bar             string `json:"bar"`
-	BarBorder       string `json:"barBorder"`
-	Icon            string `json:"icon"`
-	IconHighlight   string `json:"iconHighlight"`
-	Label           string `json:"label"`
-	LabelHighlight  string `json:"labelHighlight"`
+	Island          string `json:"island"`
+	IslandBorder    string `json:"islandBorder"`
+	Text            string `json:"text"`
+	Hot             string `json:"hot"`
+	HotText         string `json:"hotText"`
 	PopupBackground string `json:"popupBackground"`
 	PopupBorder     string `json:"popupBorder"`
 }
 
 type Config struct {
-	Colors  Colors `json:"colors"`
-	MailApp string `json:"mailApp,omitempty"`
+	Colors Colors   `json:"colors"`
+	Badges []string `json:"badges,omitempty"`
 }
 
 func LoadConfig(path string) (Config, error) {

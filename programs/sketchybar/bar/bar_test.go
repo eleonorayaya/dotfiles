@@ -65,74 +65,27 @@ func containsSeq(haystack []string, needle ...string) bool {
 	return false
 }
 
-const workspacesJSON = `[
-  {"monitor-appkit-nsscreen-screens-id": 1, "workspace": "1", "workspace-is-focused": false, "workspace-is-visible": false},
-  {"monitor-appkit-nsscreen-screens-id": 1, "workspace": "2", "workspace-is-focused": true, "workspace-is-visible": true},
-  {"monitor-appkit-nsscreen-screens-id": 2, "workspace": "T", "workspace-is-focused": false, "workspace-is-visible": true},
-  {"monitor-appkit-nsscreen-screens-id": 1, "workspace": "9", "workspace-is-focused": false, "workspace-is-visible": false}
-]`
-
-const windowsJSON = `[
-  {"app-name": "Finder", "workspace": "1"},
-  {"app-name": "Firefox", "workspace": "2"}
-]`
-
-func TestWorkspacesSetup(t *testing.T) {
-	r := newFakeRunner(map[string]string{"aerospace list-workspaces": workspacesJSON})
+func TestWorkspaceShowsFocused(t *testing.T) {
+	r := newFakeRunner(map[string]string{"aerospace list-workspaces --focused": "3\n"})
+	w := NewWorkspace(r, Colors{})
 	b := &Batch{}
-	if err := NewWorkspaces(r).Setup(context.Background(), b); err != nil {
+	if err := w.Setup(context.Background(), b); err != nil {
 		t.Fatal(err)
 	}
-	args := b.Args()
-	if !containsSeq(args, "--add", "item", "space.T", "left") || !slices.Contains(args, "icon=T") {
-		t.Fatalf("space.T should be labelled with its name: %v", args)
-	}
-	if !slices.Contains(args, "click_script=aerospace workspace T") {
-		t.Fatalf("space.T should switch on click: %v", args)
-	}
-	if !containsSeq(args, "--add", "event", WorkspaceChangeEvent) {
-		t.Fatalf("missing custom aerospace event: %v", args)
-	}
-}
-
-const windowsWithDupes = `[
-  {"app-name": "Finder", "workspace": "1"},
-  {"app-name": "Firefox", "workspace": "2"},
-  {"app-name": "kitty", "workspace": "2"},
-  {"app-name": "Firefox", "workspace": "2"},
-  {"app-name": "Some Unknown App", "workspace": "T"}
-]`
-
-func TestRenderWorkspaces(t *testing.T) {
-	spaces, err := decodeJSON[[]aerospaceWorkspace]([]byte(workspacesJSON), "workspaces")
-	if err != nil {
-		t.Fatal(err)
-	}
-	windows, err := decodeJSON[[]aerospaceWindow]([]byte(windowsWithDupes), "windows")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	b := &Batch{}
-	renderWorkspaces(b, spaces, windows, "")
-	args := b.Args()
-
-	want := [][]string{
-		{"--set", "space.1", "drawing=on", "display=1", "label=:finder:", "label.drawing=on", "icon.highlight=off"},
-		{"--set", "space.2", "drawing=on", "display=1", "label=:firefox: :kitty:", "label.drawing=on", "icon.highlight=on"},
-		{"--set", "space.T", "drawing=on", "display=2", "label=:default:", "label.drawing=on", "icon.highlight=off"},
-		{"--set", "space.9", "drawing=off", "display=1", "label=", "label.drawing=off", "icon.highlight=off"},
-	}
-	for _, w := range want {
-		if !containsSeq(args, w...) {
-			t.Errorf("missing %v in %v", w, args)
-		}
+	if !containsSeq(b.Args(), "--add", "event", WorkspaceChangeEvent) || !slices.Contains(b.Args(), "icon="+iconFlower) {
+		t.Fatalf("unexpected setup: %v", b.Args())
 	}
 
 	b = &Batch{}
-	renderWorkspaces(b, spaces, windows, "9")
-	if !containsSeq(b.Args(), "--set", "space.9", "drawing=on") || !containsSeq(b.Args(), "label.drawing=off", "icon.highlight=on") {
-		t.Errorf("FOCUSED_WORKSPACE should override aerospace focus: %v", b.Args())
+	w.Handle(context.Background(), Event{Env: map[string]string{"FOCUSED_WORKSPACE": "T"}}, b)
+	if !slices.Equal(b.Args(), []string{"--set", "space", "label=T"}) {
+		t.Fatalf("FOCUSED_WORKSPACE should win: %v", b.Args())
+	}
+
+	b = &Batch{}
+	w.Handle(context.Background(), Event{}, b)
+	if !slices.Equal(b.Args(), []string{"--set", "space", "label=3"}) {
+		t.Fatalf("should fall back to aerospace: %v", b.Args())
 	}
 }
 
@@ -151,15 +104,6 @@ func TestAppIcon(t *testing.T) {
 	}
 }
 
-func TestMailIconUsesAppFont(t *testing.T) {
-	if got := mailIcon("Proton Mail"); !slices.Equal(got, []string{"icon=:proton_mail:", "icon.font=" + appFont}) {
-		t.Fatalf("mailIcon = %v", got)
-	}
-	if got := mailIcon("Nonexistent Mailer"); !slices.Equal(got, []string{"icon=" + iconMail}) {
-		t.Fatalf("mailIcon fallback = %v", got)
-	}
-}
-
 func TestParseStatusLabel(t *testing.T) {
 	cases := map[string]string{
 		`"StatusLabel"={ "label"="12" }`: "12",
@@ -173,23 +117,112 @@ func TestParseStatusLabel(t *testing.T) {
 	}
 }
 
-func TestMailHidesWhenNoUnread(t *testing.T) {
-	r := newFakeRunner(map[string]string{"lsappinfo": `"StatusLabel"={ "label"="" }`})
+func TestBadges(t *testing.T) {
+	r := newFakeRunner(map[string]string{
+		"lsappinfo info -only StatusLabel Proton Mail": `"StatusLabel"={ "label"="" }`,
+		"lsappinfo info -only StatusLabel Discord":     `"StatusLabel"={ "label"="2" }`,
+	})
+	mood := NewMood()
+	bg := NewBadges(r, Colors{}, []string{"Proton Mail", "Discord"}, mood)
+
 	b := &Batch{}
-	NewMail(r, "Mail").Poll(context.Background())(b)
-	if !slices.Contains(b.Args(), "drawing=off") {
-		t.Fatalf("expected hidden mail item: %v", b.Args())
+	if err := bg.Setup(context.Background(), b); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Contains(b.Args(), "icon=:discord:") || !containsSeq(b.Args(), "--add", "bracket", badgesBracket) {
+		t.Fatalf("unexpected setup: %v", b.Args())
 	}
 
-	r = newFakeRunner(map[string]string{"lsappinfo": `"StatusLabel"={ "label"="4" }`})
-	m := NewMail(r, "Proton Mail")
 	b = &Batch{}
-	m.Poll(context.Background())(b)
-	if !slices.Contains(b.Args(), "drawing=on") || !slices.Contains(b.Args(), "label=4") {
-		t.Fatalf("expected visible mail count: %v", b.Args())
+	bg.Poll(context.Background())(b)
+	args := b.Args()
+	for _, want := range [][]string{
+		{"--set", "badge.0", "drawing=off"},
+		{"--set", "badge.1", "drawing=on"},
+		{"--set", "badge.1.count", "drawing=on", "label=2"},
+		{"--set", badgesBracket, "drawing=on"},
+	} {
+		if !containsSeq(args, want...) {
+			t.Errorf("missing %v in %v", want, args)
+		}
 	}
-	if m.Poll(context.Background()) != nil {
-		t.Fatal("unchanged mail count should not produce an update")
+	if mood.Face() != faceSparkly && time.Now().Hour() >= 6 {
+		t.Errorf("new unread should make the face sparkly, got %q", mood.Face())
+	}
+	if bg.Poll(context.Background()) != nil {
+		t.Error("unchanged badges should not produce an update")
+	}
+}
+
+func TestRenderBadgesDotAndEmpty(t *testing.T) {
+	b := &Batch{}
+	renderBadges(b, []string{"•", ""})
+	if !containsSeq(b.Args(), "--set", "badge.0.count", "drawing=on", "label=", "background.height=8") {
+		t.Fatalf("dot badge should render as a small dot: %v", b.Args())
+	}
+
+	b = &Batch{}
+	renderBadges(b, []string{"", "0"})
+	if !containsSeq(b.Args(), "--set", badgesBracket, "drawing=off") {
+		t.Fatalf("island should hide when nothing is unread: %v", b.Args())
+	}
+}
+
+func TestUnreadTotal(t *testing.T) {
+	if got := unreadTotal([]string{"3", "•", "", "x"}); got != 4 {
+		t.Fatalf("unreadTotal = %d, want 4", got)
+	}
+}
+
+func TestMoodPriority(t *testing.T) {
+	at := func(hour int) func() time.Time {
+		return func() time.Time { return time.Date(2026, 10, 13, hour, 0, 0, 0, time.Local) }
+	}
+	m := NewMood()
+	m.now = at(14)
+	if m.Face() != faceHappy {
+		t.Fatalf("default should be happy, got %q", m.Face())
+	}
+	m.SetUnread(1)
+	if m.Face() != faceSparkly {
+		t.Fatalf("new unread should be sparkly, got %q", m.Face())
+	}
+	m.SetCPU(95)
+	if m.Face() != faceSparkly {
+		t.Fatal("one high CPU sample should not fluster")
+	}
+	m.SetCPU(95)
+	if m.Face() != faceFlustered {
+		t.Fatalf("sustained CPU should fluster, got %q", m.Face())
+	}
+	m.SetOnline(false)
+	if m.Face() != faceLost {
+		t.Fatalf("offline should be lost, got %q", m.Face())
+	}
+	m.now = at(2)
+	if m.Face() != faceSleepy {
+		t.Fatalf("late night should be sleepy, got %q", m.Face())
+	}
+	m.now = at(14)
+	m.SetOnline(true)
+	m.SetCPU(10)
+	m.now = func() time.Time { return at(14)().Add(sparklyDuration + time.Minute) }
+	if m.Face() != faceHappy {
+		t.Fatalf("sparkly should wear off, got %q", m.Face())
+	}
+}
+
+func TestKaomojiOnlyUpdatesOnChange(t *testing.T) {
+	m := NewMood()
+	m.now = func() time.Time { return time.Date(2026, 10, 13, 14, 0, 0, 0, time.Local) }
+	k := NewKaomoji(m, Colors{})
+	b := &Batch{}
+	k.Poll(context.Background())(b)
+	if !slices.Contains(b.Args(), "label="+faceHappy) {
+		t.Fatalf("unexpected face: %v", b.Args())
+	}
+	if k.Poll(context.Background()) != nil {
+		t.Fatal("unchanged face should not update")
 	}
 }
 
@@ -231,7 +264,7 @@ func TestNetworkRates(t *testing.T) {
 		"ipconfig": "  InterfaceType : WiFi\n",
 		"netstat":  "Name Mtu Network Address Ipkts Ierrs Ibytes Opkts Oerrs Obytes Coll\nen1 1500 <Link#17> aa 1 0 1000 1 0 2000 0\n",
 	})
-	n := NewNetwork(r)
+	n := NewNetwork(r, Colors{}, NewMood())
 	n.now = func() time.Time { return now }
 
 	b := &Batch{}
@@ -250,11 +283,16 @@ func TestNetworkRates(t *testing.T) {
 }
 
 func TestNetworkOffline(t *testing.T) {
-	n := NewNetwork(newFakeRunner(map[string]string{}))
+	mood := NewMood()
+	n := NewNetwork(newFakeRunner(map[string]string{}), Colors{}, mood)
 	b := &Batch{}
 	n.Poll(context.Background())(b)
 	if !slices.Contains(b.Args(), "label=offline") {
 		t.Fatalf("expected offline label: %v", b.Args())
+	}
+	mood.now = func() time.Time { return time.Date(2026, 10, 13, 14, 0, 0, 0, time.Local) }
+	if mood.Face() != faceLost {
+		t.Fatalf("offline network should make the face lost, got %q", mood.Face())
 	}
 }
 
@@ -356,7 +394,7 @@ func TestUtenaStream(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	updates := make(chan Update, 4)
-	u := NewUtena(srv.URL)
+	u := NewUtena(srv.URL, Colors{})
 	u.settle = 10 * time.Millisecond
 	go u.Stream(ctx, updates)
 
@@ -365,7 +403,7 @@ func TestUtenaStream(t *testing.T) {
 		case u := <-updates:
 			b := &Batch{}
 			u(b)
-			if !slices.Contains(b.Args(), "label="+want) || !slices.Contains(b.Args(), "drawing=on") {
+			if !slices.Contains(b.Args(), "label="+sparkleFrame(want)) || !slices.Contains(b.Args(), "drawing=on") {
 				t.Fatalf("unexpected utena update: %v", b.Args())
 			}
 		case <-time.After(2 * time.Second):
@@ -399,7 +437,7 @@ func TestUtenaRefreshesWithoutActivation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	updates := make(chan Update, 4)
-	u := NewUtena(srv.URL)
+	u := NewUtena(srv.URL, Colors{})
 	u.pollWindow, u.settle = 50*time.Millisecond, time.Millisecond
 	go u.Stream(ctx, updates)
 
@@ -423,7 +461,7 @@ func TestUtenaHiddenWhenDown(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	updates := make(chan Update, 1)
-	go NewUtena("http://127.0.0.1:1").Stream(ctx, updates)
+	go NewUtena("http://127.0.0.1:1", Colors{}).Stream(ctx, updates)
 
 	select {
 	case u := <-updates:
@@ -443,17 +481,17 @@ func TestBluetoothPopup(t *testing.T) {
 		"blueutil --connect":    "",
 		"blueutil --disconnect": "",
 	})
-	bt := NewBluetooth(r)
+	bt := NewBluetooth(r, Colors{})
 
 	b := &Batch{}
-	bt.Click(context.Background(), Event{Name: "bluetooth", Sender: "mouse.clicked"}, b)
+	bt.Click(context.Background(), Event{Name: bluetoothItem, Sender: "mouse.clicked"}, b)
 	args := b.Args()
 	for _, want := range [][]string{
 		{"--remove", `/bluetooth\.device\..*/`},
-		{"--add", "item", "bluetooth.device.0", "popup.bluetooth"},
-		{"--add", "item", "bluetooth.device.1", "popup.bluetooth"},
+		{"--add", "item", "bluetooth.device.0", "popup." + bluetoothItem},
+		{"--add", "item", "bluetooth.device.1", "popup." + bluetoothItem},
 		{"--subscribe", "bluetooth.device.1", "mouse.clicked"},
-		{"--set", "bluetooth", "popup.drawing=on"},
+		{"--set", bluetoothItem, "popup.drawing=on"},
 	} {
 		if !containsSeq(args, want...) {
 			t.Errorf("missing %v in %v", want, args)
@@ -474,13 +512,13 @@ func TestBluetoothPopup(t *testing.T) {
 	}
 
 	b = &Batch{}
-	bt.Click(context.Background(), Event{Name: "bluetooth", Sender: "mouse.exited.global"}, b)
-	if !containsSeq(b.Args(), "--set", "bluetooth", "popup.drawing=off") {
+	bt.Click(context.Background(), Event{Name: bluetoothItem, Sender: "mouse.exited.global"}, b)
+	if !containsSeq(b.Args(), "--set", bluetoothItem, "popup.drawing=off") {
 		t.Fatalf("expected popup to close: %v", b.Args())
 	}
 
 	b = &Batch{}
-	bt.Click(context.Background(), Event{Name: "bluetooth", Sender: "mouse.exited.global"}, b)
+	bt.Click(context.Background(), Event{Name: bluetoothItem, Sender: "mouse.exited.global"}, b)
 	if len(b.Args()) != 0 {
 		t.Fatalf("closed popup should not be touched again: %v", b.Args())
 	}
@@ -684,14 +722,14 @@ func TestEventFromEnv(t *testing.T) {
 
 func TestLoadConfig(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "bar.json")
-	if err := os.WriteFile(path, []byte(`{"mailApp":"Mail","colors":{"bar":"0xCC000000"}}`), 0o644); err != nil {
+	if err := os.WriteFile(path, []byte(`{"badges":["Mail","Slack"],"colors":{"island":"0xCC000000"}}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	cfg, err := LoadConfig(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.MailApp != "Mail" || cfg.Colors.Bar != "0xCC000000" {
+	if !slices.Equal(cfg.Badges, []string{"Mail", "Slack"}) || cfg.Colors.Island != "0xCC000000" {
 		t.Fatalf("unexpected config: %+v", cfg)
 	}
 }
@@ -712,8 +750,8 @@ func (f *failingRunner) Run(ctx context.Context, name string, args ...string) ([
 
 func TestDaemonReconfiguresWhenItemsGoMissing(t *testing.T) {
 	r := &failingRunner{fakeRunner: newFakeRunner(nil), failures: 1}
-	m := NewMail(r, "Mail")
-	m.last.changed("3")
+	m := NewKaomoji(NewMood(), Colors{})
+	m.last.changed("x")
 	d := NewDaemon(Config{}, r, "emit", []Item{&recordingItem{events: []string{"system_woke"}}, m})
 
 	b := d.newBatch()
@@ -732,7 +770,7 @@ func TestDaemonReconfiguresWhenItemsGoMissing(t *testing.T) {
 	if setups := countSetups(); setups != 1 {
 		t.Fatalf("expected one re-setup after a missing item, got %d", setups)
 	}
-	if !m.last.changed("3") {
+	if !m.last.changed("x") {
 		t.Fatal("re-setup should clear cached item state")
 	}
 

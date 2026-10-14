@@ -21,7 +21,7 @@ const (
 )
 
 type Options struct {
-	MailApp string
+	Badges []string
 }
 
 type App struct {
@@ -49,8 +49,10 @@ func (a *App) Install(ctx *app.Context) error {
 		return fmt.Errorf("failed to install blueutil: %w", err)
 	}
 
-	if err := util.InstallBrewPackage("font-sketchybar-app-font", true); err != nil {
-		return fmt.Errorf("failed to install sketchybar-app-font: %w", err)
+	for _, font := range []string{"font-sketchybar-app-font", "font-m-plus-rounded-1c"} {
+		if err := util.InstallBrewPackage(font, true); err != nil {
+			return fmt.Errorf("failed to install %s: %w", font, err)
+		}
 	}
 
 	return nil
@@ -58,20 +60,17 @@ func (a *App) Install(ctx *app.Context) error {
 
 func (a *App) barConfig(ctx *app.Context) bar.Config {
 	colors := ctx.Styles.Theme.Colors
-	text := util.HexToARGB(colors.TextOnSurface, 100)
-	primary := util.HexToARGB(colors.Primary, 100)
 	return bar.Config{
 		Colors: bar.Colors{
-			Bar:             util.HexToARGB(colors.Surface, ctx.Styles.WindowOpacity),
-			BarBorder:       util.HexToARGB(colors.SurfaceBorder, ctx.Styles.WindowOpacity),
-			Icon:            text,
-			IconHighlight:   primary,
-			Label:           text,
-			LabelHighlight:  primary,
+			Island:          util.HexToARGB(colors.Surface, ctx.Styles.WindowOpacity),
+			IslandBorder:    util.HexToARGB(colors.SurfaceBorder, 100),
+			Text:            util.HexToARGB(colors.TextOnSurface, 100),
+			Hot:             util.HexToARGB(colors.Primary, 100),
+			HotText:         util.HexToARGB(colors.TextOnPrimary, 100),
 			PopupBackground: util.HexToARGB(colors.Surface, 100),
 			PopupBorder:     util.HexToARGB(colors.SurfaceBorder, 100),
 		},
-		MailApp: a.opts.MailApp,
+		Badges: a.opts.Badges,
 	}
 }
 
