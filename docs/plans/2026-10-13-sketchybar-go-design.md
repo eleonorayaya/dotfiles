@@ -42,6 +42,18 @@ The bar's side margin follows `styles.Gaps.OuterLeft` (and the `GapOverride` whe
 
 Profiles set the badge apps: `work` uses Mail + Slack, and `personal` uses Proton Mail + Discord.
 
+## Bottom shelf
+
+The Dock is hidden for good (a separate `dock` app sets autohide and a 1000s reveal delay). A second sketchybar instance replaces it: `~/.local/bin/bottombar` is a symlink to sketchybar, because sketchybar names its instance, lock file and IPC service after the binary. A LaunchAgent (`sh.shizuku.bottombar`, logging to `~/Library/Logs/shizuku-bottombar.log`) keeps it running. Its rc execs `shizuku bar run --bar bottom`, a second daemon with its own socket. Sync reloads it in place and only re-bootstraps the agent when the plist changes.
+
+| Island | Contents | Source / update |
+|---|---|---|
+| sessions (left) | live Utena sessions (active/creating/pending/completed); one pip per Claude agent: ● working, ○ idle/done, ✦ ready for review or needs attention; names truncated, overflow shown as `+N` | `GET /sessions`, 3s; click → `PUT /sessions/{id}/activate`; hover → outline + agent popup; bounce when an agent finishes |
+| pet's room (center) | pixel Sylveon rendered to PNG by the daemon: blinks, strolls with a walk cycle, naps (idle > 5 min or 0–6h), hops when an agent finishes, waves when one needs attention | 1s tick; `ioreg` idle check every 10s |
+| workspaces (right) | tiles for the workspaces on that monitor with app icons; each monitor's visible space highlighted | aerospace triggers; click → `aerospace workspace`; hover tint |
+
+The shelf is centered in the bottom window gap (`styles.Gaps.OuterBottom`, now 64pt). Sketchybar applies a bottom bar's `y_offset` twice, so the offset is `(gap − height) / 4`. It hides on monitors whose gap override is too small to fit it (the built-in display).
+
 ## Deferred
 
 - **Per-monitor margins.** Sketchybar has one margin for all displays, so mixed built-in + external setups use the default gap everywhere.
