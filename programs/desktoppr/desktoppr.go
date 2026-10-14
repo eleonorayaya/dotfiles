@@ -12,7 +12,7 @@ import (
 //go:embed all:contents
 var contents embed.FS
 
-const wallpaperPath = "~/.config/desktoppr/cozy-autumn-rain.png"
+const wallpaperPath = "~/.config/desktoppr/sylveon-bg.jpg"
 
 type App struct{}
 
