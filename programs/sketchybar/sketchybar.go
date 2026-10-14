@@ -49,7 +49,7 @@ func (a *App) Install(ctx *app.Context) error {
 		return fmt.Errorf("failed to install blueutil: %w", err)
 	}
 
-	for _, font := range []string{"font-sketchybar-app-font", "font-m-plus-rounded-1c"} {
+	for _, font := range []string{"font-sketchybar-app-font", "font-m-plus-rounded-1c", "font-hack-nerd-font"} {
 		if err := util.InstallBrewPackage(font, true); err != nil {
 			return fmt.Errorf("failed to install %s: %w", font, err)
 		}

@@ -811,7 +811,7 @@ func TestRenderTiles(t *testing.T) {
 	args := b.Args()
 	for _, want := range [][]string{
 		{"--set", "tile.1", "drawing=on", "display=1", "label=:finder:"},
-		{"--set", "tile.2", "drawing=on", "display=1", "label=:kitty:", "label.drawing=on", "background.color=H"},
+		{"--set", "tile.2", "drawing=on", "display=1", "label=", "label.drawing=off", "icon=" + iconSittingCat, "icon.drawing=on", "icon.padding_right=12", "label.padding_left=0", "background.color=H"},
 		{"--set", "tile.9", "drawing=off"},
 	} {
 		if !containsSeq(args, want...) {

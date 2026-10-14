@@ -13,6 +13,7 @@ const (
 	badgesBracket  = "badges"
 	badgeDot       = "•"
 	badgeIconInset = 10
+	badgeIconSize  = 16
 	bubbleReach    = 5
 	bubbleOverlap  = 18
 	bubbleDigit    = 6
@@ -49,17 +50,15 @@ func (bg *Badges) Setup(ctx context.Context, b *Batch) error {
 			"background.corner_radius=7",
 			"y_offset=7",
 		)
-		b.Add(badgeIconItem(i), "right",
+		b.Add(badgeIconItem(i), "right", append(appIconProps(app, badgeIconSize),
 			"drawing=off",
-			P("icon", appIcon(app)),
-			P("icon.font", appFont),
 			P("icon.padding_left", badgeIconInset-bubbleReach),
 			P("icon.padding_right", badgeIconInset),
 			P("padding_left", itemPadding),
 			"padding_right=0",
 			"label.drawing=off",
 			P("click_script", fmt.Sprintf("open -a %q", app)),
-		)
+		)...)
 	}
 	b.Raw("--add", "bracket", badgesBracket, `/badge\..*/`)
 	b.Set(badgesBracket, append(bracketIsland(bg.colors, smallIsland), "drawing=off")...)

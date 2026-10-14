@@ -24,6 +24,9 @@ const (
 	tilesBracket       = "spaces"
 	tileOuterPadding   = itemPadding + 4
 	tileInnerPadding   = 2
+	emptyTileGlyph     = "✦"
+	tileNerdSize       = 19
+	tileGlyphGap       = 6
 	statusWorking      = "working"
 	statusNeedsYou     = "needs_attention"
 	statusReadyReview  = "ready_for_review"
@@ -352,11 +355,12 @@ func (t *SpaceTiles) Setup(ctx context.Context, b *Batch) error {
 		members = append(members, tileItem(s.Workspace))
 		b.Add(tileItem(s.Workspace), "right",
 			"drawing=off",
-			P("icon", s.Workspace),
-			P("icon.font", font("ExtraBold", tileSize.fontSize)),
+			"icon.drawing=off",
+			P("icon.font", fmt.Sprintf("%s:Regular:%d.0", nerdFont, tileNerdSize)),
 			P("icon.padding_left", tileSize.pad),
-			"icon.padding_right=5",
+			"icon.padding_right=0",
 			P("label.font", largeAppFont),
+			P("label.padding_left", tileSize.pad),
 			P("label.padding_right", tileSize.pad),
 			"background.drawing=on",
 			P("background.color", transparent),
@@ -431,15 +435,23 @@ func (t *SpaceTiles) resetCache() {
 
 func renderTiles(b *Batch, c Colors, spaces []aerospaceWorkspace, windows []aerospaceWindow, focused string) map[string]bool {
 	currents := map[string]bool{}
-	apps := map[string][]string{}
+	apps, nerds := map[string][]string{}, map[string][]string{}
 	for _, win := range windows {
-		icon := appIcon(win.AppName)
-		if !slices.Contains(apps[win.Workspace], icon) {
-			apps[win.Workspace] = append(apps[win.Workspace], icon)
+		target, icon := apps, appIcon(win.AppName)
+		if glyph, ok := nerdIcon(win.AppName); ok {
+			target, icon = nerds, glyph
+		}
+		if !slices.Contains(target[win.Workspace], icon) {
+			target[win.Workspace] = append(target[win.Workspace], icon)
 		}
 	}
 	for _, s := range spaces {
 		label := strings.Join(apps[s.Workspace], " ")
+		nerd := strings.Join(nerds[s.Workspace], " ")
+		occupied := label != "" || nerd != ""
+		if !occupied {
+			label = emptyTileGlyph
+		}
 		current := s.Visible || s.Workspace == focused
 		currents[s.Workspace] = current
 		fill, text := transparent, c.Text
@@ -447,16 +459,27 @@ func renderTiles(b *Batch, c Colors, spaces []aerospaceWorkspace, windows []aero
 			fill, text = c.Hot, c.HotText
 		}
 		b.Set(tileItem(s.Workspace),
-			onOff("drawing", current || label != ""),
+			onOff("drawing", current || occupied),
 			P("display", s.Display),
 			P("label", label),
 			onOff("label.drawing", label != ""),
+			P("icon", nerd),
+			onOff("icon.drawing", nerd != ""),
+			P("icon.padding_right", tilePad(label == "", tileGlyphGap)),
+			P("label.padding_left", tilePad(nerd == "", 0)),
 			P("background.color", fill),
 			P("icon.color", text),
 			P("label.color", text),
 		)
 	}
 	return currents
+}
+
+func tilePad(edge bool, inner int) int {
+	if edge {
+		return tileSize.pad
+	}
+	return inner
 }
 
 func BottomItems(cfg Config, runner Runner) []Item {

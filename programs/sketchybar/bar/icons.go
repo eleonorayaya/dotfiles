@@ -3,18 +3,23 @@ package bar
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 )
 
 const (
-	symbolFont = "SF Pro"
-	appFont    = "sketchybar-app-font:Regular:16.0"
+	symbolFont    = "SF Pro"
+	appFontFamily = "sketchybar-app-font"
+	appFont       = appFontFamily + ":Regular:16.0"
+	nerdFont      = "Hack Nerd Font"
 
 	iconWifi     = "\U00100647"
 	iconOffline  = "\U00100648"
 	iconEthernet = "\U00100906"
 	iconHeart    = "♥"
+
+	iconSittingCat = "\uEEED"
 
 	appIconDefault   = ":default:"
 	appIconBluetooth = ":bluetooth:"
@@ -42,6 +47,22 @@ var appIcons = sync.OnceValue(func() map[string]string {
 
 var appIconOverrides = map[string]string{
 	"vesktop": ":discord:",
+}
+
+var nerdAppIcons = map[string]string{
+	"kitty": iconSittingCat,
+}
+
+func nerdIcon(app string) (string, bool) {
+	icon, ok := nerdAppIcons[strings.ToLower(app)]
+	return icon, ok
+}
+
+func appIconProps(app string, size int) []string {
+	if icon, ok := nerdIcon(app); ok {
+		return []string{P("icon", icon), P("icon.font", fmt.Sprintf("%s:Regular:%d.0", nerdFont, size))}
+	}
+	return []string{P("icon", appIcon(app)), P("icon.font", fmt.Sprintf("%s:Regular:%d.0", appFontFamily, size))}
 }
 
 func appIcon(app string) string {

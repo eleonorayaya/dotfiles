@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	frontAppItem = "front_app"
-	clockItem    = "clock"
+	frontAppIconSize = 16
+	frontAppItem     = "front_app"
+	clockItem        = "clock"
 )
 
 type FrontApp struct {
@@ -23,7 +24,7 @@ func NewFrontApp(runner Runner, colors Colors) *FrontApp {
 }
 
 func (f *FrontApp) Setup(ctx context.Context, b *Batch) error {
-	b.Add(frontAppItem, "left", append(island(f.colors), P("icon.font", appFont))...)
+	b.Add(frontAppItem, "left", island(f.colors)...)
 	return nil
 }
 
@@ -40,7 +41,7 @@ func (f *FrontApp) Handle(ctx context.Context, ev Event, b *Batch) {
 		}
 		name = strings.TrimSpace(string(out))
 	}
-	b.Set(frontAppItem, P("icon", appIcon(name)), P("label", strings.ToLower(name)))
+	b.Set(frontAppItem, append(appIconProps(name, frontAppIconSize), P("label", strings.ToLower(name)))...)
 }
 
 type Clock struct {
