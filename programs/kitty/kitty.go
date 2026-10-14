@@ -24,6 +24,10 @@ func (a *App) Name() string {
 }
 
 func (a *App) Install(ctx *app.Context) error {
+	if err := util.InstallBrewPackage("font-maple-mono", true); err != nil {
+		return fmt.Errorf("failed to install font-maple-mono: %w", err)
+	}
+
 	if util.BinaryExists("kitty") {
 		slog.Info("kitty already installed, skipping")
 		return nil
