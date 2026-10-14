@@ -1019,3 +1019,18 @@ func TestSpaceTilesIgnoreUnknownWorkspaces(t *testing.T) {
 		t.Fatalf("tiles created after setup should not be set: %v", b.Args())
 	}
 }
+
+func TestUtenaRequestsOnlyLiveSessions(t *testing.T) {
+	var query string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		query = r.URL.RawQuery
+		w.Write([]byte(`{"sessions":[]}`))
+	}))
+	defer srv.Close()
+	if _, err := newUtenaClient(srv.URL).sessions(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if query != "status=active,creating,pending,completed" {
+		t.Fatalf("unexpected query %q", query)
+	}
+}

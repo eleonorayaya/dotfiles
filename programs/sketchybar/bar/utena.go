@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -127,7 +128,7 @@ func (u utenaClient) sessions(ctx context.Context) ([]utenaSession, error) {
 	var body struct {
 		Sessions []utenaSession `json:"sessions"`
 	}
-	if err := u.do(ctx, http.MethodGet, "/sessions", &body); err != nil {
+	if err := u.do(ctx, http.MethodGet, "/sessions?status="+strings.Join(liveSessionStatuses, ","), &body); err != nil {
 		return nil, err
 	}
 	return body.Sessions, nil
