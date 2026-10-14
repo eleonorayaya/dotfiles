@@ -113,8 +113,12 @@ func (a *App) Sync(ctx *app.Context) error {
 	}
 
 	if util.BinaryExists("sketchybar") {
-		if out, err := exec.Command("sketchybar", "--reload").CombinedOutput(); err != nil {
-			slog.Warn("failed to reload sketchybar", "error", err, "output", string(out))
+		if started, err := util.EnsureBrewService("sketchybar"); err != nil {
+			slog.Warn("failed to start sketchybar", "error", err)
+		} else if !started {
+			if out, err := exec.Command("sketchybar", "--reload").CombinedOutput(); err != nil {
+				slog.Warn("failed to reload sketchybar", "error", err, "output", string(out))
+			}
 		}
 		if err := syncBottomBar(); err != nil {
 			slog.Warn("failed to start bottom bar", "error", err)
