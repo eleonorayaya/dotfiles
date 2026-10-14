@@ -1,0 +1,87 @@
+[appearance]
+hide_window_buttons = true
+theme = 'monade'
+dockbar_position = 'bottom'
+click_to_type = 'single'
+dim_unfocused = 30
+border_focused_color = "{{.Colors.Primary}}"
+border_unfocused_color = "{{.Colors.SurfaceBorder}}"
+background = "off"
+
+[appearance.scrollbar]
+tint = "{{.Colors.TextOnSurfaceMuted}}"
+
+[appearance.selection]
+bg = "{{.Colors.Selection}}"
+fg = "{{.Colors.SelectionForeground}}"
+cursor_bg = "{{.Colors.Cursor}}"
+cursor_fg = "{{.Colors.CursorText}}"
+match_bg = "{{.Colors.Warning}}"
+match_fg = "{{.Colors.TextOnWarning}}"
+search_bg = "{{.Colors.SurfaceHighlight}}"
+search_fg = "{{.Colors.TextOnSurface}}"
+flash_color = "{{.Colors.Accent}}"
+
+[appearance.sidebar]
+position = "left"
+sections = "sessions:41,files:25,agents:34"
+
+[appearance.sidebar.agent_row]
+tokens = ["$session", "need", "harness", "elapsed", "context", "subagents", "meta", "now", "message"]
+
+[keybindings.prefix_mode]
+prefix_new_window = []
+prefix_window = []
+prefix_next_window = ['tab']
+prefix_prev_window = ['shift+tab']
+prefix_split_vertical = ['v', '|', '\']
+prefix_split_horizontal = ['s', '-']
+prefix_scrollback = ['u']
+prefix_review = ['V']
+
+[keybindings.terminal_mode]
+terminal_focus_left = ['ctrl+h', 'alt+left']
+terminal_focus_down = ['ctrl+j', 'alt+down']
+terminal_focus_up = ['ctrl+k', 'alt+up']
+terminal_focus_right = ['ctrl+l', 'alt+right']
+
+[startup]
+tiled = true
+open_default_window = true
+start_in_terminal_mode = true
+
+[[keybindings.command]]
+key = "prefix+p"
+type = "popup"
+command = "UTENA_POPUP=1 $HOME/.local/bin/utena"
+description = "utena sessions"
+
+[[keybindings.command]]
+key = "prefix+n"
+type = "shell"
+command = "$HOME/.local/bin/utena workspace new"
+description = "new window in the next empty workspace"
+
+[[keybindings.command]]
+key = "prefix+c"
+type = "shell"
+command = "$HOME/.local/bin/utena workspace new"
+description = "new window in the next empty workspace (tmux c)"
+
+[[keybindings.command]]
+key = "prefix+l"
+type = "shell"
+command = "$HOME/.local/bin/utena workspace next"
+description = "next workspace"
+
+[[keybindings.command]]
+key = "prefix+h"
+type = "shell"
+command = "$HOME/.local/bin/utena workspace prev"
+description = "previous workspace"
+
+[dock]
+right = ["notifications", "clock"]
+
+[hooks]
+after-attach = '''curl -sf --max-time 1 -X PUT -H 'Content-Type: application/json' -d "{\"session_name\":\"$TUIOS_SESSION_ID\"}" http://localhost:3333/tmux/hooks/client-session-changed'''

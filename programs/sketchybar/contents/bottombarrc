@@ -1,0 +1,5 @@
+#!/bin/zsh
+
+source "$HOME/.config/shizuku/shizuku.zshenv"
+
+exec shizuku bar run --bar bottom --config "$HOME/.config/sketchybar/bar.json"

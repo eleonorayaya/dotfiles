@@ -1,17 +1,17 @@
-"attribute" = "accent_salmon"
+"attribute" = "red"
 "type" = { fg = "secondary", modifiers = ["bold"] }
 "type.builtin" = { fg = "secondary", modifiers = ["bold"] }
-"type.enum.variant" = "accent_salmon"
+"type.enum.variant" = "red"
 "constructor" = "accent"
-"constant" = "accent_salmon"
+"constant" = "constant"
 "constant.builtin" = "accent"
-"constant.builtin.boolean" = "accent_peach"
-"constant.character" = "accent_yellow"
-"constant.character.escape" = "accent_gold"
-"constant.numeric" = "accent_salmon"
-"string" = "accent_gold"
-"string.regexp" = "accent_gold"
-"string.special" = "accent_gold"
+"constant.builtin.boolean" = "keyword"
+"constant.character" = "yellow"
+"constant.character.escape" = "string"
+"constant.numeric" = "number"
+"string" = "string"
+"string.regexp" = "string"
+"string.special" = "string"
 "string.special.url" = { fg = "link", modifiers = ["underlined"] }
 "comment" = { fg = "comment", modifiers = ["italic"] }
 "comment.line.documentation" = { fg = "comment", modifiers = ["italic", "bold"] }
@@ -19,45 +19,45 @@
 "variable" = "text"
 "variable.builtin" = "accent"
 "variable.parameter" = "text_emphasis"
-"variable.other.member" = "accent_salmon"
+"variable.other.member" = "red"
 "label" = "primary_variant"
 "punctuation" = "text_variant"
 "punctuation.special" = "accent"
-"keyword" = { fg = "accent_peach", modifiers = ["bold"] }
+"keyword" = { fg = "keyword", modifiers = ["bold"] }
 "keyword.control" = { fg = "primary", modifiers = ["bold"] }
-"keyword.control.import" = "accent_salmon"
+"keyword.control.import" = "red"
 "keyword.control.exception" = { fg = "error", modifiers = ["bold"] }
-"keyword.directive" = "accent_salmon"
+"keyword.directive" = "red"
 "operator" = "text_variant"
 "function" = { fg = "secondary", modifiers = ["bold"] }
 "function.builtin" = "accent"
-"function.macro" = "accent_salmon"
-"tag" = "accent_lavender"
-"namespace" = "accent_lavender"
+"function.macro" = "red"
+"tag" = "tag"
+"namespace" = "tag"
 "special" = "accent"
 
 "markup.heading" = { fg = "primary", modifiers = ["bold"] }
-"markup.list" = "accent_peach"
+"markup.list" = "keyword"
 "markup.bold" = { modifiers = ["bold"] }
 "markup.italic" = { modifiers = ["italic"] }
 "markup.strikethrough" = { modifiers = ["crossed_out"] }
 "markup.link.url" = { fg = "link", modifiers = ["underlined"] }
-"markup.link.text" = "accent_lavender"
+"markup.link.text" = "link"
 "markup.quote" = { fg = "text_variant", modifiers = ["italic"] }
-"markup.raw" = "accent_gold"
+"markup.raw" = "inline_code"
 
-"diff.plus" = "accent_mint"
-"diff.minus" = "accent_salmon"
+"diff.plus" = "added"
+"diff.minus" = "removed"
 "diff.delta" = "warning"
 
 "ui.background" = {}
 "ui.text" = "text"
 "ui.text.focus" = { fg = "text_emphasis", modifiers = ["bold"] }
 "ui.text.inactive" = "text_muted"
-"ui.text.directory" = "accent_peach"
+"ui.text.directory" = "path"
 "ui.cursor" = { fg = "cursor_text", bg = "text_variant" }
 "ui.cursor.primary" = { fg = "cursor_text", bg = "cursor" }
-"ui.cursor.match" = { fg = "surface", bg = "accent_lavender", modifiers = ["bold"] }
+"ui.cursor.match" = { fg = "surface", bg = "bright_magenta", modifiers = ["bold"] }
 "ui.cursorline.primary" = { bg = "surface_highlight" }
 "ui.linenr" = "text_muted"
 "ui.linenr.selected" = { fg = "text_emphasis", modifiers = ["bold"] }
@@ -114,12 +114,18 @@ text_on_secondary = "{{.Colors.TextOnSecondary}}"
 tertiary = "{{.Colors.Tertiary}}"
 text_on_tertiary = "{{.Colors.TextOnTertiary}}"
 accent = "{{.Colors.Accent}}"
-accent_peach = "{{.Colors.AccentPeach}}"
-accent_salmon = "{{.Colors.AccentSalmon}}"
-accent_lavender = "{{.Colors.AccentLavender}}"
-accent_gold = "{{.Colors.AccentGold}}"
-accent_yellow = "{{.Colors.AccentYellow}}"
-accent_mint = "{{.Colors.AccentMint}}"
+keyword = "{{.Colors.Keyword}}"
+string = "{{.Colors.String}}"
+number = "{{.Colors.Number}}"
+constant = "{{.Colors.Constant}}"
+tag = "{{.Colors.Tag}}"
+path = "{{.Colors.Path}}"
+inline_code = "{{.Colors.InlineCode}}"
+added = "{{.Colors.Added}}"
+removed = "{{.Colors.Removed}}"
+red = "{{.Colors.Palette.Red}}"
+yellow = "{{.Colors.Palette.Yellow}}"
+bright_magenta = "{{.Colors.Palette.BrightMagenta}}"
 error = "{{.Colors.Error}}"
 warning = "{{.Colors.Warning}}"
 info = "{{.Colors.Info}}"

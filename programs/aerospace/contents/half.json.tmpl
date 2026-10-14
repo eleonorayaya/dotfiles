@@ -1,0 +1,19 @@
+{
+  "gaps": {
+    "left": {{ .Gaps.OuterLeft }},
+    "right": {{ .Gaps.OuterRight }},
+    "top": {{ .Gaps.OuterTop }},
+    "bottom": {{ .Gaps.OuterBottom }},
+    "inner": {{ .Gaps.InnerHorizontal }}
+  }{{ if .GapOverride }},
+  "override": {
+    "pattern": "{{ .GapOverride.Pattern }}",
+    "gaps": {
+      "left": {{ .GapOverride.Gaps.OuterLeft }},
+      "right": {{ .GapOverride.Gaps.OuterRight }},
+      "top": {{ .GapOverride.Gaps.OuterTop }},
+      "bottom": {{ .GapOverride.Gaps.OuterBottom }},
+      "inner": {{ .GapOverride.Gaps.InnerHorizontal }}
+    }
+  }{{ end }}
+}

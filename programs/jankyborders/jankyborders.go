@@ -35,8 +35,8 @@ func (a *App) Install(ctx *app.Context) error {
 
 func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 	data := map[string]any{
-		"ActiveColor":   util.HexToARGB(ctx.Styles.Theme.Colors.AccentLavender, 100),
-		"InactiveColor": util.HexToARGB(ctx.Styles.Theme.Colors.AccentLavender, 100),
+		"ActiveColor":   util.HexToARGB(ctx.Styles.Theme.Colors.Palette.BrightMagenta, 100),
+		"InactiveColor": util.HexToARGB(ctx.Styles.Theme.Colors.Palette.BrightMagenta, 100),
 	}
 
 	fileMap, err := app.GenerateAppFiles("jankyborders", contents, data, ctx.OutDir)

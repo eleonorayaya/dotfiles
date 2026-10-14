@@ -230,6 +230,12 @@ pkg.Spec{
 
 `util.InstallBrewPackage` remains for macOS-only apps. Aliases that depend on an optional binary should set `Requires` so the shell stays usable if the install failed.
 
+## Themes
+
+`styles.ThemeColors` has a 16-color terminal `Palette` and role fields (`Keyword`, `String`, `Path`, `Added`, …). Terminal palettes (kitty, tuios) read `Palette`; everything else reads roles. `styles.WithTheme` fills empty roles from the palette. Every theme must be listed in `styles/themes/themes.go` (`themes.All`), which the tests check.
+
+Import iTerm2 schemes with `task theme:import -- [-name X] [-primary magenta] <file-or-url>...` (flags before files). It writes `styles/themes/<name>.go`, registers it in `themes.All`, and prints low-contrast warnings.
+
 ## Profiles
 
 The base profile is server-safe. `desktop` holds macOS apps, languages and agents; `work` and `personal` use `shizuku.Extends("desktop")`. Only add apps to the base if they work on Debian/Ubuntu.
@@ -259,6 +265,8 @@ The validation and default config creation will automatically include the new la
 The `claude` shizuku app manages `~/.claude/settings.json` with additive merges for `enabledPlugins` and `permissions.allow`. To add allowed commands, plugins, or other managed fields, use the `/claude-config` skill.
 
 Claude Code mods are plugins, so `claude.Options.Mods` takes `app.Mod` entries. Each one registers its marketplace (which defaults to the mod name), enables `<name>@<marketplace>`, and merges `Options` into `pluginConfigs.<id>.options`. Option keys the mod doesn't set keep whatever the user picked in `/config`. `ThemeOptions` derives options from the shizuku theme, and explicit `Options` override them. `claude.Prismantis()` uses it to map `ThemeColors` onto prismantis's color slots.
+
+The claude app also generates a Claude Code custom theme at `~/.claude/themes/shizuku.json` (base `light`/`dark` from `Theme.Type`, token overrides from `ThemeColors`; see `agents/claude/theme.go`) and selects it with `"theme": "custom:shizuku"` in settings.json.
 
 ## Coding Style
 
