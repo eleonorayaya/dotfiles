@@ -14,6 +14,38 @@ const (
 	iconFlower    = "✿"
 )
 
+type aerospaceWorkspace struct {
+	Workspace string `json:"workspace"`
+	Display   int    `json:"monitor-appkit-nsscreen-screens-id"`
+	Visible   bool   `json:"workspace-is-visible"`
+}
+
+type aerospaceWindow struct {
+	Workspace string `json:"workspace"`
+	AppName   string `json:"app-name"`
+}
+
+func addWorkspaceEvents(b *Batch) {
+	b.Raw("--add", "event", WorkspaceChangeEvent, "--add", "event", WorkspaceMonitorChangeEvent)
+}
+
+func listWorkspaces(ctx context.Context, r Runner) ([]aerospaceWorkspace, error) {
+	out, err := r.Run(ctx, "aerospace", "list-workspaces", "--all", "--json",
+		"--format", "%{workspace} %{monitor-appkit-nsscreen-screens-id} %{workspace-is-visible}")
+	if err != nil {
+		return nil, err
+	}
+	return decodeJSON[[]aerospaceWorkspace](out, "aerospace workspaces")
+}
+
+func listWindows(ctx context.Context, r Runner) ([]aerospaceWindow, error) {
+	out, err := r.Run(ctx, "aerospace", "list-windows", "--all", "--json", "--format", "%{workspace} %{app-name}")
+	if err != nil {
+		return nil, err
+	}
+	return decodeJSON[[]aerospaceWindow](out, "aerospace windows")
+}
+
 type Workspace struct {
 	runner Runner
 	colors Colors
@@ -25,7 +57,7 @@ func NewWorkspace(runner Runner, colors Colors) *Workspace {
 }
 
 func (w *Workspace) Setup(ctx context.Context, b *Batch) error {
-	b.Raw("--add", "event", WorkspaceChangeEvent, "--add", "event", WorkspaceMonitorChangeEvent)
+	addWorkspaceEvents(b)
 	b.Add(workspaceItem, "left", append(hotIsland(w.colors),
 		P("icon", iconFlower),
 		P("icon.font", symbolFont+":Bold:14.0"),
@@ -52,7 +84,7 @@ func (w *Workspace) Handle(ctx context.Context, ev Event, b *Batch) {
 	}
 	b.Set(workspaceItem, P("label", focused))
 	if w.last != "" && focused != w.last {
-		b.Raw("--animate", "sin", "14", "--set", workspaceItem, "y_offset=5", "y_offset=0")
+		b.Bounce(workspaceItem, 5)
 	}
 	w.last = focused
 }

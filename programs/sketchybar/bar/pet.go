@@ -12,25 +12,33 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
 const (
-	petItem       = "petsprite"
-	petZzzItem    = "petzzz"
-	petBracket    = "petroom"
-	petPixel      = 5
-	petIdleNap    = 5 * time.Minute
-	petHopFor     = 4 * time.Second
-	petTick       = time.Second
-	petBlinkGap   = 6
-	petRoam       = 72
-	petStroll     = 4
-	petEdge       = itemPadding + largePadding
-	petWalkSteps  = 4
-	petStepGap    = 220 * time.Millisecond
-	petWalkFrames = 52
+	petItem           = "petsprite"
+	petZzzItem        = "petzzz"
+	petBracket        = "petroom"
+	petPixel          = 5
+	petIdleNap        = 5 * time.Minute
+	petHopFor         = 4 * time.Second
+	petTick           = time.Second
+	petBlinkGap       = 6
+	petRoam           = 72
+	petStroll         = 8
+	petHome           = petRoam / 2
+	petWalkSteps      = 3
+	petStepGap        = 250 * time.Millisecond
+	petWalkFrames     = 45
+	petHopHeight      = 10
+	petNightUntilHour = 6
+	petIdleCheckTicks = 10
+	petImageScale     = "0.5"
+)
+
+var (
+	petEdge = itemPadding + petRoomSize.pad
+	petSide = (len(petBase) + 2) * petPixel / 2
 )
 
 var petBase = []string{
@@ -143,38 +151,20 @@ func writePetFrames(dir string) (map[string]string, error) {
 	return paths, nil
 }
 
-type Shelf struct {
-	mu             sync.Mutex
-	needsAttention bool
-	finishedAt     time.Time
-}
-
-func (s *Shelf) update(needsAttention, finished bool, now time.Time) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.needsAttention = needsAttention
-	if finished {
-		s.finishedAt = now
-	}
-}
-
-func (s *Shelf) snapshot() (bool, time.Time) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.needsAttention, s.finishedAt
-}
-
 type Pet struct {
 	runner Runner
 	colors Colors
 	shelf  *Shelf
 	frames map[string]string
-	now    func() time.Time
 	idle   time.Duration
 }
 
 func NewPet(runner Runner, colors Colors, shelf *Shelf) *Pet {
-	return &Pet{runner: runner, colors: colors, shelf: shelf, now: time.Now}
+	return &Pet{runner: runner, colors: colors, shelf: shelf}
+}
+
+func petPadding(pos int) []string {
+	return []string{P("padding_left", petEdge+pos), P("padding_right", petEdge+petRoam-pos)}
 }
 
 func (p *Pet) Setup(ctx context.Context, b *Batch) error {
@@ -187,18 +177,15 @@ func (p *Pet) Setup(ctx context.Context, b *Batch) error {
 		return err
 	}
 	p.frames = frames
-	side := (len(petBase) + 2) * petPixel / 2
-	b.Add(petItem, "center",
+	b.Add(petItem, "center", append([]string{
 		"background.drawing=on",
-		"background.color=0x00000000",
+		P("background.color", transparent),
 		P("background.image", frames["awake"]),
-		"background.image.scale=0.5",
-		P("width", side),
+		P("background.image.scale", petImageScale),
+		P("width", petSide),
 		"icon.drawing=off",
 		"label.drawing=off",
-		P("padding_left", petEdge+petRoam/2),
-		P("padding_right", petEdge+petRoam-petRoam/2),
-	)
+	}, petPadding(petHome)...)...)
 	b.Add(petZzzItem, "center",
 		"icon.drawing=off",
 		"label=z z ₊",
@@ -207,31 +194,29 @@ func (p *Pet) Setup(ctx context.Context, b *Batch) error {
 		"drawing=off",
 		"y_offset=4",
 		"label.padding_left=0",
-		P("label.padding_right", largePadding),
+		P("label.padding_right", petRoomSize.pad),
 		"padding_left=0",
 		"padding_right=0",
 	)
 	b.Raw("--add", "bracket", petBracket, petItem, petZzzItem)
-	b.Set(petBracket, append(bracketIsland(p.colors), P("background.height", largeHeight+8), P("background.corner_radius", largeRadius+4))...)
+	b.Set(petBracket, bracketIsland(p.colors, petRoomSize)...)
 	return nil
 }
 
 func (p *Pet) Stream(ctx context.Context, updates chan<- Update) {
-	ticks, lastFrame, hopped, pos := 0, "", time.Time{}, petRoam/2
+	ticks, lastFrame, hopped, pos := 0, "", time.Time{}, petHome
 	for ctx.Err() == nil {
 		ticks++
-		needsYou, finishedAt := p.shelf.snapshot()
-		now := p.now()
-		frame := p.frameFor(ctx, ticks, needsYou, now)
-		hop := !finishedAt.IsZero() && now.Sub(finishedAt) < petHopFor && finishedAt.After(hopped)
+		urgent, finishedAt := p.shelf.snapshot()
+		frame := p.frameFor(ctx, ticks, urgent, time.Now())
+		hop := time.Since(finishedAt) < petHopFor && finishedAt.After(hopped)
 		if hop {
 			hopped = finishedAt
 		}
-		if frame != "sleep" && !needsYou && ticks%petStroll == 0 {
-			target := rand.IntN(petRoam + 1)
-			if target != pos {
-				p.stroll(ctx, updates, pos, target)
-				pos, lastFrame = target, ""
+		if frame != "sleep" && !urgent && ticks%petStroll == 0 {
+			if target := rand.IntN(petRoam + 1); target != pos {
+				p.stroll(ctx, updates, pos, target, frame)
+				pos, lastFrame = target, frame
 			}
 		}
 		if frame != lastFrame || hop {
@@ -240,7 +225,7 @@ func (p *Pet) Stream(ctx context.Context, updates chan<- Update) {
 				b.Set(petItem, P("background.image", p.frames[frame]))
 				b.Set(petZzzItem, onOff("drawing", frame == "sleep"))
 				if hop {
-					b.Raw("--animate", "sin", "12", "--set", petItem, "y_offset=10", "y_offset=0")
+					b.Bounce(petItem, petHopHeight)
 				}
 			})
 		}
@@ -248,35 +233,34 @@ func (p *Pet) Stream(ctx context.Context, updates chan<- Update) {
 	}
 }
 
-func (p *Pet) stroll(ctx context.Context, updates chan<- Update, from, to int) {
+func (p *Pet) stroll(ctx context.Context, updates chan<- Update, from, to int, rest string) {
 	dir := "r"
 	if to < from {
 		dir = "l"
 	}
-	send(ctx, updates, func(b *Batch) {
-		b.Set(petItem, P("background.image", p.frames["walk1"+dir]))
-		b.Raw("--animate", "linear", strconv.Itoa(petWalkFrames), "--set", petItem, P("padding_left", petEdge+to), P("padding_right", petEdge+petRoam-to))
-	})
-	for step := 1; step < petWalkSteps; step++ {
-		sleep(ctx, petStepGap)
-		frame := "walk1" + dir
-		if step%2 == 1 {
-			frame = "walk2" + dir
-		}
+	for step := range petWalkSteps {
+		frame := fmt.Sprintf("walk%d%s", step%2+1, dir)
 		send(ctx, updates, func(b *Batch) {
 			b.Set(petItem, P("background.image", p.frames[frame]))
+			if step == 0 {
+				b.Raw(append([]string{"--animate", "linear", strconv.Itoa(petWalkFrames), "--set", petItem}, petPadding(to)...)...)
+			}
 		})
+		sleep(ctx, petStepGap)
 	}
+	send(ctx, updates, func(b *Batch) {
+		b.Set(petItem, P("background.image", p.frames[rest]))
+	})
 }
 
-func (p *Pet) frameFor(ctx context.Context, tick int, needsYou bool, now time.Time) string {
+func (p *Pet) frameFor(ctx context.Context, tick int, urgent bool, now time.Time) string {
 	switch {
-	case needsYou:
+	case urgent:
 		if tick%2 == 0 {
 			return "wave"
 		}
 		return "awake"
-	case now.Hour() < 6 || p.userIdle(ctx, tick) >= petIdleNap:
+	case now.Hour() < petNightUntilHour || p.userIdle(ctx, tick) >= petIdleNap:
 		return "sleep"
 	case tick%petBlinkGap == 0:
 		return "blink"
@@ -286,7 +270,7 @@ func (p *Pet) frameFor(ctx context.Context, tick int, needsYou bool, now time.Ti
 }
 
 func (p *Pet) userIdle(ctx context.Context, tick int) time.Duration {
-	if tick%10 != 1 {
+	if tick%petIdleCheckTicks != 1 {
 		return p.idle
 	}
 	if out, err := p.runner.Run(ctx, "ioreg", "-c", "IOHIDSystem", "-d", "4", "-k", "HIDIdleTime"); err == nil {

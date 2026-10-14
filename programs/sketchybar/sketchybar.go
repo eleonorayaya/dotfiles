@@ -77,6 +77,9 @@ func (a *App) barConfig(ctx *app.Context) bar.Config {
 	}
 	if o := ctx.Styles.GapOverride; o != nil {
 		cfg.MarginOverride = &bar.MarginOverride{Monitor: o.Pattern, Margin: o.Gaps.OuterLeft}
+		if o.Gaps.OuterBottom < bar.MinShelfGap {
+			cfg.HideOnMonitor = o.Pattern
+		}
 	}
 	return cfg
 }
@@ -116,7 +119,6 @@ func (a *App) Sync(ctx *app.Context) error {
 		if err := syncBottomBar(); err != nil {
 			slog.Warn("failed to start bottom bar", "error", err)
 		}
-		hideDock()
 	}
 
 	return nil

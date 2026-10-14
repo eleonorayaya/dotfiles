@@ -19,10 +19,15 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bar",
 		Short: "Run the sketchybar daemon",
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			if socketPath == "" {
-				socketPath = bar.DefaultSocketPath(which)
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			spec, err := bar.SpecFor(which)
+			if err != nil {
+				return err
 			}
+			if socketPath == "" {
+				socketPath = spec.SocketPath()
+			}
+			return nil
 		},
 	}
 	cmd.PersistentFlags().StringVar(&socketPath, "socket", "", "Unix socket the daemon listens on (default depends on --bar)")
@@ -60,7 +65,7 @@ func runDaemon(configPath, socketPath, which string) error {
 	if err != nil {
 		return err
 	}
-	place, err := bar.PlacementFor(which, cfg)
+	spec, err := bar.SpecFor(which)
 	if err != nil {
 		return err
 	}
@@ -84,5 +89,5 @@ func runDaemon(configPath, socketPath, which string) error {
 	go bar.Serve(ctx, server, events)
 
 	runner := bar.ExecRunner{}
-	return bar.NewDaemon(cfg, runner, emit, place, bar.ItemsFor(which, cfg, runner)).Run(ctx, events)
+	return bar.NewDaemon(cfg, runner, emit, spec.Placement(cfg), spec.Items(cfg, runner)).Run(ctx, events)
 }

@@ -487,7 +487,7 @@ func TestDaemonSetupSubscribesSinkOnce(t *testing.T) {
 	r := newFakeRunner(nil)
 	a := &recordingItem{events: []string{"front_app_switched", "system_woke"}}
 	c := &recordingItem{events: []string{"system_woke"}}
-	d := NewDaemon(Config{}, r, "emit", TopPlacement(Config{}), []Item{a, c})
+	d := NewDaemon(Config{}, r, "emit", topPlacement(Config{}), []Item{a, c})
 	if err := d.Setup(context.Background()); err != nil {
 		t.Fatal(err)
 	}
@@ -509,7 +509,7 @@ func TestDaemonSetupSubscribesSinkOnce(t *testing.T) {
 
 func TestDaemonDispatchCoalescesEvents(t *testing.T) {
 	a := &recordingItem{events: []string{"front_app_switched", "space_windows_change"}}
-	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", TopPlacement(Config{}), []Item{a})
+	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", topPlacement(Config{}), []Item{a})
 
 	d.dispatch(context.Background(), []Event{
 		{Name: sinkItem, Sender: "front_app_switched", Info: "kitty"},
@@ -528,7 +528,7 @@ func TestDaemonDispatchCoalescesEvents(t *testing.T) {
 
 func TestDaemonClicksRunOffLoop(t *testing.T) {
 	a := &recordingItem{}
-	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", TopPlacement(Config{}), []Item{a})
+	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", topPlacement(Config{}), []Item{a})
 
 	d.dispatch(context.Background(), []Event{{Name: "rec.child", Sender: "mouse.clicked"}, {Name: "other", Sender: "mouse.clicked"}})
 	select {
@@ -544,7 +544,7 @@ func TestDaemonClicksRunOffLoop(t *testing.T) {
 func TestDaemonRenderHandlesEveryItem(t *testing.T) {
 	a := &recordingItem{events: []string{"front_app_switched"}}
 	c := &recordingItem{events: []string{"system_woke"}}
-	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", TopPlacement(Config{}), []Item{a, c})
+	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", topPlacement(Config{}), []Item{a, c})
 	d.render(context.Background())
 	if len(a.handled) != 1 || len(c.handled) != 1 {
 		t.Fatalf("render should handle every item once: %+v %+v", a.handled, c.handled)
@@ -691,7 +691,7 @@ func TestDaemonReconfiguresWhenItemsGoMissing(t *testing.T) {
 	r := &failingRunner{fakeRunner: newFakeRunner(nil), failures: 1}
 	m := NewKaomoji(NewMood(), Colors{})
 	m.last.changed("x")
-	d := NewDaemon(Config{}, r, "emit", TopPlacement(Config{}), []Item{&recordingItem{events: []string{"system_woke"}}, m})
+	d := NewDaemon(Config{}, r, "emit", topPlacement(Config{}), []Item{&recordingItem{events: []string{"system_woke"}}, m})
 
 	b := d.newBatch()
 	b.Set("rec", "label=x")
@@ -728,21 +728,21 @@ func TestLayoutFollowsWindowGaps(t *testing.T) {
 
 	r := newFakeRunner(map[string]string{"aerospace list-monitors": "U32J59x (2)\nU32J59x (1)\n"})
 	b := &Batch{}
-	NewLayout(r, 64, override, false).Handle(ctx, Event{}, b)
+	NewLayout(r, 64, override, "").Handle(ctx, Event{}, b)
 	if !slices.Equal(b.Args(), []string{"--bar", P("margin", 64-itemPadding)}) {
 		t.Fatalf("external monitors should use the default gap: %v", b.Args())
 	}
 
 	r = newFakeRunner(map[string]string{"aerospace list-monitors": "Built-in Retina Display\n"})
 	b = &Batch{}
-	NewLayout(r, 64, override, false).Handle(ctx, Event{}, b)
+	NewLayout(r, 64, override, "").Handle(ctx, Event{}, b)
 	if !slices.Equal(b.Args(), []string{"--bar", P("margin", 8-itemPadding)}) {
 		t.Fatalf("laptop-only should use the override gap: %v", b.Args())
 	}
 
 	r = newFakeRunner(map[string]string{"aerospace list-monitors": "Built-in Retina Display\nU32J59x (1)\n"})
 	b = &Batch{}
-	NewLayout(r, 64, override, false).Handle(ctx, Event{}, b)
+	NewLayout(r, 64, override, "").Handle(ctx, Event{}, b)
 	if !slices.Equal(b.Args(), []string{"--bar", P("margin", 64-itemPadding)}) {
 		t.Fatalf("mixed monitors should use the default gap: %v", b.Args())
 	}
@@ -767,11 +767,11 @@ func TestSystemPushesGraphAndMeter(t *testing.T) {
 }
 
 func TestBottomPlacementCentersInWindowGap(t *testing.T) {
-	p := BottomPlacement(Config{BottomGap: 64})
+	p := bottomPlacement(Config{BottomGap: 64})
 	if p.Bin != BottomBinary || p.Position != "bottom" || p.YOffset != 5 || p.Height != bottomBarHeight {
 		t.Fatalf("unexpected bottom placement: %+v", p)
 	}
-	if BottomPlacement(Config{BottomGap: 8}).YOffset != 0 {
+	if bottomPlacement(Config{BottomGap: 8}).YOffset != 0 {
 		t.Fatal("small gaps should not push the bar off-screen")
 	}
 }
@@ -782,8 +782,8 @@ func TestSessionChips(t *testing.T) {
 		{ID: 3, Name: "new-bg", Status: "active", IsAttached: true, ClaudeSessions: []claudeAgent{{ID: 2, Status: "working"}, {ID: 3, Status: "idle"}}},
 		{ID: 4, Name: "old", Status: "archived"},
 	}
-	chips := sessionChips(sessions)
-	if len(chips) != 2 || chips[0].label() != "new-bg ●○" || !chips[0].attached || chips[1].label() != "sayo ✦" || !chips[1].needsMe {
+	chips := sessionChips(liveSessions(sessions))
+	if len(chips) != 2 || chips[0].label() != "new-bg ●○" || !chips[0].attached || chips[1].label() != "sayo ✦" || !chips[1].wantsYou {
 		t.Fatalf("unexpected chips: %+v", chips)
 	}
 }
@@ -803,7 +803,7 @@ func TestSessionsTrackFinishedAgents(t *testing.T) {
 }
 
 func TestRenderTiles(t *testing.T) {
-	spaces := []aerospaceWorkspace{{Workspace: "1", Display: 1}, {Workspace: "2", Display: 1, Focused: true}, {Workspace: "9", Display: 1}}
+	spaces := []aerospaceWorkspace{{Workspace: "1", Display: 1}, {Workspace: "2", Display: 1, Visible: true}, {Workspace: "9", Display: 1}}
 	windows := []aerospaceWindow{{Workspace: "1", AppName: "Finder"}, {Workspace: "1", AppName: "Finder"}, {Workspace: "2", AppName: "kitty"}}
 	b := &Batch{}
 	renderTiles(b, Colors{Hot: "H", HotText: "W", Text: "T"}, spaces, windows, "")
@@ -838,13 +838,13 @@ func TestSessionChipResetsTextAfterDetach(t *testing.T) {
 	if !containsSeq(b.Args(), P("label.color", "T")) {
 		t.Fatalf("detached chip should use normal text color: %v", b.Args())
 	}
-	if len(sessionChips([]utenaSession{{ID: 1, Name: "notion-app", Status: "broken"}})) != 0 {
+	if len(sessionChips(liveSessions([]utenaSession{{ID: 1, Name: "notion-app", Status: "broken"}}))) != 0 {
 		t.Fatal("broken sessions should not show")
 	}
 }
 
 func TestTopPlacementCentersInWindowGap(t *testing.T) {
-	if p := TopPlacement(Config{TopGap: 64}); p.YOffset != 12 || p.Position != "top" {
+	if p := topPlacement(Config{TopGap: 64}); p.YOffset != 12 || p.Position != "top" {
 		t.Fatalf("unexpected top placement: %+v", p)
 	}
 }
@@ -934,5 +934,52 @@ func TestWorkspaceBouncesOnSwitch(t *testing.T) {
 	w.Handle(context.Background(), Event{Env: map[string]string{"FOCUSED_WORKSPACE": "2"}}, b)
 	if !slices.Contains(b.Args(), "--animate") {
 		t.Fatalf("switching should bounce the badge: %v", b.Args())
+	}
+}
+
+func TestLayoutHidesShelfOnMatchingMonitors(t *testing.T) {
+	r := newFakeRunner(map[string]string{"aerospace list-monitors": "Built-in Retina Display\n"})
+	b := &Batch{}
+	NewLayout(r, 64, nil, "built-in retina").Handle(context.Background(), Event{}, b)
+	if !slices.Contains(b.Args(), "hidden=on") {
+		t.Fatalf("shelf should hide on the laptop screen: %v", b.Args())
+	}
+	r = newFakeRunner(map[string]string{"aerospace list-monitors": "U32J59x (1)\n"})
+	b = &Batch{}
+	NewLayout(r, 64, nil, "built-in retina").Handle(context.Background(), Event{}, b)
+	if !slices.Contains(b.Args(), "hidden=off") {
+		t.Fatalf("shelf should show on external monitors: %v", b.Args())
+	}
+}
+
+func TestSpecFor(t *testing.T) {
+	if _, err := SpecFor("sideways"); err == nil {
+		t.Fatal("unknown bars should be rejected")
+	}
+	top, _ := SpecFor(BarTop)
+	bottom, _ := SpecFor(BarBottom)
+	if top.SocketPath() == bottom.SocketPath() {
+		t.Fatal("each bar needs its own socket")
+	}
+	if bottom.Placement(Config{}).Bin != BottomBinary {
+		t.Fatal("bottom bar should drive the bottombar instance")
+	}
+}
+
+func TestSpaceTilesSkipUnchangedRender(t *testing.T) {
+	r := newFakeRunner(map[string]string{
+		"aerospace list-workspaces": `[{"workspace":"1","monitor-appkit-nsscreen-screens-id":1,"workspace-is-visible":true}]`,
+		"aerospace list-windows":    `[{"workspace":"1","app-name":"kitty"}]`,
+	})
+	tiles := NewSpaceTiles(r, Colors{})
+	b := &Batch{}
+	tiles.Handle(context.Background(), Event{}, b)
+	if len(b.Args()) == 0 {
+		t.Fatal("first render should set tiles")
+	}
+	b = &Batch{}
+	tiles.Handle(context.Background(), Event{}, b)
+	if len(b.Args()) != 0 {
+		t.Fatalf("unchanged tiles should not re-render: %v", b.Args())
 	}
 }

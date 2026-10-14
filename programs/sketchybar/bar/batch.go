@@ -9,7 +9,10 @@ import (
 	"time"
 )
 
-const commandTimeout = 10 * time.Second
+const (
+	commandTimeout = 10 * time.Second
+	bounceFrames   = "14"
+)
 
 type Runner interface {
 	Run(ctx context.Context, name string, args ...string) ([]byte, error)
@@ -74,6 +77,10 @@ func (b *Batch) Listen(name string, events ...string) *Batch {
 	return b.Subscribe(name, events...)
 }
 
+func (b *Batch) Bounce(name string, height int) *Batch {
+	return b.Raw("--animate", "sin", bounceFrames, "--set", name, P("y_offset", height), "y_offset=0")
+}
+
 func (b *Batch) Remove(name string) *Batch {
 	b.args = append(b.args, "--remove", name)
 	return b
@@ -92,11 +99,7 @@ func (b *Batch) apply(ctx context.Context, r Runner) error {
 	if len(b.args) == 0 {
 		return nil
 	}
-	bin := b.bin
-	if bin == "" {
-		bin = topBinary
-	}
-	if _, err := r.Run(ctx, bin, b.args...); err != nil {
+	if _, err := r.Run(ctx, b.bin, b.args...); err != nil {
 		return fmt.Errorf("failed to apply sketchybar batch: %w", err)
 	}
 	return nil

@@ -28,9 +28,8 @@ type utenaSession struct {
 }
 
 type Utena struct {
+	utenaClient
 	colors     Colors
-	baseURL    string
-	client     *http.Client
 	pollWindow time.Duration
 	settle     time.Duration
 	last       lastValue
@@ -38,11 +37,10 @@ type Utena struct {
 
 func NewUtena(baseURL string, colors Colors) *Utena {
 	return &Utena{
-		colors:     colors,
-		baseURL:    baseURL,
-		client:     &http.Client{Timeout: 60 * time.Second},
-		pollWindow: utenaPollWindow,
-		settle:     utenaSettle,
+		utenaClient: newUtenaClient(baseURL),
+		colors:      colors,
+		pollWindow:  utenaPollWindow,
+		settle:      utenaSettle,
 	}
 }
 
@@ -76,27 +74,34 @@ func (u *Utena) Stream(ctx context.Context, updates chan<- Update) {
 }
 
 func (u *Utena) activeSession(ctx context.Context) (string, error) {
-	var body struct {
-		Sessions []utenaSession `json:"sessions"`
-	}
-	if err := u.get(ctx, "/sessions", &body); err != nil {
+	sessions, err := u.sessions(ctx)
+	if err != nil {
 		return "", err
 	}
-	return pickActiveSession(body.Sessions), nil
+	return pickActiveSession(sessions), nil
 }
 
 func (u *Utena) waitForActivation(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, u.pollWindow)
 	defer cancel()
-	err := u.get(ctx, "/tmux/activations/next", nil)
+	err := u.do(ctx, http.MethodGet, "/tmux/activations/next", nil)
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 		return nil
 	}
 	return err
 }
 
-func (u *Utena) get(ctx context.Context, path string, into any) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.baseURL+path, nil)
+type utenaClient struct {
+	baseURL string
+	client  *http.Client
+}
+
+func newUtenaClient(baseURL string) utenaClient {
+	return utenaClient{baseURL: baseURL, client: &http.Client{Timeout: 60 * time.Second}}
+}
+
+func (u utenaClient) do(ctx context.Context, method, path string, into any) error {
+	req, err := http.NewRequestWithContext(ctx, method, u.baseURL+path, nil)
 	if err != nil {
 		return fmt.Errorf("failed to build utena request: %w", err)
 	}
@@ -107,7 +112,7 @@ func (u *Utena) get(ctx context.Context, path string, into any) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 300 {
-		return fmt.Errorf("utena %s: %s", path, resp.Status)
+		return fmt.Errorf("utena %s %s: %s", method, path, resp.Status)
 	}
 	if into == nil {
 		return nil
@@ -116,6 +121,16 @@ func (u *Utena) get(ctx context.Context, path string, into any) error {
 		return fmt.Errorf("failed to decode utena %s: %w", path, err)
 	}
 	return nil
+}
+
+func (u utenaClient) sessions(ctx context.Context) ([]utenaSession, error) {
+	var body struct {
+		Sessions []utenaSession `json:"sessions"`
+	}
+	if err := u.do(ctx, http.MethodGet, "/sessions", &body); err != nil {
+		return nil, err
+	}
+	return body.Sessions, nil
 }
 
 func (u *Utena) resetCache() {

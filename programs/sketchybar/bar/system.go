@@ -79,7 +79,7 @@ func (s *System) Setup(ctx context.Context, b *Batch) error {
 	)
 	b.Add(cpuItem, "right", P("icon", "cpu"), P("icon.font", font("ExtraBold", 11)), P("icon.color", c.Hot), "label.drawing=off", P("icon.padding_left", islandPadding), "icon.padding_right=6", P("padding_left", itemPadding), "padding_right=0", click)
 	b.Raw("--add", "bracket", systemBracket, cpuItem, cpuGraphItem, sparkleItem, memoryItem, memoryBar)
-	b.Set(systemBracket, bracketIsland(s.colors)...)
+	b.Set(systemBracket, bracketIsland(s.colors, smallIsland)...)
 	return nil
 }
 

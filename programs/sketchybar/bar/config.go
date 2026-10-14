@@ -27,6 +27,7 @@ type Config struct {
 	Margin         int             `json:"margin"`
 	TopGap         int             `json:"topGap"`
 	BottomGap      int             `json:"bottomGap"`
+	HideOnMonitor  string          `json:"hideOnMonitor,omitempty"`
 	MarginOverride *MarginOverride `json:"marginOverride,omitempty"`
 }
 

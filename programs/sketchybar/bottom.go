@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -18,7 +17,6 @@ import (
 
 const (
 	bottomLabel         = "sh.shizuku.bottombar"
-	dockHideDelay       = "1000"
 	bootstrapAttempts   = 20
 	bootstrapRetryDelay = 250 * time.Millisecond
 )
@@ -52,11 +50,17 @@ func syncBottomBar() error {
 	if err != nil {
 		return err
 	}
+	domain := "gui/" + strconv.Itoa(os.Getuid())
+	if current, err := os.ReadFile(plistPath); err == nil && bytes.Equal(current, plist) && exec.Command("launchctl", "print", domain+"/"+bottomLabel).Run() == nil {
+		if out, err := exec.Command(link, "--reload").CombinedOutput(); err != nil {
+			return fmt.Errorf("failed to reload bottom bar: %w: %s", err, strings.TrimSpace(string(out)))
+		}
+		return nil
+	}
 	if err := os.WriteFile(plistPath, plist, 0o644); err != nil {
 		return fmt.Errorf("failed to write %s: %w", plistPath, err)
 	}
 
-	domain := "gui/" + strconv.Itoa(os.Getuid())
 	exec.Command("launchctl", "bootout", domain+"/"+bottomLabel).Run()
 	var lastErr error
 	for range bootstrapAttempts {
@@ -113,26 +117,4 @@ func bottomPlist(home, binary string) ([]byte, error) {
 </dict>
 </plist>
 `, bottomLabel, esc(binary), esc(rc), esc(path), esc(logPath), esc(logPath))), nil
-}
-
-func hideDock() {
-	current := func(key string) string {
-		out, _ := exec.Command("defaults", "read", "com.apple.dock", key).Output()
-		return strings.TrimSpace(string(out))
-	}
-	if current("autohide") == "1" && current("autohide-delay") == dockHideDelay {
-		return
-	}
-	for _, args := range [][]string{
-		{"write", "com.apple.dock", "autohide", "-bool", "true"},
-		{"write", "com.apple.dock", "autohide-delay", "-float", dockHideDelay},
-	} {
-		if out, err := exec.Command("defaults", args...).CombinedOutput(); err != nil {
-			slog.Warn("failed to configure dock", "error", err, "output", string(out))
-			return
-		}
-	}
-	if err := exec.Command("killall", "Dock").Run(); err != nil {
-		slog.Warn("failed to restart dock", "error", err)
-	}
 }

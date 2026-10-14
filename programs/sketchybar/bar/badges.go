@@ -62,7 +62,7 @@ func (bg *Badges) Setup(ctx context.Context, b *Batch) error {
 		)
 	}
 	b.Raw("--add", "bracket", badgesBracket, `/badge\..*/`)
-	b.Set(badgesBracket, append(bracketIsland(bg.colors), "drawing=off")...)
+	b.Set(badgesBracket, append(bracketIsland(bg.colors, smallIsland), "drawing=off")...)
 	return nil
 }
 

@@ -13,43 +13,84 @@ import (
 )
 
 const (
-	sessionSlots   = 8
-	sessionPrefix  = "sess."
-	sessionPopup   = "sesspop."
-	maxNameRunes   = 14
-	maxPopupAgents = 6
-	tilePrefix     = "tile."
-	tilesBracket   = "spaces"
-
-	pipWorking = "●"
-	pipIdle    = "○"
-	pipNeedsMe = "✦"
+	sessionSlots       = 8
+	sessionPrefix      = "sess."
+	sessionPopup       = "sesspop."
+	sessionPopupRegex  = `/sesspop\..*/`
+	maxNameRunes       = 14
+	maxPopupAgents     = 6
+	sessionBounce      = 6
+	tilePrefix         = "tile."
+	tilesBracket       = "spaces"
+	tileOuterPadding   = itemPadding + 4
+	tileInnerPadding   = 2
+	statusWorking      = "working"
+	statusNeedsYou     = "needs_attention"
+	statusReadyReview  = "ready_for_review"
+	pipWorking         = "●"
+	pipIdle            = "○"
+	pipNeedsMe         = "✦"
+	agentLabelNeedsYou = "needs you"
+	agentLabelReview   = "ready for review"
 )
 
 var liveSessionStatuses = []string{"active", "creating", "pending", "completed"}
-
-var agentStatusLabels = map[string]string{
-	"working":          "working",
-	"idle":             "idle",
-	"needs_attention":  "needs you",
-	"ready_for_review": "ready for review",
-	"done":             "done",
-}
 
 type claudeAgent struct {
 	ID     uint   `json:"ID"`
 	Status string `json:"status"`
 }
 
+func wantsYou(status string) bool {
+	return status == statusNeedsYou || status == statusReadyReview
+}
+
 func pip(status string) string {
-	switch status {
-	case "working":
+	switch {
+	case status == statusWorking:
 		return pipWorking
-	case "needs_attention", "ready_for_review":
+	case wantsYou(status):
 		return pipNeedsMe
 	default:
 		return pipIdle
 	}
+}
+
+func agentLabel(status string) string {
+	switch status {
+	case statusNeedsYou:
+		return agentLabelNeedsYou
+	case statusReadyReview:
+		return agentLabelReview
+	}
+	return status
+}
+
+func liveSessions(sessions []utenaSession) []utenaSession {
+	return slices.DeleteFunc(sessions, func(s utenaSession) bool {
+		return !slices.Contains(liveSessionStatuses, s.Status)
+	})
+}
+
+type Shelf struct {
+	mu         sync.Mutex
+	urgent     bool
+	finishedAt time.Time
+}
+
+func (s *Shelf) update(urgent, finished bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.urgent = urgent
+	if finished {
+		s.finishedAt = time.Now()
+	}
+}
+
+func (s *Shelf) snapshot() (bool, time.Time) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.urgent, s.finishedAt
 }
 
 type sessionChip struct {
@@ -57,7 +98,7 @@ type sessionChip struct {
 	name     string
 	agents   []string
 	attached bool
-	needsMe  bool
+	wantsYou bool
 	more     int
 }
 
@@ -86,13 +127,10 @@ func truncateName(name string) string {
 func sessionChips(sessions []utenaSession) []sessionChip {
 	var chips []sessionChip
 	for _, s := range sessions {
-		if !slices.Contains(liveSessionStatuses, s.Status) {
-			continue
-		}
 		chip := sessionChip{id: s.ID, name: truncateName(s.Name), attached: s.IsAttached}
 		for _, a := range s.ClaudeSessions {
 			chip.agents = append(chip.agents, a.Status)
-			chip.needsMe = chip.needsMe || pip(a.Status) == pipNeedsMe
+			chip.wantsYou = chip.wantsYou || wantsYou(a.Status)
 		}
 		chips = append(chips, chip)
 	}
@@ -105,7 +143,7 @@ func sessionChips(sessions []utenaSession) []sessionChip {
 }
 
 type Sessions struct {
-	utena  *Utena
+	utena  utenaClient
 	colors Colors
 	shelf  *Shelf
 	mu     sync.Mutex
@@ -115,14 +153,14 @@ type Sessions struct {
 }
 
 func NewSessions(baseURL string, colors Colors, shelf *Shelf) *Sessions {
-	return &Sessions{utena: NewUtena(baseURL, colors), colors: colors, shelf: shelf, agents: map[uint]string{}}
+	return &Sessions{utena: newUtenaClient(baseURL), colors: colors, shelf: shelf, agents: map[uint]string{}}
 }
 
 func sessionItem(i int) string { return fmt.Sprintf("%s%d", sessionPrefix, i) }
 
 func (s *Sessions) Setup(ctx context.Context, b *Batch) error {
 	for i := range sessionSlots {
-		b.Add(sessionItem(i), "left", append(append(island(s.colors), large()...), "drawing=off", "icon.drawing=off", "popup.align=left")...)
+		b.Add(sessionItem(i), "left", "drawing=off", "popup.align=left")
 		b.OnClick(sessionItem(i), "mouse.entered", "mouse.exited", "mouse.exited.global")
 	}
 	return nil
@@ -133,15 +171,13 @@ func (s *Sessions) Interval() time.Duration {
 }
 
 func (s *Sessions) Poll(ctx context.Context) Update {
-	var body struct {
-		Sessions []utenaSession `json:"sessions"`
-	}
-	if err := s.utena.get(ctx, "/sessions", &body); err != nil {
+	sessions, err := s.utena.sessions(ctx)
+	if err != nil {
 		slog.Debug("bar: utena sessions unavailable", "error", err)
-		body.Sessions = nil
 	}
-	chips := sessionChips(body.Sessions)
-	finished := s.trackAgents(body.Sessions)
+	sessions = liveSessions(sessions)
+	chips := sessionChips(sessions)
+	finished := s.trackAgents(sessions)
 
 	s.mu.Lock()
 	s.chips = chips
@@ -159,44 +195,42 @@ func (s *Sessions) Poll(ctx context.Context) Update {
 	return func(b *Batch) {
 		renderSessions(b, s.colors, chips)
 		for _, i := range bounce {
-			b.Raw("--animate", "sin", "14", "--set", sessionItem(i), "y_offset=6", "y_offset=0")
+			b.Bounce(sessionItem(i), sessionBounce)
 		}
 	}
 }
 
 func (s *Sessions) trackAgents(sessions []utenaSession) []uint {
-	needsMe := false
+	urgent := false
 	var finished []uint
 	seen := map[uint]string{}
 	for _, sess := range sessions {
-		if !slices.Contains(liveSessionStatuses, sess.Status) {
-			continue
-		}
 		for _, a := range sess.ClaudeSessions {
 			seen[a.ID] = a.Status
-			needsMe = needsMe || a.Status == "needs_attention"
-			if s.agents[a.ID] == "working" && a.Status != "working" && !slices.Contains(finished, sess.ID) {
+			urgent = urgent || a.Status == statusNeedsYou
+			if s.agents[a.ID] == statusWorking && a.Status != statusWorking && !slices.Contains(finished, sess.ID) {
 				finished = append(finished, sess.ID)
 			}
 		}
 	}
 	s.agents = seen
-	s.shelf.update(needsMe, len(finished) > 0, time.Now())
+	s.shelf.update(urgent, len(finished) > 0)
 	return finished
 }
 
 func chipProps(c Colors, chip sessionChip, hovered bool) []string {
-	props := island(c)
+	props := islandOf(c, largeIsland)
 	switch {
 	case chip.attached:
-		props = hotIsland(c)
-	case chip.needsMe:
+		props = hotIslandOf(c, largeIsland)
+	case chip.wantsYou:
 		props = append(props, P("background.color", c.IslandBorder), P("background.border_color", c.Hot))
 	}
 	if hovered && !chip.attached {
 		props = append(props, P("background.border_color", c.Hot))
 	}
-	return append(append(props, large()...), "drawing=on", "icon.drawing=off", P("label", chip.label()))
+	props = append(props, labelOnly(largeIsland)...)
+	return append(props, "drawing=on", P("label", chip.label()))
 }
 
 func renderSessions(b *Batch, c Colors, chips []sessionChip) {
@@ -234,45 +268,31 @@ func (s *Sessions) Click(ctx context.Context, ev Event, b *Batch) {
 	case "mouse.exited", "mouse.exited.global":
 		b.Set(item, append(chipProps(s.colors, chip, false), "popup.drawing=off")...)
 	case "mouse.clicked":
-		if chip.more == 0 {
-			s.activate(ctx, chip.id)
+		if chip.more > 0 {
+			return
+		}
+		if err := s.utena.do(ctx, http.MethodPut, fmt.Sprintf("/sessions/%d/activate", chip.id), nil); err != nil {
+			slog.Warn("bar: activate session failed", "id", chip.id, "error", err)
 		}
 	}
 }
 
 func renderAgentPopup(b *Batch, host string, chip sessionChip) {
-	b.Remove("/" + strings.ReplaceAll(sessionPopup, ".", `\.`) + ".*/")
+	b.Remove(sessionPopupRegex)
 	if len(chip.agents) == 0 {
 		b.Set(host, "popup.drawing=off")
 		return
 	}
 	for j, status := range chip.agents[:min(len(chip.agents), maxPopupAgents)] {
-		label := agentStatusLabels[status]
-		if label == "" {
-			label = status
-		}
 		b.Add(fmt.Sprintf("%s%d", sessionPopup, j), "popup."+host,
 			P("icon", pip(status)),
-			"icon.padding_left=12",
+			P("icon.padding_left", islandPadding),
 			"icon.padding_right=6",
-			P("label", fmt.Sprintf("agent %d · %s", j+1, label)),
-			"label.padding_right=14",
+			P("label", fmt.Sprintf("agent %d · %s", j+1, agentLabel(status))),
+			P("label.padding_right", largeIsland.pad),
 		)
 	}
 	b.Set(host, "popup.drawing=on")
-}
-
-func (s *Sessions) activate(ctx context.Context, id uint) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, fmt.Sprintf("%s/sessions/%d/activate", s.utena.baseURL, id), nil)
-	if err != nil {
-		return
-	}
-	resp, err := s.utena.client.Do(req)
-	if err != nil {
-		slog.Warn("bar: activate session failed", "id", id, "error", err)
-		return
-	}
-	resp.Body.Close()
 }
 
 func (s *Sessions) resetCache() {
@@ -284,6 +304,7 @@ type SpaceTiles struct {
 	colors  Colors
 	mu      sync.Mutex
 	current map[string]bool
+	last    lastValue
 }
 
 func NewSpaceTiles(runner Runner, colors Colors) *SpaceTiles {
@@ -293,7 +314,7 @@ func NewSpaceTiles(runner Runner, colors Colors) *SpaceTiles {
 func tileItem(ws string) string { return tilePrefix + ws }
 
 func (t *SpaceTiles) Setup(ctx context.Context, b *Batch) error {
-	b.Raw("--add", "event", WorkspaceChangeEvent, "--add", "event", WorkspaceMonitorChangeEvent)
+	addWorkspaceEvents(b)
 	spaces, err := listWorkspaces(ctx, t.runner)
 	if err != nil {
 		slog.Warn("bar: list workspaces failed, retrying on next update", "error", err)
@@ -302,26 +323,26 @@ func (t *SpaceTiles) Setup(ctx context.Context, b *Batch) error {
 	slices.Reverse(spaces)
 	members := []string{"--add", "bracket", tilesBracket}
 	for i, s := range spaces {
-		left, right := 2, 2
+		left, right := tileInnerPadding, tileInnerPadding
 		if i == 0 {
-			right = itemPadding + 4
+			right = tileOuterPadding
 		}
 		if i == len(spaces)-1 {
-			left = itemPadding + 4
+			left = tileOuterPadding
 		}
 		members = append(members, tileItem(s.Workspace))
 		b.Add(tileItem(s.Workspace), "right",
 			"drawing=off",
 			P("icon", s.Workspace),
-			P("icon.font", font("ExtraBold", 15)),
-			"icon.padding_left=12",
+			P("icon.font", font("ExtraBold", tileSize.fontSize)),
+			P("icon.padding_left", tileSize.pad),
 			"icon.padding_right=5",
 			P("label.font", largeAppFont),
-			"label.padding_right=12",
+			P("label.padding_right", tileSize.pad),
 			"background.drawing=on",
-			"background.color=0x00000000",
-			"background.height=30",
-			"background.corner_radius=15",
+			P("background.color", transparent),
+			P("background.height", tileSize.height),
+			P("background.corner_radius", tileSize.radius),
 			P("padding_left", left),
 			P("padding_right", right),
 			P("click_script", "aerospace workspace "+s.Workspace),
@@ -329,7 +350,7 @@ func (t *SpaceTiles) Setup(ctx context.Context, b *Batch) error {
 		b.Listen(tileItem(s.Workspace), "mouse.entered", "mouse.exited")
 	}
 	b.Raw(members...)
-	b.Set(tilesBracket, append(bracketIsland(t.colors), P("background.height", largeHeight), P("background.corner_radius", largeRadius))...)
+	b.Set(tilesBracket, bracketIsland(t.colors, largeIsland)...)
 	return nil
 }
 
@@ -343,20 +364,19 @@ func (t *SpaceTiles) Handle(ctx context.Context, ev Event, b *Batch) {
 		slog.Warn("bar: list workspaces failed", "error", err)
 		return
 	}
-	out, err := t.runner.Run(ctx, "aerospace", "list-windows", "--all", "--json", "--format", "%{workspace} %{app-name}")
+	windows, err := listWindows(ctx, t.runner)
 	if err != nil {
 		slog.Warn("bar: list windows failed", "error", err)
 		return
 	}
-	windows, err := decodeJSON[[]aerospaceWindow](out, "aerospace windows")
-	if err != nil {
-		slog.Warn("bar: list windows failed", "error", err)
-		return
-	}
-	current := renderTiles(b, t.colors, spaces, windows, ev.Env["FOCUSED_WORKSPACE"])
+	rendered := &Batch{}
+	current := renderTiles(rendered, t.colors, spaces, windows, ev.Env["FOCUSED_WORKSPACE"])
 	t.mu.Lock()
 	t.current = current
 	t.mu.Unlock()
+	if t.last.changed(strings.Join(rendered.Args(), "\x00")) {
+		b.Raw(rendered.Args()...)
+	}
 }
 
 func (t *SpaceTiles) Prefix() string {
@@ -371,32 +391,15 @@ func (t *SpaceTiles) Click(ctx context.Context, ev Event, b *Batch) {
 	if current {
 		return
 	}
-	fill := "0x00000000"
+	fill := transparent
 	if ev.Sender == "mouse.entered" {
 		fill = t.colors.IslandBorder
 	}
 	b.Set(ev.Name, P("background.color", fill))
 }
 
-type aerospaceWorkspace struct {
-	Workspace string `json:"workspace"`
-	Display   int    `json:"monitor-appkit-nsscreen-screens-id"`
-	Focused   bool   `json:"workspace-is-focused"`
-	Visible   bool   `json:"workspace-is-visible"`
-}
-
-type aerospaceWindow struct {
-	Workspace string `json:"workspace"`
-	AppName   string `json:"app-name"`
-}
-
-func listWorkspaces(ctx context.Context, r Runner) ([]aerospaceWorkspace, error) {
-	out, err := r.Run(ctx, "aerospace", "list-workspaces", "--all", "--json",
-		"--format", "%{workspace} %{monitor-appkit-nsscreen-screens-id} %{workspace-is-focused} %{workspace-is-visible}")
-	if err != nil {
-		return nil, err
-	}
-	return decodeJSON[[]aerospaceWorkspace](out, "aerospace workspaces")
+func (t *SpaceTiles) resetCache() {
+	t.last.reset()
 }
 
 func renderTiles(b *Batch, c Colors, spaces []aerospaceWorkspace, windows []aerospaceWindow, focused string) map[string]bool {
@@ -409,19 +412,15 @@ func renderTiles(b *Batch, c Colors, spaces []aerospaceWorkspace, windows []aero
 		}
 	}
 	for _, s := range spaces {
-		isFocused := s.Focused
-		if focused != "" {
-			isFocused = s.Workspace == focused
-		}
 		label := strings.Join(apps[s.Workspace], " ")
-		current := isFocused || (s.Visible && focused == "")
+		current := s.Visible || s.Workspace == focused
 		currents[s.Workspace] = current
-		fill, text := "0x00000000", c.Text
+		fill, text := transparent, c.Text
 		if current {
 			fill, text = c.Hot, c.HotText
 		}
 		b.Set(tileItem(s.Workspace),
-			onOff("drawing", current || s.Visible || label != ""),
+			onOff("drawing", current || label != ""),
 			P("display", s.Display),
 			P("label", label),
 			onOff("label.drawing", label != ""),
@@ -437,7 +436,7 @@ func BottomItems(cfg Config, runner Runner) []Item {
 	c := cfg.Colors
 	shelf := &Shelf{}
 	return []Item{
-		NewLayout(runner, cfg.Margin, cfg.MarginOverride, true),
+		NewLayout(runner, cfg.Margin, cfg.MarginOverride, cfg.HideOnMonitor),
 		NewSessions(utenaURL, c, shelf),
 		NewPet(runner, c, shelf),
 		NewSpaceTiles(runner, c),

@@ -33,7 +33,7 @@ func (n *Network) Setup(ctx context.Context, b *Batch) error {
 		P("click_script", "open 'x-apple.systempreferences:com.apple.Network-Settings.extension'"),
 	)
 	b.Raw("--add", "bracket", connectBracket, networkItem, bluetoothItem)
-	b.Set(connectBracket, bracketIsland(n.colors)...)
+	b.Set(connectBracket, bracketIsland(n.colors, smallIsland)...)
 	return nil
 }
 

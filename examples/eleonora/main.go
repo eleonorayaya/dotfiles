@@ -24,6 +24,7 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/buildkite"
 	"github.com/eleonorayaya/shizuku/programs/datadog"
 	"github.com/eleonorayaya/shizuku/programs/desktoppr"
+	"github.com/eleonorayaya/shizuku/programs/dock"
 	"github.com/eleonorayaya/shizuku/programs/fastfetch"
 	"github.com/eleonorayaya/shizuku/programs/git"
 	"github.com/eleonorayaya/shizuku/programs/glow"
@@ -103,6 +104,7 @@ func main() {
 			shizuku.WithPrograms(
 				aerospace.New(),
 				desktoppr.New(),
+				dock.New(),
 				fastfetch.New(),
 				glow.New(),
 				jankyborders.New(),
