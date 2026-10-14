@@ -49,6 +49,10 @@ func (a *App) Install(ctx *app.Context) error {
 		return fmt.Errorf("failed to install blueutil: %w", err)
 	}
 
+	if err := util.InstallBrewPackage("font-sketchybar-app-font", true); err != nil {
+		return fmt.Errorf("failed to install sketchybar-app-font: %w", err)
+	}
+
 	return nil
 }
 

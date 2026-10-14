@@ -35,7 +35,7 @@ func NewBluetooth(runner Runner) *Bluetooth {
 }
 
 func (bt *Bluetooth) Setup(ctx context.Context, b *Batch) error {
-	b.Add(bluetoothItem, "right", P("icon", iconBluetooth), "label.drawing=off", "popup.align=right")
+	b.Add(bluetoothItem, "right", P("icon", appIconBluetooth), P("icon.font", appFont), "label.drawing=off", "popup.align=right")
 	b.OnClick(bluetoothItem, "mouse.exited.global")
 	return nil
 }
@@ -54,13 +54,14 @@ func (bt *Bluetooth) Poll(ctx context.Context) Update {
 	if !bt.power.changed(power) {
 		return nil
 	}
-	icon := iconBluetoothOff
-	if power == "1" {
-		icon = iconBluetooth
-	}
+	off := power != "1"
 	return func(b *Batch) {
-		b.Set(bluetoothItem, P("icon", icon))
+		b.Set(bluetoothItem, onOff("label.drawing", off), "label=off")
 	}
+}
+
+func (bt *Bluetooth) resetCache() {
+	bt.power.reset()
 }
 
 func (bt *Bluetooth) Prefix() string {
@@ -123,11 +124,7 @@ func (bt *Bluetooth) renderDevices(ctx context.Context, b *Batch) {
 	b.Remove(bluetoothDevicesRegex)
 	for i, d := range devices {
 		name := fmt.Sprintf("%s%d", bluetoothDevicePrefix, i)
-		icon := iconBluetooth
-		if d.Connected {
-			icon = iconBluetoothConn
-		}
-		props := []string{P("icon", icon), P("label", d.Name)}
+		props := []string{P("icon", appIconBluetooth), P("icon.font", appFont), P("label", d.Name)}
 		b.Add(name, "popup."+bluetoothItem, append(props, highlight(d.Connected)...)...)
 		b.OnClick(name)
 	}

@@ -77,35 +77,38 @@ const windowsJSON = `[
   {"app-name": "Firefox", "workspace": "2"}
 ]`
 
-func TestWorkspacesSetupUsesIconsAndLabels(t *testing.T) {
+func TestWorkspacesSetup(t *testing.T) {
 	r := newFakeRunner(map[string]string{"aerospace list-workspaces": workspacesJSON})
-	w := NewWorkspaces(r)
-	w.icons = map[string]string{"1": "H"}
 	b := &Batch{}
-	if err := w.Setup(context.Background(), b); err != nil {
+	if err := NewWorkspaces(r).Setup(context.Background(), b); err != nil {
 		t.Fatal(err)
 	}
 	args := b.Args()
-	if !containsSeq(args, "--add", "item", "space.1", "left") {
-		t.Fatalf("missing space.1: %v", args)
-	}
-	if !slices.Contains(args, "icon=H") {
-		t.Fatalf("space.1 should use its icon: %v", args)
-	}
-	if !slices.Contains(args, "label=9") {
-		t.Fatalf("space.9 should fall back to a label: %v", args)
+	if !containsSeq(args, "--add", "item", "space.T", "left") || !slices.Contains(args, "icon=T") {
+		t.Fatalf("space.T should be labelled with its name: %v", args)
 	}
 	if !slices.Contains(args, "click_script=aerospace workspace T") {
 		t.Fatalf("space.T should switch on click: %v", args)
 	}
+	if !containsSeq(args, "--add", "event", WorkspaceChangeEvent) {
+		t.Fatalf("missing custom aerospace event: %v", args)
+	}
 }
+
+const windowsWithDupes = `[
+  {"app-name": "Finder", "workspace": "1"},
+  {"app-name": "Firefox", "workspace": "2"},
+  {"app-name": "kitty", "workspace": "2"},
+  {"app-name": "Firefox", "workspace": "2"},
+  {"app-name": "Some Unknown App", "workspace": "T"}
+]`
 
 func TestRenderWorkspaces(t *testing.T) {
 	spaces, err := decodeJSON[[]aerospaceWorkspace]([]byte(workspacesJSON), "workspaces")
 	if err != nil {
 		t.Fatal(err)
 	}
-	windows, err := decodeJSON[[]aerospaceWindow]([]byte(windowsJSON), "windows")
+	windows, err := decodeJSON[[]aerospaceWindow]([]byte(windowsWithDupes), "windows")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,10 +118,10 @@ func TestRenderWorkspaces(t *testing.T) {
 	args := b.Args()
 
 	want := [][]string{
-		{"--set", "space.1", "drawing=on", "display=1", "icon.highlight=off", "label.highlight=off"},
-		{"--set", "space.2", "drawing=on", "display=1", "icon.highlight=on", "label.highlight=on"},
-		{"--set", "space.T", "drawing=on", "display=2", "icon.highlight=off", "label.highlight=off"},
-		{"--set", "space.9", "drawing=off", "display=1", "icon.highlight=off", "label.highlight=off"},
+		{"--set", "space.1", "drawing=on", "display=1", "label=:finder:", "label.drawing=on", "icon.highlight=off"},
+		{"--set", "space.2", "drawing=on", "display=1", "label=:firefox: :kitty:", "label.drawing=on", "icon.highlight=on"},
+		{"--set", "space.T", "drawing=on", "display=2", "label=:default:", "label.drawing=on", "icon.highlight=off"},
+		{"--set", "space.9", "drawing=off", "display=1", "label=", "label.drawing=off", "icon.highlight=off"},
 	}
 	for _, w := range want {
 		if !containsSeq(args, w...) {
@@ -128,8 +131,32 @@ func TestRenderWorkspaces(t *testing.T) {
 
 	b = &Batch{}
 	renderWorkspaces(b, spaces, windows, "9")
-	if !containsSeq(b.Args(), "--set", "space.9", "drawing=on", "display=1", "icon.highlight=on") {
+	if !containsSeq(b.Args(), "--set", "space.9", "drawing=on") || !containsSeq(b.Args(), "label.drawing=off", "icon.highlight=on") {
 		t.Errorf("FOCUSED_WORKSPACE should override aerospace focus: %v", b.Args())
+	}
+}
+
+func TestAppIcon(t *testing.T) {
+	cases := map[string]string{
+		"Firefox":          ":firefox:",
+		"kitty":            ":kitty:",
+		"Proton Mail":      ":proton_mail:",
+		"MAIL":             ":mail:",
+		"Some Unknown App": appIconDefault,
+	}
+	for app, want := range cases {
+		if got := appIcon(app); got != want {
+			t.Errorf("appIcon(%q) = %q, want %q", app, got, want)
+		}
+	}
+}
+
+func TestMailIconUsesAppFont(t *testing.T) {
+	if got := mailIcon("Proton Mail"); !slices.Equal(got, []string{"icon=:proton_mail:", "icon.font=" + appFont}) {
+		t.Fatalf("mailIcon = %v", got)
+	}
+	if got := mailIcon("Nonexistent Mailer"); !slices.Equal(got, []string{"icon=" + iconMail}) {
+		t.Fatalf("mailIcon fallback = %v", got)
 	}
 }
 
@@ -666,5 +693,54 @@ func TestLoadConfig(t *testing.T) {
 	}
 	if cfg.MailApp != "Mail" || cfg.Colors.Bar != "0xCC000000" {
 		t.Fatalf("unexpected config: %+v", cfg)
+	}
+}
+
+type failingRunner struct {
+	*fakeRunner
+	failures int
+}
+
+func (f *failingRunner) Run(ctx context.Context, name string, args ...string) ([]byte, error) {
+	out, err := f.fakeRunner.Run(ctx, name, args...)
+	if name == "sketchybar" && len(args) > 0 && args[0] == "--set" && f.failures > 0 {
+		f.failures--
+		return nil, fmt.Errorf("sketchybar: exit status 1: [!] Set: Item not found 'rec'")
+	}
+	return out, err
+}
+
+func TestDaemonReconfiguresWhenItemsGoMissing(t *testing.T) {
+	r := &failingRunner{fakeRunner: newFakeRunner(nil), failures: 1}
+	m := NewMail(r, "Mail")
+	m.last.changed("3")
+	d := NewDaemon(Config{}, r, "emit", []Item{&recordingItem{events: []string{"system_woke"}}, m})
+
+	b := d.newBatch()
+	b.Set("rec", "label=x")
+	d.apply(context.Background(), b)
+
+	countSetups := func() int {
+		n := 0
+		for _, c := range r.sketchybarCalls() {
+			if len(c) > 0 && c[0] == "--remove" {
+				n++
+			}
+		}
+		return n
+	}
+	if setups := countSetups(); setups != 1 {
+		t.Fatalf("expected one re-setup after a missing item, got %d", setups)
+	}
+	if !m.last.changed("3") {
+		t.Fatal("re-setup should clear cached item state")
+	}
+
+	b = d.newBatch()
+	b.Set("rec", "label=y")
+	r.failures = 1
+	d.apply(context.Background(), b)
+	if countSetups() != 1 {
+		t.Fatal("re-setup should back off")
 	}
 }

@@ -113,6 +113,10 @@ func (u *Utena) get(ctx context.Context, path string, into any) error {
 	return nil
 }
 
+func (u *Utena) resetCache() {
+	u.last.reset()
+}
+
 func pickActiveSession(sessions []utenaSession) string {
 	var best *utenaSession
 	for i := range sessions {

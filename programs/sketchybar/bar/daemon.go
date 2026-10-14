@@ -34,10 +34,15 @@ type Streamer interface {
 	Stream(ctx context.Context, updates chan<- Update)
 }
 
+type cacher interface {
+	resetCache()
+}
+
 const (
 	sinkItem       = "shizuku.events"
 	healthInterval = 10 * time.Second
 	maxMissedPings = 3
+	resetupBackoff = 5 * time.Second
 )
 
 type Daemon struct {
@@ -47,6 +52,7 @@ type Daemon struct {
 	items       []Item
 	updates     chan Update
 	lastApplied time.Time
+	lastSetup   time.Time
 }
 
 func NewDaemon(cfg Config, runner Runner, emit string, items []Item) *Daemon {
@@ -58,6 +64,7 @@ func (d *Daemon) newBatch() *Batch {
 }
 
 func (d *Daemon) Setup(ctx context.Context) error {
+	d.lastSetup = time.Now()
 	b := d.newBatch()
 	b.Remove("/.*/")
 	b.Raw("--bar")
@@ -73,7 +80,15 @@ func (d *Daemon) Setup(ctx context.Context) error {
 
 	b.Add(sinkItem, "left", "drawing=off", "updates=on", P("script", d.emit))
 	b.Subscribe(sinkItem, d.subscribedEvents()...)
-	return b.apply(ctx, d.runner)
+	if err := b.apply(ctx, d.runner); err != nil {
+		return err
+	}
+	for _, item := range d.items {
+		if c, ok := item.(cacher); ok {
+			c.resetCache()
+		}
+	}
+	return nil
 }
 
 func (d *Daemon) subscribedEvents() []string {
@@ -205,11 +220,20 @@ func lastMatching(events []Event, senders []string) (Event, bool) {
 }
 
 func (d *Daemon) apply(ctx context.Context, b *Batch) {
-	if err := b.apply(ctx, d.runner); err != nil {
-		slog.Warn("bar: update failed", "error", err)
+	err := b.apply(ctx, d.runner)
+	if err == nil {
+		d.lastApplied = time.Now()
 		return
 	}
-	d.lastApplied = time.Now()
+	slog.Warn("bar: update failed", "error", err)
+	if strings.Contains(err.Error(), "Item not found") && time.Since(d.lastSetup) > resetupBackoff {
+		slog.Info("bar: items missing, configuring sketchybar again")
+		if err := d.Setup(ctx); err != nil {
+			slog.Warn("bar: setup failed", "error", err)
+			return
+		}
+		d.render(ctx)
+	}
 }
 
 func drain[T any](ch <-chan T) []T {
@@ -273,7 +297,7 @@ func barProps(c Colors) []string {
 
 func defaultProps(c Colors) []string {
 	return []string{
-		"icon.font=Liga SFMono Nerd Font:Regular:18.0",
+		P("icon.font", symbolFont+":Semibold:15.0"),
 		P("icon.color", c.Icon),
 		P("icon.highlight_color", c.IconHighlight),
 		"icon.padding_left=3",

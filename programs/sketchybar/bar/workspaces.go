@@ -3,22 +3,14 @@ package bar
 import (
 	"context"
 	"log/slog"
+	"slices"
+	"strings"
 )
 
 const (
 	WorkspaceChangeEvent        = "aerospace_workspace_change"
 	WorkspaceMonitorChangeEvent = "aerospace_workspace_monitor_change"
 )
-
-var workspaceIcons = map[string]string{
-	"1": "",
-	"2": "",
-	"3": "\U000F066F",
-	"5": "\U000F0EBF",
-	"7": "",
-	"8": "\U000F0D8E",
-	"T": "",
-}
 
 type aerospaceWorkspace struct {
 	Workspace string `json:"workspace"`
@@ -29,15 +21,15 @@ type aerospaceWorkspace struct {
 
 type aerospaceWindow struct {
 	Workspace string `json:"workspace"`
+	AppName   string `json:"app-name"`
 }
 
 type Workspaces struct {
 	runner Runner
-	icons  map[string]string
 }
 
 func NewWorkspaces(runner Runner) *Workspaces {
-	return &Workspaces{runner: runner, icons: workspaceIcons}
+	return &Workspaces{runner: runner}
 }
 
 func workspaceItem(id string) string {
@@ -45,24 +37,20 @@ func workspaceItem(id string) string {
 }
 
 func (w *Workspaces) Setup(ctx context.Context, b *Batch) error {
+	b.Raw("--add", "event", WorkspaceChangeEvent, "--add", "event", WorkspaceMonitorChangeEvent)
 	spaces, err := w.listWorkspaces(ctx)
 	if err != nil {
-		return err
+		slog.Warn("bar: list workspaces failed, retrying on next update", "error", err)
+		return nil
 	}
-	b.Raw("--add", "event", WorkspaceChangeEvent, "--add", "event", WorkspaceMonitorChangeEvent)
 	for _, s := range spaces {
-		props := []string{
+		b.Add(workspaceItem(s.Workspace), "left",
 			P("click_script", "aerospace workspace "+s.Workspace),
+			P("icon", s.Workspace),
 			"icon.padding_left=8",
-			"icon.padding_right=8",
+			P("label.font", appFont),
 			"label.padding_right=8",
-		}
-		if icon, ok := w.icons[s.Workspace]; ok {
-			props = append(props, P("icon", icon), "label.drawing=off")
-		} else {
-			props = append(props, "icon.drawing=off", P("label", s.Workspace), "label.padding_left=8")
-		}
-		b.Add(workspaceItem(s.Workspace), "left", props...)
+		)
 	}
 	return nil
 }
@@ -84,7 +72,7 @@ func (w *Workspaces) Handle(ctx context.Context, ev Event, b *Batch) {
 		slog.Warn("bar: list workspaces failed", "error", err)
 		return
 	}
-	out, err := w.runner.Run(ctx, "aerospace", "list-windows", "--all", "--json", "--format", "%{workspace}")
+	out, err := w.runner.Run(ctx, "aerospace", "list-windows", "--all", "--json", "--format", "%{workspace} %{app-name}")
 	if err != nil {
 		slog.Warn("bar: list windows failed", "error", err)
 		return
@@ -98,18 +86,24 @@ func (w *Workspaces) Handle(ctx context.Context, ev Event, b *Batch) {
 }
 
 func renderWorkspaces(b *Batch, spaces []aerospaceWorkspace, windows []aerospaceWindow, focused string) {
-	occupied := map[string]bool{}
+	apps := map[string][]string{}
 	for _, win := range windows {
-		occupied[win.Workspace] = true
+		icon := appIcon(win.AppName)
+		if !slices.Contains(apps[win.Workspace], icon) {
+			apps[win.Workspace] = append(apps[win.Workspace], icon)
+		}
 	}
 	for _, s := range spaces {
 		isFocused := s.Focused
 		if focused != "" {
 			isFocused = s.Workspace == focused
 		}
+		label := strings.Join(apps[s.Workspace], " ")
 		props := []string{
-			onOff("drawing", isFocused || s.Visible || occupied[s.Workspace]),
+			onOff("drawing", isFocused || s.Visible || label != ""),
 			P("display", s.Display),
+			P("label", label),
+			onOff("label.drawing", label != ""),
 		}
 		b.Set(workspaceItem(s.Workspace), append(props, highlight(isFocused)...)...)
 	}

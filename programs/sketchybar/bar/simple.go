@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -86,7 +87,8 @@ func NewMail(runner Runner, app string) *Mail {
 }
 
 func (m *Mail) Setup(ctx context.Context, b *Batch) error {
-	b.Add(mailItem, "right", P("icon", iconMail), "drawing=off", P("click_script", "open -a '"+m.app+"'"))
+	props := append(mailIcon(m.app), "drawing=off", P("click_script", "open -a '"+m.app+"'"))
+	b.Add(mailItem, "right", props...)
 	return nil
 }
 
@@ -108,6 +110,13 @@ func (m *Mail) Poll(ctx context.Context) Update {
 	}
 }
 
+func mailIcon(app string) []string {
+	if icon := appIcon(app); icon != appIconDefault {
+		return []string{P("icon", icon), P("icon.font", appFont)}
+	}
+	return []string{P("icon", iconMail)}
+}
+
 func parseStatusLabel(out string) string {
 	const marker = `"label"="`
 	_, rest, ok := strings.Cut(out, marker)
@@ -122,14 +131,27 @@ func parseStatusLabel(out string) string {
 }
 
 type lastValue struct {
+	mu    sync.Mutex
 	set   bool
 	value string
 }
 
 func (l *lastValue) changed(v string) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	if l.set && l.value == v {
 		return false
 	}
 	l.set, l.value = true, v
 	return true
+}
+
+func (l *lastValue) reset() {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.set = false
+}
+
+func (m *Mail) resetCache() {
+	m.last.reset()
 }
