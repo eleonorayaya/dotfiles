@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -23,6 +24,9 @@ const (
 	petHopFor   = 4 * time.Second
 	petTick     = time.Second
 	petBlinkGap = 6
+	petRoam     = 72
+	petStroll   = 4
+	petEdge     = itemPadding + largePadding
 )
 
 var petBase = []string{
@@ -171,8 +175,8 @@ func (p *Pet) Setup(ctx context.Context, b *Batch) error {
 		P("width", side),
 		"icon.drawing=off",
 		"label.drawing=off",
-		P("padding_left", itemPadding+islandPadding),
-		"padding_right=4",
+		P("padding_left", petEdge+petRoam/2),
+		P("padding_right", petEdge+petRoam-petRoam/2),
 	)
 	b.Add(petZzzItem, "center",
 		"icon.drawing=off",
@@ -181,8 +185,10 @@ func (p *Pet) Setup(ctx context.Context, b *Batch) error {
 		P("label.color", p.colors.Hot),
 		"drawing=off",
 		"y_offset=4",
+		"label.padding_left=0",
+		P("label.padding_right", largePadding),
 		"padding_left=0",
-		P("padding_right", itemPadding+islandPadding),
+		"padding_right=0",
 	)
 	b.Raw("--add", "bracket", petBracket, petItem, petZzzItem)
 	b.Set(petBracket, append(bracketIsland(p.colors), P("background.height", largeHeight+4), P("background.corner_radius", largeRadius+2))...)
@@ -190,7 +196,7 @@ func (p *Pet) Setup(ctx context.Context, b *Batch) error {
 }
 
 func (p *Pet) Stream(ctx context.Context, updates chan<- Update) {
-	ticks, lastFrame, hopped := 0, "", time.Time{}
+	ticks, lastFrame, hopped, pos := 0, "", time.Time{}, petRoam/2
 	for ctx.Err() == nil {
 		ticks++
 		needsYou, finishedAt := p.shelf.snapshot()
@@ -200,11 +206,19 @@ func (p *Pet) Stream(ctx context.Context, updates chan<- Update) {
 		if hop {
 			hopped = finishedAt
 		}
-		if frame != lastFrame || hop {
+		stroll := frame != "sleep" && !needsYou && ticks%petStroll == 0
+		if stroll {
+			pos = rand.IntN(petRoam + 1)
+		}
+		if frame != lastFrame || hop || stroll {
 			lastFrame = frame
+			target := pos
 			send(ctx, updates, func(b *Batch) {
 				b.Set(petItem, P("background.image", p.frames[frame]))
 				b.Set(petZzzItem, onOff("drawing", frame == "sleep"))
+				if stroll {
+					b.Raw("--animate", "sin", "45", "--set", petItem, P("padding_left", petEdge+target), P("padding_right", petEdge+petRoam-target))
+				}
 				if hop {
 					b.Raw("--animate", "sin", "12", "--set", petItem, "y_offset=10", "y_offset=0")
 				}
