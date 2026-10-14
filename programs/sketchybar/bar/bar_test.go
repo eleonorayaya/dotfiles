@@ -903,9 +903,21 @@ func TestSessionHoverShowsAgentPopup(t *testing.T) {
 	}
 
 	b = &Batch{}
+	s.Click(context.Background(), Event{Name: "sess.0", Sender: "mouse.entered"}, b)
+	if len(b.Args()) != 0 {
+		t.Fatalf("re-entering the hovered chip should not rebuild the popup: %v", b.Args())
+	}
+
+	b = &Batch{}
 	s.Click(context.Background(), Event{Name: "sess.0", Sender: "mouse.exited"}, b)
+	if len(b.Args()) != 0 {
+		t.Fatalf("a plain exit (sent when the popup opens) should not close it: %v", b.Args())
+	}
+
+	b = &Batch{}
+	s.Click(context.Background(), Event{Name: "sess.0", Sender: "mouse.exited.global"}, b)
 	if !slices.Contains(b.Args(), "popup.drawing=off") {
-		t.Fatalf("leaving should close the popup: %v", b.Args())
+		t.Fatalf("leaving the bar should close the popup: %v", b.Args())
 	}
 }
 
