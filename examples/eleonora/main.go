@@ -110,7 +110,7 @@ func main() {
 				notion.New(notion.Options{DisableClaudeMCP: true}),
 				nvim.New(),
 				sfsymbols.New(),
-				sketchybar.New(),
+				sketchybar.New(sketchybar.Options{}),
 				terminalbrowser.New(),
 				terraform.New(),
 				tmux.New(),
@@ -132,6 +132,7 @@ func main() {
 				datadog.New(),
 				k9s.New(),
 				mise.New(),
+				sketchybar.New(sketchybar.Options{MailApp: "Mail"}),
 			),
 		),
 		shizuku.WithProfile("personal",
@@ -144,11 +145,12 @@ func main() {
 				protonpass.New(),
 				protonvpn.New(),
 				notion.New(notion.Options{DisableClaudeMCP: false}),
+				sketchybar.New(sketchybar.Options{MailApp: "Proton Mail"}),
 			),
 		),
 	).Command()
 
-	cmd.AddCommand(upgradeCmd())
+	cmd.AddCommand(upgradeCmd(), sketchybar.Command())
 
 	if err := cmd.Execute(); err != nil {
 		fmt.Println(err)

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+export PATH="$HOME/go/bin:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+exec shizuku bar run --config "$HOME/.config/sketchybar/bar.json"
