@@ -329,7 +329,9 @@ func TestUtenaStream(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	updates := make(chan Update, 4)
-	go NewUtena(srv.URL).Stream(ctx, updates)
+	u := NewUtena(srv.URL)
+	u.settle = 10 * time.Millisecond
+	go u.Stream(ctx, updates)
 
 	for _, want := range []string{"new-bg", "sayo"} {
 		select {
@@ -346,6 +348,47 @@ func TestUtenaStream(t *testing.T) {
 		active = "sayo"
 		mu.Unlock()
 		activations <- struct{}{}
+	}
+}
+
+func TestUtenaRefreshesWithoutActivation(t *testing.T) {
+	var mu sync.Mutex
+	attached := true
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/sessions":
+			mu.Lock()
+			isAttached := attached
+			mu.Unlock()
+			json.NewEncoder(w).Encode(map[string]any{"sessions": []map[string]any{
+				{"name": "new-bg", "is_attached": isAttached, "last_used_at": "2026-10-13T19:31:33.050163-07:00"},
+			}})
+		case "/tmux/activations/next":
+			<-r.Context().Done()
+		}
+	}))
+	defer srv.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	updates := make(chan Update, 4)
+	u := NewUtena(srv.URL)
+	u.pollWindow, u.settle = 50*time.Millisecond, time.Millisecond
+	go u.Stream(ctx, updates)
+
+	<-updates
+	mu.Lock()
+	attached = false
+	mu.Unlock()
+	select {
+	case up := <-updates:
+		b := &Batch{}
+		up(b)
+		if !slices.Contains(b.Args(), "drawing=off") {
+			t.Fatalf("detach should hide the item: %v", b.Args())
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("detach was not picked up by the poll window")
 	}
 }
 

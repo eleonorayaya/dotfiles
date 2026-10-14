@@ -3,6 +3,7 @@ package bar
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -13,6 +14,8 @@ const (
 	utenaItem       = "utena"
 	utenaURL        = "http://localhost:3333"
 	utenaRetryDelay = 5 * time.Second
+	utenaPollWindow = 10 * time.Second
+	utenaSettle     = time.Second
 )
 
 type utenaSession struct {
@@ -22,13 +25,20 @@ type utenaSession struct {
 }
 
 type Utena struct {
-	baseURL string
-	client  *http.Client
-	last    lastValue
+	baseURL    string
+	client     *http.Client
+	pollWindow time.Duration
+	settle     time.Duration
+	last       lastValue
 }
 
 func NewUtena(baseURL string) *Utena {
-	return &Utena{baseURL: baseURL, client: &http.Client{Timeout: 60 * time.Second}}
+	return &Utena{
+		baseURL:    baseURL,
+		client:     &http.Client{Timeout: 60 * time.Second},
+		pollWindow: utenaPollWindow,
+		settle:     utenaSettle,
+	}
 }
 
 func (u *Utena) Setup(ctx context.Context, b *Batch) error {
@@ -54,7 +64,9 @@ func (u *Utena) Stream(ctx context.Context, updates chan<- Update) {
 		if err := u.waitForActivation(ctx); err != nil {
 			slog.Debug("bar: utena activation poll failed", "error", err)
 			sleep(ctx, utenaRetryDelay)
+			continue
 		}
+		sleep(ctx, u.settle)
 	}
 }
 
@@ -69,7 +81,13 @@ func (u *Utena) activeSession(ctx context.Context) (string, error) {
 }
 
 func (u *Utena) waitForActivation(ctx context.Context) error {
-	return u.get(ctx, "/tmux/activations/next", nil)
+	ctx, cancel := context.WithTimeout(ctx, u.pollWindow)
+	defer cancel()
+	err := u.get(ctx, "/tmux/activations/next", nil)
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		return nil
+	}
+	return err
 }
 
 func (u *Utena) get(ctx context.Context, path string, into any) error {

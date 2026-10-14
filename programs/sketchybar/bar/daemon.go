@@ -273,12 +273,12 @@ func barProps(c Colors) []string {
 
 func defaultProps(c Colors) []string {
 	return []string{
-		"icon.font=Liga SFMono Nerd Font:Regular:16.0",
+		"icon.font=Liga SFMono Nerd Font:Regular:18.0",
 		P("icon.color", c.Icon),
 		P("icon.highlight_color", c.IconHighlight),
 		"icon.padding_left=3",
 		"icon.padding_right=3",
-		"label.font=SF Pro Display:Regular:14.0",
+		"label.font=SF Pro Display:Thin:16.0",
 		P("label.color", c.Label),
 		P("label.highlight_color", c.LabelHighlight),
 		"label.padding_left=3",
