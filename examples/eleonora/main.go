@@ -117,7 +117,6 @@ func main() {
 				terraform.New(),
 				tmux.New(),
 				utena.New(),
-				vesktop.New(),
 			),
 			shizuku.WithAgents(
 				claude.New(data.ClaudeOptions()),
@@ -146,6 +145,7 @@ func main() {
 			shizuku.WithPrograms(
 				protonpass.New(),
 				protonvpn.New(),
+				vesktop.New(),
 				notion.New(notion.Options{DisableClaudeMCP: false}),
 				sketchybar.New(sketchybar.Options{Badges: []string{"Proton Mail", "Vesktop"}}),
 			),
