@@ -11,6 +11,7 @@ import (
 
 const (
 	utenaItem       = "utena"
+	utenaURL        = "http://localhost:3333"
 	utenaRetryDelay = 5 * time.Second
 )
 
@@ -23,6 +24,7 @@ type utenaSession struct {
 type Utena struct {
 	baseURL string
 	client  *http.Client
+	last    lastValue
 }
 
 func NewUtena(baseURL string) *Utena {
@@ -30,7 +32,7 @@ func NewUtena(baseURL string) *Utena {
 }
 
 func (u *Utena) Setup(ctx context.Context, b *Batch) error {
-	b.Add("item", utenaItem, "right", P("icon", iconSession), "drawing=off")
+	b.Add(utenaItem, "right", P("icon", iconSession), "drawing=off")
 	return nil
 }
 
@@ -40,9 +42,11 @@ func (u *Utena) Stream(ctx context.Context, updates chan<- Update) {
 		if err != nil {
 			slog.Debug("bar: utena unavailable", "error", err)
 		}
-		send(ctx, updates, func(b *Batch) {
-			b.Set(utenaItem, onOff("drawing", name != ""), P("label", name))
-		})
+		if u.last.changed(name) {
+			send(ctx, updates, func(b *Batch) {
+				b.Set(utenaItem, onOff("drawing", name != ""), P("label", name))
+			})
+		}
 		if err != nil {
 			sleep(ctx, utenaRetryDelay)
 			continue
@@ -103,18 +107,4 @@ func pickActiveSession(sessions []utenaSession) string {
 		return ""
 	}
 	return best.Name
-}
-
-func send(ctx context.Context, updates chan<- Update, u Update) {
-	select {
-	case updates <- u:
-	case <-ctx.Done():
-	}
-}
-
-func sleep(ctx context.Context, d time.Duration) {
-	select {
-	case <-ctx.Done():
-	case <-time.After(d):
-	}
 }

@@ -10,12 +10,15 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
+	"syscall"
 	"time"
 )
 
-const quitSender = "shizuku.quit"
+const takeoverTimeout = 2 * time.Second
 
-var forwardedEnv = []string{"NAME", "SENDER", "INFO", "BUTTON", "MODIFIER", "FOCUSED_WORKSPACE", "PREV_WORKSPACE"}
+var forwardedEnv = []string{"BUTTON", "MODIFIER", "FOCUSED_WORKSPACE", "PREV_WORKSPACE"}
 
 type Event struct {
 	Name   string            `json:"name"`
@@ -56,31 +59,67 @@ func Emit(socketPath string, ev Event) error {
 	return nil
 }
 
-func Listen(socketPath string) (net.Listener, error) {
-	if _, err := os.Stat(socketPath); err == nil {
-		if err := Emit(socketPath, Event{Sender: quitSender}); err == nil {
-			waitForRemoval(socketPath, 2*time.Second)
-		}
-		if err := os.Remove(socketPath); err != nil && !errors.Is(err, os.ErrNotExist) {
-			return nil, fmt.Errorf("failed to remove stale socket: %w", err)
-		}
-	}
+type Server struct {
+	net.Listener
+	pidPath string
+}
 
+func Listen(socketPath string) (*Server, error) {
+	pidPath := socketPath + ".pid"
+	stopPrevious(socketPath, pidPath)
+
+	if err := os.Remove(socketPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("failed to remove stale socket: %w", err)
+	}
 	l, err := net.Listen("unix", socketPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to listen on %s: %w", socketPath, err)
 	}
-	return l, nil
+	if err := os.WriteFile(pidPath, []byte(strconv.Itoa(os.Getpid())), 0o644); err != nil {
+		l.Close()
+		return nil, fmt.Errorf("failed to write pidfile: %w", err)
+	}
+	return &Server{Listener: l, pidPath: pidPath}, nil
 }
 
-func waitForRemoval(path string, timeout time.Duration) {
-	deadline := time.Now().Add(timeout)
+func (s *Server) Close() error {
+	if pid, err := readPid(s.pidPath); err == nil && pid == os.Getpid() {
+		os.Remove(s.pidPath)
+	}
+	return s.Listener.Close()
+}
+
+func stopPrevious(socketPath, pidPath string) {
+	conn, err := net.DialTimeout("unix", socketPath, time.Second)
+	if err != nil {
+		return
+	}
+	conn.Close()
+
+	pid, err := readPid(pidPath)
+	if err != nil || pid == os.Getpid() {
+		return
+	}
+	if err := syscall.Kill(pid, syscall.SIGTERM); err != nil {
+		return
+	}
+	deadline := time.Now().Add(takeoverTimeout)
 	for time.Now().Before(deadline) {
-		if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		if err := syscall.Kill(pid, 0); errors.Is(err, syscall.ESRCH) {
 			return
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
+	slog.Warn("bar: previous daemon ignored SIGTERM, killing", "pid", pid)
+	syscall.Kill(pid, syscall.SIGKILL)
+}
+
+func readPid(path string) (int, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return 0, err
+	}
+	return strconv.Atoi(strings.TrimSpace(string(data)))
 }
 
 func Serve(ctx context.Context, l net.Listener, events chan<- Event) {

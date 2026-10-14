@@ -6,18 +6,9 @@ import (
 	"os"
 )
 
-type BarStyle struct {
-	Height       int    `json:"height"`
-	Margin       int    `json:"margin"`
-	YOffset      int    `json:"yOffset"`
-	CornerRadius int    `json:"cornerRadius"`
-	BorderWidth  int    `json:"borderWidth"`
-	BlurRadius   int    `json:"blurRadius"`
-	Color        string `json:"color"`
-	BorderColor  string `json:"borderColor"`
-}
-
 type Colors struct {
+	Bar             string `json:"bar"`
+	BarBorder       string `json:"barBorder"`
 	Icon            string `json:"icon"`
 	IconHighlight   string `json:"iconHighlight"`
 	Label           string `json:"label"`
@@ -26,19 +17,9 @@ type Colors struct {
 	PopupBorder     string `json:"popupBorder"`
 }
 
-type Fonts struct {
-	Text string `json:"text"`
-	Icon string `json:"icon"`
-}
-
 type Config struct {
-	Bar            BarStyle          `json:"bar"`
-	Colors         Colors            `json:"colors"`
-	Fonts          Fonts             `json:"fonts"`
-	WorkspaceIcons map[string]string `json:"workspaceIcons"`
-	MailApp        string            `json:"mailApp,omitempty"`
-	UtenaURL       string            `json:"utenaURL,omitempty"`
-	Bluetooth      bool              `json:"bluetooth"`
+	Colors  Colors `json:"colors"`
+	MailApp string `json:"mailApp,omitempty"`
 }
 
 func LoadConfig(path string) (Config, error) {
@@ -46,9 +27,13 @@ func LoadConfig(path string) (Config, error) {
 	if err != nil {
 		return Config{}, fmt.Errorf("failed to read bar config: %w", err)
 	}
-	var cfg Config
-	if err := json.Unmarshal(data, &cfg); err != nil {
-		return Config{}, fmt.Errorf("failed to parse bar config: %w", err)
+	return decodeJSON[Config](data, "bar config")
+}
+
+func decodeJSON[T any](data []byte, what string) (T, error) {
+	var v T
+	if err := json.Unmarshal(data, &v); err != nil {
+		return v, fmt.Errorf("failed to parse %s: %w", what, err)
 	}
-	return cfg, nil
+	return v, nil
 }

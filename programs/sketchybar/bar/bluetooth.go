@@ -2,17 +2,18 @@ package bar
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
 const (
 	bluetoothItem         = "bluetooth"
 	bluetoothDevicePrefix = "bluetooth.device."
+	bluetoothDevicesRegex = `/bluetooth\.device\..*/`
 )
 
 type bluetoothDevice struct {
@@ -23,18 +24,19 @@ type bluetoothDevice struct {
 
 type Bluetooth struct {
 	runner  Runner
-	emitCmd string
+	power   lastValue
+	mu      sync.Mutex
+	open    bool
 	devices []bluetoothDevice
 }
 
-func NewBluetooth(runner Runner, emitCmd string) *Bluetooth {
-	return &Bluetooth{runner: runner, emitCmd: emitCmd}
+func NewBluetooth(runner Runner) *Bluetooth {
+	return &Bluetooth{runner: runner}
 }
 
 func (bt *Bluetooth) Setup(ctx context.Context, b *Batch) error {
-	b.Add("item", bluetoothItem, "right", P("icon", iconBluetooth), "label.drawing=off", "popup.align=right")
-	OnClick(b, bluetoothItem, bt.emitCmd)
-	b.Subscribe(bluetoothItem, "mouse.exited.global")
+	b.Add(bluetoothItem, "right", P("icon", iconBluetooth), "label.drawing=off", "popup.align=right")
+	b.OnClick(bluetoothItem, "mouse.exited.global")
 	return nil
 }
 
@@ -48,8 +50,12 @@ func (bt *Bluetooth) Poll(ctx context.Context) Update {
 		slog.Debug("bar: bluetooth power lookup failed", "error", err)
 		return nil
 	}
+	power := strings.TrimSpace(string(out))
+	if !bt.power.changed(power) {
+		return nil
+	}
 	icon := iconBluetoothOff
-	if strings.TrimSpace(string(out)) == "1" {
+	if power == "1" {
 		icon = iconBluetooth
 	}
 	return func(b *Batch) {
@@ -62,36 +68,28 @@ func (bt *Bluetooth) Prefix() string {
 }
 
 func (bt *Bluetooth) Click(ctx context.Context, ev Event, b *Batch) {
+	bt.mu.Lock()
+	defer bt.mu.Unlock()
+
 	switch {
-	case ev.Sender == "mouse.exited.global":
-		b.Set(bluetoothItem, "popup.drawing=off")
-	case ev.Name == bluetoothItem:
-		if bt.popupOpen(ctx) {
-			b.Set(bluetoothItem, "popup.drawing=off")
-			return
+	case ev.Name == bluetoothItem && ev.Sender == "mouse.exited.global":
+		if bt.open {
+			bt.setOpen(b, false)
 		}
-		bt.renderDevices(ctx, b)
-		b.Set(bluetoothItem, "popup.drawing=on")
-	case strings.HasPrefix(ev.Name, bluetoothDevicePrefix):
+	case ev.Name == bluetoothItem && ev.Sender == "mouse.clicked":
+		if !bt.open {
+			bt.renderDevices(ctx, b)
+		}
+		bt.setOpen(b, !bt.open)
+	case strings.HasPrefix(ev.Name, bluetoothDevicePrefix) && ev.Sender == "mouse.clicked":
 		bt.toggleDevice(ctx, strings.TrimPrefix(ev.Name, bluetoothDevicePrefix))
 		bt.renderDevices(ctx, b)
 	}
 }
 
-func (bt *Bluetooth) popupOpen(ctx context.Context) bool {
-	out, err := bt.runner.Run(ctx, "sketchybar", "--query", bluetoothItem)
-	if err != nil {
-		return false
-	}
-	var item struct {
-		Popup struct {
-			Drawing string `json:"drawing"`
-		} `json:"popup"`
-	}
-	if err := json.Unmarshal(out, &item); err != nil {
-		return false
-	}
-	return item.Popup.Drawing == "on"
+func (bt *Bluetooth) setOpen(b *Batch, open bool) {
+	bt.open = open
+	b.Set(bluetoothItem, onOff("popup.drawing", open))
 }
 
 func (bt *Bluetooth) toggleDevice(ctx context.Context, index string) {
@@ -115,34 +113,22 @@ func (bt *Bluetooth) renderDevices(ctx context.Context, b *Batch) {
 		slog.Warn("bar: bluetooth device lookup failed", "error", err)
 		return
 	}
-	devices, err := parseBluetoothDevices(out)
+	devices, err := decodeJSON[[]bluetoothDevice](out, "blueutil output")
 	if err != nil {
-		slog.Warn("bar: bluetooth device parse failed", "error", err)
+		slog.Warn("bar: bluetooth device lookup failed", "error", err)
 		return
 	}
 	bt.devices = devices
 
-	b.Remove("/" + strings.ReplaceAll(bluetoothDevicePrefix, ".", `\.`) + ".*/")
+	b.Remove(bluetoothDevicesRegex)
 	for i, d := range devices {
 		name := fmt.Sprintf("%s%d", bluetoothDevicePrefix, i)
 		icon := iconBluetooth
 		if d.Connected {
 			icon = iconBluetoothConn
 		}
-		b.Add("item", name, "popup."+bluetoothItem,
-			P("icon", icon),
-			P("label", d.Name),
-			onOff("icon.highlight", d.Connected),
-			onOff("label.highlight", d.Connected),
-		)
-		OnClick(b, name, bt.emitCmd)
+		props := []string{P("icon", icon), P("label", d.Name)}
+		b.Add(name, "popup."+bluetoothItem, append(props, highlight(d.Connected)...)...)
+		b.OnClick(name)
 	}
-}
-
-func parseBluetoothDevices(data []byte) ([]bluetoothDevice, error) {
-	var devices []bluetoothDevice
-	if err := json.Unmarshal(data, &devices); err != nil {
-		return nil, fmt.Errorf("failed to parse blueutil output: %w", err)
-	}
-	return devices, nil
 }

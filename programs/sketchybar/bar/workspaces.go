@@ -2,10 +2,23 @@ package bar
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"log/slog"
 )
+
+const (
+	WorkspaceChangeEvent        = "aerospace_workspace_change"
+	WorkspaceMonitorChangeEvent = "aerospace_workspace_monitor_change"
+)
+
+var workspaceIcons = map[string]string{
+	"1": "",
+	"2": "",
+	"3": "\U000F066F",
+	"5": "\U000F0EBF",
+	"7": "",
+	"8": "\U000F0D8E",
+	"T": "",
+}
 
 type aerospaceWorkspace struct {
 	Workspace string `json:"workspace"`
@@ -16,7 +29,6 @@ type aerospaceWorkspace struct {
 
 type aerospaceWindow struct {
 	Workspace string `json:"workspace"`
-	AppName   string `json:"app-name"`
 }
 
 type Workspaces struct {
@@ -24,8 +36,8 @@ type Workspaces struct {
 	icons  map[string]string
 }
 
-func NewWorkspaces(runner Runner, icons map[string]string) *Workspaces {
-	return &Workspaces{runner: runner, icons: icons}
+func NewWorkspaces(runner Runner) *Workspaces {
+	return &Workspaces{runner: runner, icons: workspaceIcons}
 }
 
 func workspaceItem(id string) string {
@@ -37,6 +49,7 @@ func (w *Workspaces) Setup(ctx context.Context, b *Batch) error {
 	if err != nil {
 		return err
 	}
+	b.Raw("--add", "event", WorkspaceChangeEvent, "--add", "event", WorkspaceMonitorChangeEvent)
 	for _, s := range spaces {
 		props := []string{
 			P("click_script", "aerospace workspace "+s.Workspace),
@@ -49,15 +62,15 @@ func (w *Workspaces) Setup(ctx context.Context, b *Batch) error {
 		} else {
 			props = append(props, "icon.drawing=off", P("label", s.Workspace), "label.padding_left=8")
 		}
-		b.Add("item", workspaceItem(s.Workspace), "left", props...)
+		b.Add(workspaceItem(s.Workspace), "left", props...)
 	}
 	return nil
 }
 
 func (w *Workspaces) Events() []string {
 	return []string{
-		"aerospace_workspace_change",
-		"aerospace_workspace_monitor_change",
+		WorkspaceChangeEvent,
+		WorkspaceMonitorChangeEvent,
 		"front_app_switched",
 		"space_windows_change",
 		"display_change",
@@ -71,13 +84,17 @@ func (w *Workspaces) Handle(ctx context.Context, ev Event, b *Batch) {
 		slog.Warn("bar: list workspaces failed", "error", err)
 		return
 	}
-	windows, err := w.listWindows(ctx)
+	out, err := w.runner.Run(ctx, "aerospace", "list-windows", "--all", "--json", "--format", "%{workspace}")
 	if err != nil {
 		slog.Warn("bar: list windows failed", "error", err)
 		return
 	}
-	focused := ev.Env["FOCUSED_WORKSPACE"]
-	renderWorkspaces(b, spaces, windows, focused)
+	windows, err := decodeJSON[[]aerospaceWindow](out, "aerospace windows")
+	if err != nil {
+		slog.Warn("bar: list windows failed", "error", err)
+		return
+	}
+	renderWorkspaces(b, spaces, windows, ev.Env["FOCUSED_WORKSPACE"])
 }
 
 func renderWorkspaces(b *Batch, spaces []aerospaceWorkspace, windows []aerospaceWindow, focused string) {
@@ -90,12 +107,11 @@ func renderWorkspaces(b *Batch, spaces []aerospaceWorkspace, windows []aerospace
 		if focused != "" {
 			isFocused = s.Workspace == focused
 		}
-		b.Set(workspaceItem(s.Workspace),
+		props := []string{
 			onOff("drawing", isFocused || s.Visible || occupied[s.Workspace]),
 			P("display", s.Display),
-			onOff("icon.highlight", isFocused),
-			onOff("label.highlight", isFocused),
-		)
+		}
+		b.Set(workspaceItem(s.Workspace), append(props, highlight(isFocused)...)...)
 	}
 }
 
@@ -105,29 +121,5 @@ func (w *Workspaces) listWorkspaces(ctx context.Context) ([]aerospaceWorkspace, 
 	if err != nil {
 		return nil, err
 	}
-	return parseAerospaceWorkspaces(out)
-}
-
-func (w *Workspaces) listWindows(ctx context.Context) ([]aerospaceWindow, error) {
-	out, err := w.runner.Run(ctx, "aerospace", "list-windows", "--all", "--json", "--format", "%{workspace} %{app-name}")
-	if err != nil {
-		return nil, err
-	}
-	return parseAerospaceWindows(out)
-}
-
-func parseAerospaceWorkspaces(data []byte) ([]aerospaceWorkspace, error) {
-	var spaces []aerospaceWorkspace
-	if err := json.Unmarshal(data, &spaces); err != nil {
-		return nil, fmt.Errorf("failed to parse aerospace workspaces: %w", err)
-	}
-	return spaces, nil
-}
-
-func parseAerospaceWindows(data []byte) ([]aerospaceWindow, error) {
-	var windows []aerospaceWindow
-	if err := json.Unmarshal(data, &windows); err != nil {
-		return nil, fmt.Errorf("failed to parse aerospace windows: %w", err)
-	}
-	return windows, nil
+	return decodeJSON[[]aerospaceWorkspace](out, "aerospace workspaces")
 }

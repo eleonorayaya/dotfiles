@@ -2,9 +2,14 @@ package bar
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os/exec"
+	"strings"
+	"time"
 )
+
+const commandTimeout = 10 * time.Second
 
 type Runner interface {
 	Run(ctx context.Context, name string, args ...string) ([]byte, error)
@@ -13,14 +18,22 @@ type Runner interface {
 type ExecRunner struct{}
 
 func (ExecRunner) Run(ctx context.Context, name string, args ...string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(ctx, commandTimeout)
+	defer cancel()
+
 	out, err := exec.CommandContext(ctx, name, args...).Output()
 	if err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && len(exitErr.Stderr) > 0 {
+			return out, fmt.Errorf("%s: %w: %s", name, err, strings.TrimSpace(string(exitErr.Stderr)))
+		}
 		return out, fmt.Errorf("%s: %w", name, err)
 	}
 	return out, nil
 }
 
 type Batch struct {
+	emit string
 	args []string
 }
 
@@ -28,8 +41,8 @@ func P(key string, value any) string {
 	return fmt.Sprintf("%s=%v", key, value)
 }
 
-func (b *Batch) Add(kind, name, position string, props ...string) *Batch {
-	b.args = append(b.args, "--add", kind, name, position)
+func (b *Batch) Add(name, position string, props ...string) *Batch {
+	b.args = append(b.args, "--add", "item", name, position)
 	return b.Set(name, props...)
 }
 
@@ -51,6 +64,11 @@ func (b *Batch) Subscribe(name string, events ...string) *Batch {
 	return b
 }
 
+func (b *Batch) OnClick(name string, events ...string) *Batch {
+	b.Set(name, P("script", b.emit))
+	return b.Subscribe(name, append([]string{"mouse.clicked"}, events...)...)
+}
+
 func (b *Batch) Remove(name string) *Batch {
 	b.args = append(b.args, "--remove", name)
 	return b
@@ -61,16 +79,12 @@ func (b *Batch) Raw(args ...string) *Batch {
 	return b
 }
 
-func (b *Batch) Empty() bool {
-	return len(b.args) == 0
-}
-
 func (b *Batch) Args() []string {
 	return b.args
 }
 
-func (b *Batch) Apply(ctx context.Context, r Runner) error {
-	if b.Empty() {
+func (b *Batch) apply(ctx context.Context, r Runner) error {
+	if len(b.args) == 0 {
 		return nil
 	}
 	if _, err := r.Run(ctx, "sketchybar", b.args...); err != nil {
@@ -84,4 +98,8 @@ func onOff(key string, on bool) string {
 		return key + "=on"
 	}
 	return key + "=off"
+}
+
+func highlight(on bool) []string {
+	return []string{onOff("icon.highlight", on), onOff("label.highlight", on)}
 }

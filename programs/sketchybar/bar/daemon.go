@@ -40,54 +40,59 @@ const (
 	maxMissedPings = 3
 )
 
-var customEvents = []string{"aerospace_workspace_change", "aerospace_workspace_monitor_change"}
-
 type Daemon struct {
-	runner  Runner
-	cfg     Config
-	emitCmd string
-	items   []Item
+	runner      Runner
+	cfg         Config
+	emit        string
+	items       []Item
+	updates     chan Update
+	lastApplied time.Time
 }
 
-func NewDaemon(cfg Config, runner Runner, emitCmd string, items []Item) *Daemon {
-	return &Daemon{runner: runner, cfg: cfg, emitCmd: emitCmd, items: items}
+func NewDaemon(cfg Config, runner Runner, emit string, items []Item) *Daemon {
+	return &Daemon{runner: runner, cfg: cfg, emit: emit, items: items, updates: make(chan Update, 32)}
+}
+
+func (d *Daemon) newBatch() *Batch {
+	return &Batch{emit: d.emit}
 }
 
 func (d *Daemon) Setup(ctx context.Context) error {
-	b := &Batch{}
+	b := d.newBatch()
 	b.Remove("/.*/")
 	b.Raw("--bar")
-	b.Raw(barProps(d.cfg)...)
+	b.Raw(barProps(d.cfg.Colors)...)
 	b.Raw("--default")
-	b.Raw(defaultProps(d.cfg)...)
-	for _, ev := range customEvents {
-		b.Raw("--add", "event", ev)
-	}
-
-	b.Add("item", sinkItem, "left", "drawing=off", "updates=on", P("script", d.emitCmd))
-	b.Subscribe(sinkItem, d.subscribedEvents()...)
+	b.Raw(defaultProps(d.cfg.Colors)...)
 
 	for _, item := range d.items {
 		if err := item.Setup(ctx, b); err != nil {
 			return fmt.Errorf("failed to set up bar item: %w", err)
 		}
 	}
-	return b.Apply(ctx, d.runner)
+
+	b.Add(sinkItem, "left", "drawing=off", "updates=on", P("script", d.emit))
+	b.Subscribe(sinkItem, d.subscribedEvents()...)
+	return b.apply(ctx, d.runner)
 }
 
 func (d *Daemon) subscribedEvents() []string {
-	seen := map[string]bool{}
 	var out []string
-	for _, item := range d.items {
-		h, ok := item.(EventHandler)
-		if !ok {
-			continue
-		}
+	for _, h := range d.eventHandlers() {
 		for _, ev := range h.Events() {
-			if !seen[ev] {
-				seen[ev] = true
+			if !slices.Contains(out, ev) {
 				out = append(out, ev)
 			}
+		}
+	}
+	return out
+}
+
+func (d *Daemon) eventHandlers() []EventHandler {
+	var out []EventHandler
+	for _, item := range d.items {
+		if h, ok := item.(EventHandler); ok {
+			out = append(out, h)
 		}
 	}
 	return out
@@ -101,17 +106,16 @@ func (d *Daemon) Run(ctx context.Context, events <-chan Event) error {
 		return err
 	}
 
-	updates := make(chan Update, 32)
 	for _, item := range d.items {
 		if p, ok := item.(Poller); ok {
-			go poll(ctx, p, updates)
+			go poll(ctx, p, d.updates)
 		}
 		if s, ok := item.(Streamer); ok {
-			go s.Stream(ctx, updates)
+			go s.Stream(ctx, d.updates)
 		}
 	}
 
-	d.dispatch(ctx, Event{Sender: "forced"})
+	d.render(ctx)
 
 	health := time.NewTicker(healthInterval)
 	defer health.Stop()
@@ -122,16 +126,19 @@ func (d *Daemon) Run(ctx context.Context, events <-chan Event) error {
 		case <-ctx.Done():
 			return nil
 		case ev := <-events:
-			if ev.Sender == quitSender {
-				slog.Info("bar: replaced by a new daemon, exiting")
-				return nil
-			}
-			d.dispatch(ctx, ev)
-		case u := <-updates:
-			b := &Batch{}
+			d.dispatch(ctx, append([]Event{ev}, drain(events)...))
+		case u := <-d.updates:
+			b := d.newBatch()
 			u(b)
+			for _, more := range drain(d.updates) {
+				more(b)
+			}
 			d.apply(ctx, b)
 		case <-health.C:
+			if time.Since(d.lastApplied) < healthInterval {
+				missed = 0
+				continue
+			}
 			if _, err := d.runner.Run(ctx, "sketchybar", "--query", "bar"); err != nil {
 				missed++
 				if missed >= maxMissedPings {
@@ -144,34 +151,76 @@ func (d *Daemon) Run(ctx context.Context, events <-chan Event) error {
 	}
 }
 
-func (d *Daemon) dispatch(ctx context.Context, ev Event) {
-	if ev.Sender == "forced" && ev.Name != "" && ev.Name != sinkItem {
+func (d *Daemon) render(ctx context.Context) {
+	b := d.newBatch()
+	for _, h := range d.eventHandlers() {
+		h.Handle(ctx, Event{}, b)
+	}
+	d.apply(ctx, b)
+}
+
+func (d *Daemon) dispatch(ctx context.Context, events []Event) {
+	var subscribed []Event
+	for _, ev := range events {
+		if ev.Name == sinkItem {
+			subscribed = append(subscribed, ev)
+			continue
+		}
+		d.click(ctx, ev)
+	}
+	if len(subscribed) == 0 {
 		return
 	}
-	b := &Batch{}
-	if strings.HasPrefix(ev.Sender, "mouse.") && ev.Name != sinkItem {
-		for _, item := range d.items {
-			if c, ok := item.(ClickHandler); ok && strings.HasPrefix(ev.Name, c.Prefix()) {
-				c.Click(ctx, ev, b)
-			}
-		}
-	} else {
-		for _, item := range d.items {
-			if h, ok := item.(EventHandler); ok && handles(h, ev.Sender) {
-				h.Handle(ctx, ev, b)
-			}
+
+	b := d.newBatch()
+	for _, h := range d.eventHandlers() {
+		if ev, ok := lastMatching(subscribed, h.Events()); ok {
+			h.Handle(ctx, ev, b)
 		}
 	}
 	d.apply(ctx, b)
 }
 
-func handles(h EventHandler, sender string) bool {
-	return sender == "forced" || slices.Contains(h.Events(), sender)
+func (d *Daemon) click(ctx context.Context, ev Event) {
+	for _, item := range d.items {
+		c, ok := item.(ClickHandler)
+		if !ok || !strings.HasPrefix(ev.Name, c.Prefix()) {
+			continue
+		}
+		go func() {
+			b := d.newBatch()
+			c.Click(ctx, ev, b)
+			send(ctx, d.updates, func(out *Batch) { out.Raw(b.Args()...) })
+		}()
+	}
+}
+
+func lastMatching(events []Event, senders []string) (Event, bool) {
+	for i := len(events) - 1; i >= 0; i-- {
+		if slices.Contains(senders, events[i].Sender) {
+			return events[i], true
+		}
+	}
+	return Event{}, false
 }
 
 func (d *Daemon) apply(ctx context.Context, b *Batch) {
-	if err := b.Apply(ctx, d.runner); err != nil {
+	if err := b.apply(ctx, d.runner); err != nil {
 		slog.Warn("bar: update failed", "error", err)
+		return
+	}
+	d.lastApplied = time.Now()
+}
+
+func drain[T any](ch <-chan T) []T {
+	var out []T
+	for {
+		select {
+		case v := <-ch:
+			out = append(out, v)
+		default:
+			return out
+		}
 	}
 }
 
@@ -190,39 +239,46 @@ func poll(ctx context.Context, p Poller, updates chan<- Update) {
 	}
 }
 
-func OnClick(b *Batch, name, emitCmd string) {
-	b.Set(name, P("script", emitCmd))
-	b.Subscribe(name, "mouse.clicked")
+func send(ctx context.Context, updates chan<- Update, u Update) {
+	select {
+	case updates <- u:
+	case <-ctx.Done():
+	}
 }
 
-func barProps(cfg Config) []string {
-	s := cfg.Bar
+func sleep(ctx context.Context, d time.Duration) {
+	select {
+	case <-ctx.Done():
+	case <-time.After(d):
+	}
+}
+
+func barProps(c Colors) []string {
 	return []string{
-		P("height", s.Height),
+		"height=32",
 		"position=top",
 		"padding_left=16",
 		"padding_right=16",
-		P("margin", s.Margin),
-		P("y_offset", s.YOffset),
-		P("color", s.Color),
-		P("border_color", s.BorderColor),
-		P("border_width", s.BorderWidth),
-		P("corner_radius", s.CornerRadius),
-		P("blur_radius", s.BlurRadius),
+		"margin=12",
+		"y_offset=12",
+		P("color", c.Bar),
+		P("border_color", c.BarBorder),
+		"border_width=2",
+		"corner_radius=8",
+		"blur_radius=48",
 		"sticky=off",
 		"font_smoothing=on",
 	}
 }
 
-func defaultProps(cfg Config) []string {
-	c := cfg.Colors
+func defaultProps(c Colors) []string {
 	return []string{
-		P("icon.font", cfg.Fonts.Icon+":Regular:16.0"),
+		"icon.font=Liga SFMono Nerd Font:Regular:16.0",
 		P("icon.color", c.Icon),
 		P("icon.highlight_color", c.IconHighlight),
 		"icon.padding_left=3",
 		"icon.padding_right=3",
-		P("label.font", cfg.Fonts.Text+":Regular:14.0"),
+		"label.font=SF Pro Display:Regular:14.0",
 		P("label.color", c.Label),
 		P("label.highlight_color", c.LabelHighlight),
 		"label.padding_left=3",

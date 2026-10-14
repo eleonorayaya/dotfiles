@@ -1,20 +1,16 @@
 package bar
 
-func Items(cfg Config, runner Runner, emitCmd string) []Item {
+func Items(cfg Config, runner Runner) []Item {
 	items := []Item{
-		NewWorkspaces(runner, cfg.WorkspaceIcons),
+		NewWorkspaces(runner),
 		NewFrontApp(runner),
 		NewClock(),
+		NewBluetooth(runner),
+		NewNetwork(runner),
+		NewSystem(runner),
 	}
-	if cfg.Bluetooth {
-		items = append(items, NewBluetooth(runner, emitCmd))
-	}
-	items = append(items, NewNetwork(runner), NewSystem(runner))
 	if cfg.MailApp != "" {
 		items = append(items, NewMail(runner, cfg.MailApp))
 	}
-	if cfg.UtenaURL != "" {
-		items = append(items, NewUtena(cfg.UtenaURL))
-	}
-	return items
+	return append(items, NewUtena(utenaURL))
 }

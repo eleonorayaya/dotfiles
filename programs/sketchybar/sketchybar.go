@@ -2,10 +2,8 @@ package sketchybar
 
 import (
 	"embed"
-	"encoding/json"
 	"fmt"
 	"log/slog"
-	"os"
 	"os/exec"
 	"path"
 
@@ -18,26 +16,12 @@ import (
 var contents embed.FS
 
 const (
-	configName      = "bar.json"
-	configFile      = "~/.config/sketchybar/" + configName
-	defaultUtenaURL = "http://localhost:3333"
+	configDir  = "~/.config/sketchybar/"
+	configName = "bar.json"
 )
 
-var DefaultWorkspaceIcons = map[string]string{
-	"1": "",
-	"2": "",
-	"3": "\U000F066F",
-	"5": "\U000F0EBF",
-	"7": "",
-	"8": "\U000F0D8E",
-	"T": "",
-}
-
 type Options struct {
-	MailApp        string
-	WorkspaceIcons map[string]string
-	DisableUtena   bool
-	DisableBT      bool
+	MailApp string
 }
 
 type App struct {
@@ -45,9 +29,6 @@ type App struct {
 }
 
 func New(opts Options) *App {
-	if opts.WorkspaceIcons == nil {
-		opts.WorkspaceIcons = DefaultWorkspaceIcons
-	}
 	return &App{opts: opts}
 }
 
@@ -64,10 +45,8 @@ func (a *App) Install(ctx *app.Context) error {
 		return fmt.Errorf("failed to install sketchybar: %w", err)
 	}
 
-	if !a.opts.DisableBT {
-		if err := util.InstallBrewPackage("blueutil", false); err != nil {
-			return fmt.Errorf("failed to install blueutil: %w", err)
-		}
+	if err := util.InstallBrewPackage("blueutil", false); err != nil {
+		return fmt.Errorf("failed to install blueutil: %w", err)
 	}
 
 	return nil
@@ -75,37 +54,21 @@ func (a *App) Install(ctx *app.Context) error {
 
 func (a *App) barConfig(ctx *app.Context) bar.Config {
 	colors := ctx.Styles.Theme.Colors
-	cfg := bar.Config{
-		Bar: bar.BarStyle{
-			Height:       32,
-			Margin:       12,
-			YOffset:      12,
-			CornerRadius: 8,
-			BorderWidth:  2,
-			BlurRadius:   48,
-			Color:        util.HexToARGB(colors.Surface, ctx.Styles.WindowOpacity),
-			BorderColor:  util.HexToARGB(colors.SurfaceBorder, ctx.Styles.WindowOpacity),
-		},
+	text := util.HexToARGB(colors.TextOnSurface, 100)
+	primary := util.HexToARGB(colors.Primary, 100)
+	return bar.Config{
 		Colors: bar.Colors{
-			Icon:            util.HexToARGB(colors.TextOnSurface, 100),
-			IconHighlight:   util.HexToARGB(colors.Primary, 100),
-			Label:           util.HexToARGB(colors.TextOnSurface, 100),
-			LabelHighlight:  util.HexToARGB(colors.Primary, 100),
+			Bar:             util.HexToARGB(colors.Surface, ctx.Styles.WindowOpacity),
+			BarBorder:       util.HexToARGB(colors.SurfaceBorder, ctx.Styles.WindowOpacity),
+			Icon:            text,
+			IconHighlight:   primary,
+			Label:           text,
+			LabelHighlight:  primary,
 			PopupBackground: util.HexToARGB(colors.Surface, 100),
 			PopupBorder:     util.HexToARGB(colors.SurfaceBorder, 100),
 		},
-		Fonts: bar.Fonts{
-			Text: "SF Pro Display",
-			Icon: "Liga SFMono Nerd Font",
-		},
-		WorkspaceIcons: a.opts.WorkspaceIcons,
-		MailApp:        a.opts.MailApp,
-		Bluetooth:      !a.opts.DisableBT,
+		MailApp: a.opts.MailApp,
 	}
-	if !a.opts.DisableUtena {
-		cfg.UtenaURL = defaultUtenaURL
-	}
-	return cfg
 }
 
 func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
@@ -114,19 +77,15 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 		return nil, fmt.Errorf("failed to generate app files: %w", err)
 	}
 
-	data, err := json.MarshalIndent(a.barConfig(ctx), "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("failed to encode bar config: %w", err)
-	}
 	configPath := path.Join(ctx.OutDir, "sketchybar", configName)
-	if err := os.WriteFile(configPath, append(data, '\n'), 0o644); err != nil {
+	if err := util.WriteJSON(configPath, a.barConfig(ctx)); err != nil {
 		return nil, fmt.Errorf("failed to write bar config: %w", err)
 	}
 	fileMap[configName] = configPath
 
 	return &app.GenerateResult{
 		FileMap: fileMap,
-		DestDir: "~/.config/sketchybar/",
+		DestDir: configDir,
 	}, nil
 }
 

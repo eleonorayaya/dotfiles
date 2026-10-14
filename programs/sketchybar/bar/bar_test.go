@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -76,7 +79,8 @@ const windowsJSON = `[
 
 func TestWorkspacesSetupUsesIconsAndLabels(t *testing.T) {
 	r := newFakeRunner(map[string]string{"aerospace list-workspaces": workspacesJSON})
-	w := NewWorkspaces(r, map[string]string{"1": "H"})
+	w := NewWorkspaces(r)
+	w.icons = map[string]string{"1": "H"}
 	b := &Batch{}
 	if err := w.Setup(context.Background(), b); err != nil {
 		t.Fatal(err)
@@ -97,11 +101,11 @@ func TestWorkspacesSetupUsesIconsAndLabels(t *testing.T) {
 }
 
 func TestRenderWorkspaces(t *testing.T) {
-	spaces, err := parseAerospaceWorkspaces([]byte(workspacesJSON))
+	spaces, err := decodeJSON[[]aerospaceWorkspace]([]byte(workspacesJSON), "workspaces")
 	if err != nil {
 		t.Fatal(err)
 	}
-	windows, err := parseAerospaceWindows([]byte(windowsJSON))
+	windows, err := decodeJSON[[]aerospaceWindow]([]byte(windowsJSON), "windows")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,10 +155,14 @@ func TestMailHidesWhenNoUnread(t *testing.T) {
 	}
 
 	r = newFakeRunner(map[string]string{"lsappinfo": `"StatusLabel"={ "label"="4" }`})
+	m := NewMail(r, "Proton Mail")
 	b = &Batch{}
-	NewMail(r, "Proton Mail").Poll(context.Background())(b)
+	m.Poll(context.Background())(b)
 	if !slices.Contains(b.Args(), "drawing=on") || !slices.Contains(b.Args(), "label=4") {
 		t.Fatalf("expected visible mail count: %v", b.Args())
+	}
+	if m.Poll(context.Background()) != nil {
+		t.Fatal("unchanged mail count should not produce an update")
 	}
 }
 
@@ -296,12 +304,17 @@ func TestPickActiveSession(t *testing.T) {
 }
 
 func TestUtenaStream(t *testing.T) {
+	var mu sync.Mutex
+	active := "new-bg"
 	activations := make(chan struct{})
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/sessions":
+			mu.Lock()
+			name := active
+			mu.Unlock()
 			json.NewEncoder(w).Encode(map[string]any{"sessions": []map[string]any{
-				{"name": "new-bg", "is_attached": true, "last_used_at": "2026-10-13T19:31:33.050163-07:00"},
+				{"name": name, "is_attached": true, "last_used_at": "2026-10-13T19:31:33.050163-07:00"},
 			}})
 		case "/tmux/activations/next":
 			select {
@@ -318,17 +331,20 @@ func TestUtenaStream(t *testing.T) {
 	updates := make(chan Update, 4)
 	go NewUtena(srv.URL).Stream(ctx, updates)
 
-	for range 2 {
+	for _, want := range []string{"new-bg", "sayo"} {
 		select {
 		case u := <-updates:
 			b := &Batch{}
 			u(b)
-			if !slices.Contains(b.Args(), "label=new-bg") || !slices.Contains(b.Args(), "drawing=on") {
+			if !slices.Contains(b.Args(), "label="+want) || !slices.Contains(b.Args(), "drawing=on") {
 				t.Fatalf("unexpected utena update: %v", b.Args())
 			}
 		case <-time.After(2 * time.Second):
 			t.Fatal("timed out waiting for utena update")
 		}
+		mu.Lock()
+		active = "sayo"
+		mu.Unlock()
 		activations <- struct{}{}
 	}
 }
@@ -353,12 +369,11 @@ func TestUtenaHiddenWhenDown(t *testing.T) {
 
 func TestBluetoothPopup(t *testing.T) {
 	r := newFakeRunner(map[string]string{
-		"sketchybar --query bluetooth": `{"popup": {"drawing": "off"}}`,
-		"blueutil --paired":            `[{"address":"aa-bb","name":"AirPods","connected":true},{"address":"cc-dd","name":"Keyboard","connected":false}]`,
-		"blueutil --connect":           "",
-		"blueutil --disconnect":        "",
+		"blueutil --paired":     `[{"address":"aa-bb","name":"AirPods","connected":true},{"address":"cc-dd","name":"Keyboard","connected":false}]`,
+		"blueutil --connect":    "",
+		"blueutil --disconnect": "",
 	})
-	bt := NewBluetooth(r, "emit")
+	bt := NewBluetooth(r)
 
 	b := &Batch{}
 	bt.Click(context.Background(), Event{Name: "bluetooth", Sender: "mouse.clicked"}, b)
@@ -393,6 +408,12 @@ func TestBluetoothPopup(t *testing.T) {
 	if !containsSeq(b.Args(), "--set", "bluetooth", "popup.drawing=off") {
 		t.Fatalf("expected popup to close: %v", b.Args())
 	}
+
+	b = &Batch{}
+	bt.Click(context.Background(), Event{Name: "bluetooth", Sender: "mouse.exited.global"}, b)
+	if len(b.Args()) != 0 {
+		t.Fatalf("closed popup should not be touched again: %v", b.Args())
+	}
 }
 
 type recordingItem struct {
@@ -402,7 +423,7 @@ type recordingItem struct {
 }
 
 func (r *recordingItem) Setup(ctx context.Context, b *Batch) error {
-	b.Add("item", "rec", "right")
+	b.Add("rec", "right")
 	return nil
 }
 func (r *recordingItem) Events() []string { return r.events }
@@ -431,46 +452,64 @@ func TestDaemonSetupSubscribesSinkOnce(t *testing.T) {
 	if !containsSeq(args, "--subscribe", sinkItem, "front_app_switched", "system_woke") {
 		t.Fatalf("sink should subscribe to each event once: %v", args)
 	}
-	if !containsSeq(args, "--add", "event", "aerospace_workspace_change") {
-		t.Fatalf("missing custom aerospace event: %v", args)
+	if slices.Index(args, sinkItem) < slices.Index(args, "rec") {
+		t.Fatalf("sink should subscribe after items register their events: %v", args)
 	}
 	if !slices.Contains(args, "script=emit") {
 		t.Fatalf("sink should run the emit command: %v", args)
 	}
 }
 
-func TestDaemonDispatch(t *testing.T) {
-	r := newFakeRunner(nil)
-	a := &recordingItem{events: []string{"front_app_switched"}}
-	d := NewDaemon(Config{}, r, "emit", []Item{a})
+func TestDaemonDispatchCoalescesEvents(t *testing.T) {
+	a := &recordingItem{events: []string{"front_app_switched", "space_windows_change"}}
+	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", []Item{a})
 
-	d.dispatch(context.Background(), Event{Name: sinkItem, Sender: "front_app_switched", Info: "kitty"})
-	d.dispatch(context.Background(), Event{Name: sinkItem, Sender: "volume_change"})
-	d.dispatch(context.Background(), Event{Name: "rec.child", Sender: "mouse.clicked"})
-	d.dispatch(context.Background(), Event{Name: "rec.child", Sender: "forced"})
-	d.dispatch(context.Background(), Event{Sender: "forced"})
+	d.dispatch(context.Background(), []Event{
+		{Name: sinkItem, Sender: "front_app_switched", Info: "kitty"},
+		{Name: sinkItem, Sender: "volume_change"},
+		{Name: sinkItem, Sender: "space_windows_change"},
+	})
+	if len(a.handled) != 1 || a.handled[0].Sender != "space_windows_change" {
+		t.Fatalf("burst should be handled once with the latest event: %+v", a.handled)
+	}
 
-	if len(a.handled) != 2 || a.handled[0].Info != "kitty" || a.handled[1].Sender != "forced" {
-		t.Fatalf("unexpected handled events: %+v", a.handled)
+	d.dispatch(context.Background(), []Event{{Name: sinkItem, Sender: "volume_change"}})
+	if len(a.handled) != 1 {
+		t.Fatalf("unsubscribed events should be ignored: %+v", a.handled)
+	}
+}
+
+func TestDaemonClicksRunOffLoop(t *testing.T) {
+	a := &recordingItem{}
+	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", []Item{a})
+
+	d.dispatch(context.Background(), []Event{{Name: "rec.child", Sender: "mouse.clicked"}, {Name: "other", Sender: "mouse.clicked"}})
+	select {
+	case <-d.updates:
+	case <-time.After(2 * time.Second):
+		t.Fatal("click result was not sent back to the loop")
 	}
 	if len(a.clicks) != 1 || a.clicks[0].Name != "rec.child" {
 		t.Fatalf("unexpected clicks: %+v", a.clicks)
 	}
 }
 
-func TestDaemonRunQuitsOnReplacement(t *testing.T) {
-	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", nil)
-	events := make(chan Event, 1)
-	events <- Event{Sender: quitSender}
-	done := make(chan error)
-	go func() { done <- d.Run(context.Background(), events) }()
-	select {
-	case err := <-done:
-		if err != nil {
-			t.Fatal(err)
-		}
-	case <-time.After(2 * time.Second):
-		t.Fatal("daemon did not exit on quit event")
+func TestDaemonRenderHandlesEveryItem(t *testing.T) {
+	a := &recordingItem{events: []string{"front_app_switched"}}
+	c := &recordingItem{events: []string{"system_woke"}}
+	d := NewDaemon(Config{}, newFakeRunner(nil), "emit", []Item{a, c})
+	d.render(context.Background())
+	if len(a.handled) != 1 || len(c.handled) != 1 {
+		t.Fatalf("render should handle every item once: %+v %+v", a.handled, c.handled)
+	}
+}
+
+func TestBatchOnClickUsesEmitCommand(t *testing.T) {
+	b := (&Daemon{emit: "emit-cmd"}).newBatch()
+	b.OnClick("x", "mouse.exited.global")
+	want := []string{"--set", "x", "script=emit-cmd", "--subscribe", "x", "mouse.clicked", "mouse.exited.global"}
+	if !slices.Equal(b.Args(), want) {
+		t.Fatalf("OnClick = %v, want %v", b.Args(), want)
 	}
 }
 
@@ -511,25 +550,56 @@ func TestEmitAndServe(t *testing.T) {
 
 func TestListenReplacesPreviousDaemon(t *testing.T) {
 	socket := shortSocketPath(t)
-	old, err := Listen(socket)
+	stale, err := net.Listen("unix", socket)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	events := make(chan Event, 1)
-	go Serve(ctx, old, events)
-	go func() {
-		if ev := <-events; ev.Sender == quitSender {
-			old.Close()
-		}
-	}()
+	defer stale.Close()
 
-	l, err := Listen(socket)
-	if err != nil {
-		t.Fatalf("second listen should take over: %v", err)
+	old := exec.Command("sleep", "30")
+	if err := old.Start(); err != nil {
+		t.Fatal(err)
 	}
-	l.Close()
+	exited := make(chan struct{})
+	go func() {
+		old.Wait()
+		close(exited)
+	}()
+	if err := os.WriteFile(socket+".pid", []byte(strconv.Itoa(old.Process.Pid)), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	server, err := Listen(socket)
+	if err != nil {
+		t.Fatalf("listen should take over: %v", err)
+	}
+	select {
+	case <-exited:
+	case <-time.After(3 * time.Second):
+		old.Process.Kill()
+		t.Fatal("previous daemon was not stopped")
+	}
+
+	pid, err := readPid(socket + ".pid")
+	if err != nil || pid != os.Getpid() {
+		t.Fatalf("pidfile should hold the new daemon, got %d (%v)", pid, err)
+	}
+	server.Close()
+	if _, err := os.Stat(socket + ".pid"); !os.IsNotExist(err) {
+		t.Fatalf("pidfile should be removed on close: %v", err)
+	}
+}
+
+func TestListenIgnoresPidfileWithoutLiveSocket(t *testing.T) {
+	socket := shortSocketPath(t)
+	if err := os.WriteFile(socket+".pid", []byte("1"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	server, err := Listen(socket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	server.Close()
 }
 
 func TestEventFromEnv(t *testing.T) {
@@ -544,14 +614,14 @@ func TestEventFromEnv(t *testing.T) {
 
 func TestLoadConfig(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "bar.json")
-	if err := os.WriteFile(path, []byte(`{"mailApp":"Mail","bluetooth":true,"workspaceIcons":{"1":"x"}}`), 0o644); err != nil {
+	if err := os.WriteFile(path, []byte(`{"mailApp":"Mail","colors":{"bar":"0xCC000000"}}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	cfg, err := LoadConfig(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.MailApp != "Mail" || !cfg.Bluetooth || cfg.WorkspaceIcons["1"] != "x" {
+	if cfg.MailApp != "Mail" || cfg.Colors.Bar != "0xCC000000" {
 		t.Fatalf("unexpected config: %+v", cfg)
 	}
 }

@@ -1,7 +1,6 @@
 package bar
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"log/slog"
@@ -30,8 +29,8 @@ func NewSystem(runner Runner) *System {
 }
 
 func (s *System) Setup(ctx context.Context, b *Batch) error {
-	b.Add("item", memoryItem, "right", P("icon", iconMemory), "click_script=open -a 'Activity Monitor'")
-	b.Add("item", cpuItem, "right", P("icon", iconCPU), "click_script=open -a 'Activity Monitor'")
+	b.Add(memoryItem, "right", P("icon", iconMemory), "click_script=open -a 'Activity Monitor'")
+	b.Add(cpuItem, "right", P("icon", iconCPU), "click_script=open -a 'Activity Monitor'")
 	return nil
 }
 
@@ -90,9 +89,6 @@ func (s *System) memoryPercent(ctx context.Context) (float64, error) {
 }
 
 func parseCPU(out string, ncpu int) (float64, error) {
-	if ncpu <= 0 {
-		return 0, fmt.Errorf("invalid cpu count %d", ncpu)
-	}
 	total := 0.0
 	for field := range strings.FieldsSeq(out) {
 		v, err := strconv.ParseFloat(field, 64)
@@ -115,17 +111,10 @@ func parseVMStatUsed(out string) (uint64, error) {
 	}
 
 	pages := map[string]uint64{}
-	scanner := bufio.NewScanner(strings.NewReader(out))
-	for scanner.Scan() {
-		k, v, ok := strings.Cut(scanner.Text(), ":")
-		if !ok {
-			continue
+	for k, v := range parseFields(out) {
+		if n, err := strconv.ParseUint(strings.TrimSuffix(v, "."), 10, 64); err == nil {
+			pages[k] = n
 		}
-		n, err := strconv.ParseUint(strings.TrimSuffix(strings.TrimSpace(v), "."), 10, 64)
-		if err != nil {
-			continue
-		}
-		pages[strings.TrimSpace(k)] = n
 	}
 
 	app := pages["Anonymous pages"]

@@ -22,7 +22,7 @@ func NewFrontApp(runner Runner) *FrontApp {
 }
 
 func (f *FrontApp) Setup(ctx context.Context, b *Batch) error {
-	b.Add("item", frontAppItem, "left", "icon.drawing=off", "label.padding_left=12")
+	b.Add(frontAppItem, "left", "icon.drawing=off", "label.padding_left=12")
 	return nil
 }
 
@@ -42,25 +42,34 @@ func (f *FrontApp) Handle(ctx context.Context, ev Event, b *Batch) {
 	b.Set(frontAppItem, P("label", name))
 }
 
-type Clock struct {
-	now func() time.Time
-}
+type Clock struct{}
 
 func NewClock() *Clock {
-	return &Clock{now: time.Now}
+	return &Clock{}
 }
 
 func (c *Clock) Setup(ctx context.Context, b *Batch) error {
-	b.Add("item", clockItem, "right", "click_script=open -a Calendar", "label.padding_left=9")
+	b.Add(clockItem, "right", "click_script=open -a Calendar", "label.padding_left=9")
 	return nil
 }
 
-func (c *Clock) Interval() time.Duration {
-	return 15 * time.Second
+func (c *Clock) Stream(ctx context.Context, updates chan<- Update) {
+	for ctx.Err() == nil {
+		now := time.Now()
+		send(ctx, updates, clockUpdate(now))
+		sleep(ctx, now.Truncate(time.Minute).Add(time.Minute).Sub(now))
+	}
 }
 
-func (c *Clock) Poll(ctx context.Context) Update {
-	t := c.now()
+func (c *Clock) Events() []string {
+	return []string{"system_woke"}
+}
+
+func (c *Clock) Handle(ctx context.Context, ev Event, b *Batch) {
+	clockUpdate(time.Now())(b)
+}
+
+func clockUpdate(t time.Time) Update {
 	return func(b *Batch) {
 		b.Set(clockItem, P("icon", t.Format("Mon Jan 2")), P("label", t.Format("3:04 PM")))
 	}
@@ -69,6 +78,7 @@ func (c *Clock) Poll(ctx context.Context) Update {
 type Mail struct {
 	runner Runner
 	app    string
+	last   lastValue
 }
 
 func NewMail(runner Runner, app string) *Mail {
@@ -76,7 +86,7 @@ func NewMail(runner Runner, app string) *Mail {
 }
 
 func (m *Mail) Setup(ctx context.Context, b *Batch) error {
-	b.Add("item", mailItem, "right", P("icon", iconMail), "drawing=off", P("click_script", "open -a '"+m.app+"'"))
+	b.Add(mailItem, "right", P("icon", iconMail), "drawing=off", P("click_script", "open -a '"+m.app+"'"))
 	return nil
 }
 
@@ -90,6 +100,9 @@ func (m *Mail) Poll(ctx context.Context) Update {
 		slog.Debug("bar: mail badge lookup failed", "error", err)
 	}
 	count := parseStatusLabel(string(out))
+	if !m.last.changed(count) {
+		return nil
+	}
 	return func(b *Batch) {
 		b.Set(mailItem, onOff("drawing", count != "" && count != "0"), P("label", count))
 	}
@@ -97,14 +110,26 @@ func (m *Mail) Poll(ctx context.Context) Update {
 
 func parseStatusLabel(out string) string {
 	const marker = `"label"="`
-	i := strings.Index(out, marker)
-	if i < 0 {
+	_, rest, ok := strings.Cut(out, marker)
+	if !ok {
 		return ""
 	}
-	rest := out[i+len(marker):]
-	end := strings.Index(rest, `"`)
-	if end < 0 {
+	label, _, ok := strings.Cut(rest, `"`)
+	if !ok {
 		return ""
 	}
-	return rest[:end]
+	return label
+}
+
+type lastValue struct {
+	set   bool
+	value string
+}
+
+func (l *lastValue) changed(v string) bool {
+	if l.set && l.value == v {
+		return false
+	}
+	l.set, l.value = true, v
+	return true
 }

@@ -11,7 +11,10 @@ import (
 	"time"
 )
 
-const networkItem = "network"
+const (
+	networkItem      = "network"
+	routeRefreshPoll = 10
+)
 
 type ifaceCounters struct {
 	in, out uint64
@@ -20,8 +23,9 @@ type ifaceCounters struct {
 type Network struct {
 	runner   Runner
 	now      func() time.Time
+	polls    int
 	iface    string
-	kind     string
+	icon     string
 	last     ifaceCounters
 	lastSeen time.Time
 }
@@ -31,7 +35,7 @@ func NewNetwork(runner Runner) *Network {
 }
 
 func (n *Network) Setup(ctx context.Context, b *Batch) error {
-	b.Add("item", networkItem, "right",
+	b.Add(networkItem, "right",
 		P("click_script", "open 'x-apple.systempreferences:com.apple.Network-Settings.extension'"))
 	return nil
 }
@@ -41,27 +45,20 @@ func (n *Network) Interval() time.Duration {
 }
 
 func (n *Network) Poll(ctx context.Context) Update {
-	iface := n.defaultInterface(ctx)
-	if iface == "" {
-		n.iface = ""
+	if n.iface == "" || n.polls%routeRefreshPoll == 0 {
+		n.resolveInterface(ctx)
+	}
+	n.polls++
+	if n.iface == "" {
 		return func(b *Batch) {
 			b.Set(networkItem, P("icon", iconOffline), "label=offline")
 		}
 	}
-	if iface != n.iface {
-		n.iface = iface
-		n.kind = n.interfaceKind(ctx, iface)
-		n.lastSeen = time.Time{}
-	}
 
-	out, err := n.runner.Run(ctx, "netstat", "-ibn", "-I", iface)
+	counters, err := n.counters(ctx)
 	if err != nil {
-		slog.Debug("bar: netstat failed", "error", err)
-		return nil
-	}
-	counters, err := parseNetstat(string(out), iface)
-	if err != nil {
-		slog.Debug("bar: netstat parse failed", "error", err)
+		slog.Debug("bar: network counters failed", "error", err)
+		n.iface = ""
 		return nil
 	}
 
@@ -73,44 +70,46 @@ func (n *Network) Poll(ctx context.Context) Update {
 	}
 	n.last, n.lastSeen = counters, now
 
-	icon := iconEthernet
-	if n.kind == "WiFi" {
-		icon = iconWifi
-	}
+	icon := n.icon
 	return func(b *Batch) {
 		b.Set(networkItem, P("icon", icon), P("label", label))
 	}
 }
 
-func (n *Network) defaultInterface(ctx context.Context) string {
-	out, err := n.runner.Run(ctx, "route", "-n", "get", "default")
-	if err != nil {
-		return ""
+func (n *Network) resolveInterface(ctx context.Context) {
+	iface := ""
+	if out, err := n.runner.Run(ctx, "route", "-n", "get", "default"); err == nil {
+		iface = parseFields(string(out))["interface"]
 	}
-	return parseRouteInterface(string(out))
-}
-
-func (n *Network) interfaceKind(ctx context.Context, iface string) string {
-	out, err := n.runner.Run(ctx, "ipconfig", "getsummary", iface)
-	if err != nil {
-		return ""
+	if iface == n.iface {
+		return
 	}
-	return parseSummaryField(string(out), "InterfaceType")
+	n.iface, n.icon, n.lastSeen = iface, iconEthernet, time.Time{}
+	if iface == "" {
+		return
+	}
+	if out, err := n.runner.Run(ctx, "ipconfig", "getsummary", iface); err == nil && parseFields(string(out))["InterfaceType"] == "WiFi" {
+		n.icon = iconWifi
+	}
 }
 
-func parseRouteInterface(out string) string {
-	return parseSummaryField(out, "interface")
+func (n *Network) counters(ctx context.Context) (ifaceCounters, error) {
+	out, err := n.runner.Run(ctx, "netstat", "-ibn", "-I", n.iface)
+	if err != nil {
+		return ifaceCounters{}, err
+	}
+	return parseNetstat(string(out), n.iface)
 }
 
-func parseSummaryField(out, key string) string {
+func parseFields(out string) map[string]string {
+	fields := map[string]string{}
 	scanner := bufio.NewScanner(strings.NewReader(out))
 	for scanner.Scan() {
-		k, v, ok := strings.Cut(scanner.Text(), ":")
-		if ok && strings.TrimSpace(k) == key {
-			return strings.TrimSpace(v)
+		if k, v, ok := strings.Cut(scanner.Text(), ":"); ok {
+			fields[strings.TrimSpace(k)] = strings.TrimSpace(v)
 		}
 	}
-	return ""
+	return fields
 }
 
 func parseNetstat(out, iface string) (ifaceCounters, error) {

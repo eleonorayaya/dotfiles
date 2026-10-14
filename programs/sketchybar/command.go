@@ -17,13 +17,12 @@ func Command() *cobra.Command {
 	socketPath := bar.DefaultSocketPath()
 
 	cmd := &cobra.Command{
-		Use:               "bar",
-		Short:             "Run the sketchybar daemon",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error { return nil },
+		Use:   "bar",
+		Short: "Run the sketchybar daemon",
 	}
 	cmd.PersistentFlags().StringVar(&socketPath, "socket", socketPath, "Unix socket the daemon listens on")
 
-	configPath := configFile
+	configPath := configDir + configName
 	runCmd := &cobra.Command{
 		Use:   "run",
 		Short: "Configure sketchybar and serve its events",
@@ -65,15 +64,15 @@ func runDaemon(configPath, socketPath string) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	l, err := bar.Listen(socketPath)
+	server, err := bar.Listen(socketPath)
 	if err != nil {
 		return err
 	}
-	defer l.Close()
+	defer server.Close()
 
 	events := make(chan bar.Event, 64)
-	go bar.Serve(ctx, l, events)
+	go bar.Serve(ctx, server, events)
 
 	runner := bar.ExecRunner{}
-	return bar.NewDaemon(cfg, runner, emit, bar.Items(cfg, runner, emit)).Run(ctx, events)
+	return bar.NewDaemon(cfg, runner, emit, bar.Items(cfg, runner)).Run(ctx, events)
 }
