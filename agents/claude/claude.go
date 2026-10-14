@@ -64,6 +64,14 @@ func (a *App) Generate(ctx *app.Context, agents app.AgentContext) (*app.Generate
 	}
 	fileMap["settings.json"] = mergedPath
 
+	if ctx.Styles.Theme.Name != "" {
+		themeFile, themePath, err := writeClaudeTheme(ctx.OutDir, ctx.Styles.Theme)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate theme: %w", err)
+		}
+		fileMap[themeFile] = themePath
+	}
+
 	return &app.GenerateResult{
 		FileMap: fileMap,
 		DestDir: "~/.claude/",
@@ -373,6 +381,9 @@ func (a *App) mergeSettings(outDir string, theme styles.Theme, agents app.AgentC
 	}
 	if a.opts.AdvisorModel != "" {
 		settings["advisorModel"] = a.opts.AdvisorModel
+	}
+	if theme.Name != "" {
+		settings["theme"] = themeSetting
 	}
 	if a.opts.StatusLine != nil {
 		settings["statusLine"] = a.opts.StatusLine

@@ -266,6 +266,8 @@ The `claude` shizuku app manages `~/.claude/settings.json` with additive merges 
 
 Claude Code mods are plugins, so `claude.Options.Mods` takes `app.Mod` entries. Each one registers its marketplace (which defaults to the mod name), enables `<name>@<marketplace>`, and merges `Options` into `pluginConfigs.<id>.options`. Option keys the mod doesn't set keep whatever the user picked in `/config`. `ThemeOptions` derives options from the shizuku theme, and explicit `Options` override them. `claude.Prismantis()` uses it to map `ThemeColors` onto prismantis's color slots.
 
+The claude app also generates a Claude Code custom theme at `~/.claude/themes/shizuku.json` (base `light`/`dark` from `Theme.Type`, token overrides from `ThemeColors`; see `agents/claude/theme.go`) and selects it with `"theme": "custom:shizuku"` in settings.json.
+
 ## Coding Style
 
 ### Comments
