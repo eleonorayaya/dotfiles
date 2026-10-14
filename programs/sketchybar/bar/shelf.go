@@ -165,7 +165,7 @@ func sessionItem(i int) string { return fmt.Sprintf("%s%d", sessionPrefix, i) }
 func (s *Sessions) Setup(ctx context.Context, b *Batch) error {
 	for i := range sessionSlots {
 		b.Add(sessionItem(i), "left", "drawing=off", "popup.align=left")
-		b.OnClick(sessionItem(i), "mouse.entered", "mouse.exited", "mouse.exited.global")
+		b.OnClick(sessionItem(i), "mouse.entered", "mouse.exited.global")
 	}
 	return nil
 }
@@ -267,23 +267,34 @@ func (s *Sessions) Click(ctx context.Context, ev Event, b *Batch) {
 		return
 	}
 	chip := s.chips[i]
+	prev := s.hovered
+	var prevChip sessionChip
+	if prev >= 0 && prev < len(s.chips) {
+		prevChip = s.chips[prev]
+	}
 	switch ev.Sender {
 	case "mouse.entered":
 		s.hovered = i
-	case "mouse.exited", "mouse.exited.global":
-		if s.hovered == i {
-			s.hovered = -1
-		}
+	case "mouse.exited.global":
+		s.hovered = -1
 	}
 	s.mu.Unlock()
 
 	item := sessionItem(i)
 	switch ev.Sender {
 	case "mouse.entered":
+		if prev == i {
+			return
+		}
+		if prev >= 0 {
+			b.Set(sessionItem(prev), append(chipProps(s.colors, prevChip, false), "popup.drawing=off")...)
+		}
 		b.Set(item, chipProps(s.colors, chip, true)...)
 		renderAgentPopup(b, item, chip)
-	case "mouse.exited", "mouse.exited.global":
-		b.Set(item, append(chipProps(s.colors, chip, false), "popup.drawing=off")...)
+	case "mouse.exited.global":
+		if prev >= 0 {
+			b.Set(sessionItem(prev), append(chipProps(s.colors, prevChip, false), "popup.drawing=off")...)
+		}
 	case "mouse.clicked":
 		if chip.more > 0 {
 			return
