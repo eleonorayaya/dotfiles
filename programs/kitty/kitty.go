@@ -3,8 +3,6 @@ package kitty
 import (
 	"embed"
 	"fmt"
-	"log/slog"
-	"os/exec"
 
 	"github.com/eleonorayaya/shizuku/app"
 	"github.com/eleonorayaya/shizuku/util"
@@ -28,20 +26,9 @@ func (a *App) Install(ctx *app.Context) error {
 		return fmt.Errorf("failed to install font-maple-mono: %w", err)
 	}
 
-	if util.BinaryExists("kitty") {
-		slog.Info("kitty already installed, skipping")
-		return nil
+	if err := util.InstallBrewPackage("kitty", true); err != nil {
+		return fmt.Errorf("failed to install kitty (if it was installed outside brew, run `brew install --cask --force kitty`): %w", err)
 	}
-
-	slog.Debug("installing kitty via curl script")
-
-	cmd := exec.Command("sh", "-c", "curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("failed to install kitty: %w\nOutput: %s", err, string(output))
-	}
-
-	slog.Debug("kitty installed successfully")
 
 	return nil
 }
