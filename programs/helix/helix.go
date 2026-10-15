@@ -81,5 +81,8 @@ func (a *App) Env() (*app.EnvSetup, error) {
 			{Key: "EDITOR", Value: "hx"},
 			{Key: "VISUAL", Value: "hx"},
 		},
+		Aliases: []app.Alias{
+			{Name: "vim", Command: "hx", Requires: "hx"},
+		},
 	}, nil
 }
