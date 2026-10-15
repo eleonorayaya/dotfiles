@@ -25,6 +25,15 @@ func MixHex(a, b string, t float64) string {
 	return fmt.Sprintf("#%02x%02x%02x", out[0], out[1], out[2])
 }
 
+func GrayHex(hex string) string {
+	c, ok := parseHexRGB(hex)
+	if !ok {
+		return ""
+	}
+	y := int(0.299*float64(c[0]) + 0.587*float64(c[1]) + 0.114*float64(c[2]) + 0.5)
+	return fmt.Sprintf("#%02x%02x%02x", y, y, y)
+}
+
 func parseHexRGB(hex string) ([3]int, bool) {
 	hex = strings.TrimPrefix(hex, "#")
 	if len(hex) != 6 {
