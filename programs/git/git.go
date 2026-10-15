@@ -123,6 +123,7 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"~/.cache/gh",
 			"~/.local/share/gh",
 			"~/.local/state/gh",
+			"~/.cache/pre-commit",
 		},
 	}
 }

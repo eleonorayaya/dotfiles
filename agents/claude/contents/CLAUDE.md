@@ -1,0 +1,3 @@
+- ALWAYS tell subagents the full current working directory path.
+- ALWAYS tell subagents running in a worktree not to look at the non-worktree repo root
+- when referencing a pull request, always output the full URL (`https://github.com/<org>/<repo>/pull/<number>`), never a bare `#1234` — this applies everywhere, including lists, tables, and commit/PR bodies

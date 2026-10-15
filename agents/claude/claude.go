@@ -32,6 +32,7 @@ type Options struct {
 	DefaultMode             string
 	AdvisorModel            string
 	GlobalConfig            map[string]any
+	Settings                map[string]any
 }
 
 type App struct {
@@ -369,7 +370,13 @@ func (a *App) mergeSettings(outDir string, theme styles.Theme, agents app.AgentC
 
 	denyRaw, _ := permissions["deny"].([]any)
 	permissions["deny"] = mergeStringsIntoAnySlice(denyRaw, a.collectDeniedCommands())
+	if a.opts.DefaultMode != "" {
+		permissions["defaultMode"] = a.opts.DefaultMode
+		delete(settings, "defaultMode")
+	}
 	settings["permissions"] = permissions
+
+	maps.Copy(settings, a.opts.Settings)
 
 	if len(a.opts.Env) > 0 {
 		env, _ := settings["env"].(map[string]any)
@@ -382,9 +389,6 @@ func (a *App) mergeSettings(outDir string, theme styles.Theme, agents app.AgentC
 		settings["env"] = env
 	}
 
-	if a.opts.DefaultMode != "" {
-		settings["defaultMode"] = a.opts.DefaultMode
-	}
 	if a.opts.AdvisorModel != "" {
 		settings["advisorModel"] = a.opts.AdvisorModel
 	}

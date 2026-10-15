@@ -1,0 +1,10 @@
+# Used only by Claude Code sessions (GIT_CONFIG_GLOBAL in ~/.claude/settings.json).
+# The sandbox blocks SSH, so route GitHub over HTTPS using the gh CLI token.
+[include]
+	path = ~/.gitconfig
+[url "https://github.com/"]
+	insteadOf = git@github.com:
+	insteadOf = ssh://git@github.com/
+[credential "https://github.com"]
+	helper =
+	helper = !gh auth git-credential
