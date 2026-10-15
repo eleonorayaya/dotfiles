@@ -22,10 +22,12 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/aerospace"
 	"github.com/eleonorayaya/shizuku/programs/bat"
 	"github.com/eleonorayaya/shizuku/programs/buildkite"
+	"github.com/eleonorayaya/shizuku/programs/chrome"
 	"github.com/eleonorayaya/shizuku/programs/datadog"
 	"github.com/eleonorayaya/shizuku/programs/desktoppr"
 	"github.com/eleonorayaya/shizuku/programs/dock"
 	"github.com/eleonorayaya/shizuku/programs/fastfetch"
+	"github.com/eleonorayaya/shizuku/programs/firefox"
 	"github.com/eleonorayaya/shizuku/programs/git"
 	"github.com/eleonorayaya/shizuku/programs/glow"
 	"github.com/eleonorayaya/shizuku/programs/helix"
@@ -130,6 +132,7 @@ func main() {
 			shizuku.WithPrograms(
 				acli.New(),
 				buildkite.New(),
+				chrome.New(),
 				datadog.New(),
 				k9s.New(),
 				mise.New(),
@@ -143,6 +146,7 @@ func main() {
 				zig.New(),
 			),
 			shizuku.WithPrograms(
+				firefox.New(),
 				protonpass.New(),
 				protonvpn.New(),
 				vesktop.New(),

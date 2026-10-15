@@ -1,0 +1,57 @@
+:root {
+  color-scheme: light !important;
+  --toolbox-bgcolor: {{.Colors.SurfaceHighlight}} !important;
+  --toolbox-bgcolor-inactive: {{.Colors.SurfaceVariant}} !important;
+  --toolbox-textcolor: {{.Colors.TextOnSurface}} !important;
+  --toolbox-textcolor-inactive: {{.Colors.TextOnSurfaceMuted}} !important;
+  --lwt-accent-color: {{.Colors.SurfaceHighlight}} !important;
+  --lwt-accent-color-inactive: {{.Colors.SurfaceVariant}} !important;
+  --lwt-text-color: {{.Colors.TextOnSurface}} !important;
+  --toolbar-bgcolor: {{.Colors.Surface}} !important;
+  --toolbar-color: {{.Colors.TextOnSurface}} !important;
+  --toolbarbutton-icon-fill: {{.Colors.Primary}} !important;
+  --tab-selected-bgcolor: {{.Colors.Surface}} !important;
+  --tab-selected-textcolor: {{.Colors.TextOnSurface}} !important;
+  --toolbar-field-background-color: {{.Colors.SurfaceVariant}} !important;
+  --toolbar-field-color: {{.Colors.TextOnSurface}} !important;
+  --toolbar-field-focus-background-color: {{.Colors.Surface}} !important;
+  --toolbar-field-focus-color: {{.Colors.TextOnSurface}} !important;
+  --toolbar-field-focus-border-color: {{.Colors.Primary}} !important;
+  --focus-outline-color: {{.Colors.Primary}} !important;
+  --chrome-content-separator-color: {{.Colors.SurfaceBorder}} !important;
+  --arrowpanel-background: {{.Colors.Surface}} !important;
+  --arrowpanel-color: {{.Colors.TextOnSurface}} !important;
+  --arrowpanel-border-color: {{.Colors.SurfaceBorder}} !important;
+  --sidebar-background-color: {{.Colors.SurfaceVariant}} !important;
+  --sidebar-text-color: {{.Colors.TextOnSurface}} !important;
+  --color-accent-primary: {{.Colors.Primary}} !important;
+  --link-color: {{.Colors.Link}} !important;
+}
+
+#navigator-toolbox {
+  background-color: {{.Colors.SurfaceHighlight}} !important;
+  color: {{.Colors.TextOnSurface}} !important;
+}
+
+#navigator-toolbox:-moz-window-inactive {
+  background-color: {{.Colors.SurfaceVariant}} !important;
+}
+
+#nav-bar,
+#PersonalToolbar,
+#TabsToolbar .tab-background[selected] {
+  background-color: {{.Colors.Surface}} !important;
+  background-image: none !important;
+}
+
+#PersonalToolbar,
+.tabbrowser-tab,
+.tabbrowser-tab .tab-label,
+.tabbrowser-tab[selected] .tab-label {
+  color: {{.Colors.TextOnSurface}} !important;
+}
+
+#urlbar-searchmode-switcher {
+  background-color: {{.Colors.SurfaceHighlight}} !important;
+  color: {{.Colors.Primary}} !important;
+}
