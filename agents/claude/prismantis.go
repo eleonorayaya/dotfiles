@@ -1,6 +1,9 @@
 package claude
 
 import (
+	"fmt"
+	"math"
+
 	"github.com/eleonorayaya/shizuku/app"
 	"github.com/eleonorayaya/shizuku/styles"
 	"github.com/eleonorayaya/shizuku/util"
@@ -30,14 +33,14 @@ func prismantisThemeOptions(theme styles.Theme) map[string]any {
 		"inlineCodeColor":  c.InlineCode,
 		"codeTextColor":    c.TextOnSurface,
 		"codeCommandColor": c.Palette.Blue,
-		"codeFlagColor":    c.Palette.Magenta,
+		"codeFlagColor":    c.Removed,
 		"codeStringColor":  c.String,
 		"codeCommentColor": c.Comment,
 		"linkColor":        c.Link,
 		"pathColor":        c.Path,
-		"numberColor":      c.Added,
+		"numberColor":      diffNumberColor(c),
 		"quoteColor":       c.TextOnSurfaceVariant,
-		"ruleColor":        util.GrayHex(c.SurfaceBorder),
+		"ruleColor":        diffRuleColor(c),
 		"tableHeaderColor": c.Secondary,
 		"tableRuleColor":   c.SurfaceBorder,
 		"bulletColor":      c.Secondary,
@@ -50,4 +53,27 @@ func prismantisThemeOptions(theme styles.Theme) map[string]any {
 		}
 	}
 	return options
+}
+
+const (
+	ruleLighten   = 0.6
+	prismantisMix = 0.2
+)
+
+func diffRuleColor(c styles.ThemeColors) string {
+	return util.MixHex(util.GrayHex(c.SurfaceBorder), "#ffffff", ruleLighten)
+}
+
+func diffNumberColor(c styles.ThemeColors) string {
+	rule, errRule := util.HexToRGB(diffRuleColor(c))
+	target, errTarget := util.HexToRGB(diffBackground(c, c.Added))
+	if errRule != nil || errTarget != nil {
+		return c.Added
+	}
+	var out [3]int
+	for i := range out {
+		v := (float64(target[i]) - (1-prismantisMix)*float64(rule[i])) / prismantisMix
+		out[i] = int(math.Max(0, math.Min(255, math.Round(v))))
+	}
+	return fmt.Sprintf("#%02x%02x%02x", out[0], out[1], out[2])
 }
