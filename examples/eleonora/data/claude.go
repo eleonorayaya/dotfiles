@@ -25,7 +25,8 @@ func ClaudeOptions() claude.Options {
 			"JEST_WATCHMAN":                         "false",
 		},
 		GlobalConfig: map[string]any{
-			"leftArrowOpensAgents": false,
+			"leftArrowOpensAgents":  false,
+			"prStatusFooterEnabled": false,
 		},
 		StatusLine: map[string]any{
 			"type":    "command",
