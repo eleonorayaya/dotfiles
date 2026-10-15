@@ -45,6 +45,7 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"~/.yarn",
 			"~/.yarnrc",
 			"~/.yarnrc.yml",
+			"~/.yarn/berry/cache",
 			"~/.local/share/pnpm",
 			"~/.local/state/pnpm",
 			"~/Library/Caches/npm",

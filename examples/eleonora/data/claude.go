@@ -1,19 +1,29 @@
 package data
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/eleonorayaya/shizuku/agents/claude"
 	"github.com/eleonorayaya/shizuku/app"
 )
 
 func ClaudeOptions() claude.Options {
+	home, _ := os.UserHomeDir()
+
 	return claude.Options{
 		Marketplaces: map[string]app.Marketplace{
-			"superpowers-marketplace":  {Repo: "obra/superpowers-marketplace"},
+			"claude-plugins-official":  {Repo: "anthropics/claude-plugins-official"},
 			"eleonorayaya-claude-code": {Repo: "eleonorayaya/claude-plugins"},
-			"utena":                    {Repo: "eleonorayaya/utena"},
 		},
 		AlwaysOnPlugins: []string{
-			"superpowers@superpowers-marketplace",
+			"superpowers@claude-plugins-official",
+			"claude-md-management@claude-plugins-official",
+			"plugin-dev@claude-plugins-official",
+			"skill-creator@claude-plugins-official",
+			"playground@claude-plugins-official",
+			"better-claude@eleonorayaya-claude-code",
+			"git-workflows@eleonorayaya-claude-code",
 		},
 		Mods: []app.Mod{
 			claude.Prismantis(),
@@ -25,6 +35,7 @@ func ClaudeOptions() claude.Options {
 			"CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
 			"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS":  "1",
 			"JEST_WATCHMAN":                         "false",
+			"GIT_CONFIG_GLOBAL":                     filepath.Join(home, ".config", "git", "claude.gitconfig"),
 		},
 		GlobalConfig: map[string]any{
 			"leftArrowOpensAgents":  false,
@@ -43,6 +54,7 @@ func ClaudeOptions() claude.Options {
 			"/dev/ttys*",
 			"~/.docker",
 			"~/.colima",
+			"~/Library/Caches/dotslash",
 		},
 		AllowedBashCommands: []string{
 			"grep:*",
@@ -68,5 +80,14 @@ func ClaudeOptions() claude.Options {
 		},
 		DefaultMode:  "plan",
 		AdvisorModel: "opus",
+		Settings: map[string]any{
+			"model":                    "opus",
+			"editorMode":               "vim",
+			"tui":                      "fullscreen",
+			"showThinkingSummaries":    true,
+			"skipAutoPermissionPrompt": true,
+			"skipWorkflowUsageWarning": true,
+			"agentPushNotifEnabled":    false,
+		},
 	}
 }

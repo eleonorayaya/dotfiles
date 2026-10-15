@@ -64,6 +64,15 @@ func (a *App) Install(ctx *app.Context) error {
 	return nil
 }
 
+func (a *App) AgentConfig() app.AgentConfig {
+	return app.AgentConfig{
+		Plugins: []string{"utena-claude@utena"},
+		Marketplaces: map[string]app.Marketplace{
+			"utena": {Repo: "eleonorayaya/utena"},
+		},
+	}
+}
+
 func updateClaudePlugin() error {
 	marketplaceCmd := exec.Command("claude", "plugin", "marketplace", "update", "utena")
 	if output, err := marketplaceCmd.CombinedOutput(); err != nil {
