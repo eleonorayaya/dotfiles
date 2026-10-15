@@ -88,4 +88,4 @@ resume_agents = "auto"
 right = ["notifications", "clock"]
 
 [hooks]
-after-attach = '''curl -sf --max-time 1 -X PUT -H 'Content-Type: application/json' -d "{\"session_name\":\"$TUIOS_SESSION_ID\"}" http://localhost:3333/tmux/hooks/client-session-changed'''
+after-attach = '''curl -sf --max-time 1 -X PUT -H 'Content-Type: application/json' -d "{\"session_name\":\"$TUIOS_SESSION_ID\"}" http://localhost:3333/mux/hooks/client-session-changed'''
