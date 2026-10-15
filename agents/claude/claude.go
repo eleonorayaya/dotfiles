@@ -30,6 +30,7 @@ type Options struct {
 	DeniedBashCommands      []string
 	DefaultMode             string
 	AdvisorModel            string
+	GlobalConfig            map[string]any
 }
 
 type App struct {
@@ -86,6 +87,10 @@ func (a *App) Sync(ctx *app.Context, agents app.AgentContext) error {
 
 	if err := app.SyncAppFiles(result.FileMap, result.DestDir); err != nil {
 		return fmt.Errorf("failed to sync app files: %w", err)
+	}
+
+	if err := mergeGlobalConfig(globalConfigPath, a.opts.GlobalConfig); err != nil {
+		return fmt.Errorf("failed to sync global config: %w", err)
 	}
 
 	return nil

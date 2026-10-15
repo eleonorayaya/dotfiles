@@ -24,6 +24,9 @@ func ClaudeOptions() claude.Options {
 			"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS":  "1",
 			"JEST_WATCHMAN":                         "false",
 		},
+		GlobalConfig: map[string]any{
+			"leftArrowOpensAgents": false,
+		},
 		StatusLine: map[string]any{
 			"type":    "command",
 			"command": "tuios agent-statusline claude-code --integration 1",
