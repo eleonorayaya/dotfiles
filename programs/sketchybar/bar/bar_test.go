@@ -321,7 +321,7 @@ func TestUtenaStream(t *testing.T) {
 			json.NewEncoder(w).Encode(map[string]any{"sessions": []map[string]any{
 				{"name": name, "is_attached": true, "last_used_at": "2026-10-13T19:31:33.050163-07:00"},
 			}})
-		case "/tmux/activations/next":
+		case "/mux/activations/next":
 			select {
 			case <-activations:
 			case <-r.Context().Done():
@@ -368,7 +368,7 @@ func TestUtenaRefreshesWithoutActivation(t *testing.T) {
 			json.NewEncoder(w).Encode(map[string]any{"sessions": []map[string]any{
 				{"name": "new-bg", "is_attached": isAttached, "last_used_at": "2026-10-13T19:31:33.050163-07:00"},
 			}})
-		case "/tmux/activations/next":
+		case "/mux/activations/next":
 			<-r.Context().Done()
 		}
 	}))
