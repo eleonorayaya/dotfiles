@@ -144,20 +144,15 @@ run = [ 'move-node-to-workspace T --focus-follows-window' ]
 if.app-id = 'com.apple.finder'
 run = [ 'layout floating', 'move-node-to-workspace 1' ]
 
-# Zen
-[[on-window-detected]]
-if.app-id = 'app.zen-browser.zen'
-run = [ 'move-node-to-workspace 2 --focus-follows-window' ]
-
 # Chrome
 [[on-window-detected]]
 if.app-id = 'com.google.Chrome'
 if.during-aerospace-startup = true
 run = [ 'move-node-to-workspace 2 --focus-follows-window' ]
 
-# Discord
+# Vesktop
 [[on-window-detected]]
-if.app-id = 'com.hnc.Discord'
+if.app-id = 'dev.vencord.vesktop'
 run = [ 'move-node-to-workspace 3' ]
 
 # Slack
@@ -185,11 +180,6 @@ run = [ 'move-node-to-workspace 5' ]
 if.app-id = 'com.TickTick.task.mac'
 run = [ 'move-node-to-workspace 6 --focus-follows-window' ]
 
-# Notion Calendar
-[[on-window-detected]]
-if.app-id = 'com.cron.electron'
-run = [ 'move-node-to-workspace 7' ]
-
 # Mail
 [[on-window-detected]]
 if.app-id = 'com.apple.mail'
@@ -198,10 +188,5 @@ run = [ 'move-node-to-workspace 8' ]
 # Proton Mail
 [[on-window-detected]]
 if.app-id = 'ch.protonmail.desktop'
-run = [ 'move-node-to-workspace 8' ]
-
-# Notion Mail
-[[on-window-detected]]
-if.app-id = 'notion.mail.id'
 run = [ 'move-node-to-workspace 8' ]
 

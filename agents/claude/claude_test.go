@@ -822,6 +822,9 @@ func TestPrismantisThemeOptions(t *testing.T) {
 	if options["tableRuleColor"] != "#4a3830" {
 		t.Errorf("expected table rule from surface border, got %v", options["tableRuleColor"])
 	}
+	if options["ruleColor"] != "#3c3c3c" {
+		t.Errorf("expected rule to be surface border in gray, got %v", options["ruleColor"])
+	}
 	if _, ok := options["linkColor"]; ok {
 		t.Error("expected empty theme colors to be omitted")
 	}

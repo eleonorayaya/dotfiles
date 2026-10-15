@@ -33,14 +33,6 @@ func (a *App) Install(ctx *app.Context) error {
 	return nil
 }
 
-func (a *App) Env() (*app.EnvSetup, error) {
-	return &app.EnvSetup{
-		Variables: []app.EnvVar{
-			{Key: "KUBE_EDITOR", Value: "nvim"},
-		},
-	}, nil
-}
-
 func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 	data := map[string]any{
 		"Styles": ctx.Styles,

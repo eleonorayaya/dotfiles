@@ -19,7 +19,7 @@ When invoked, this skill helps you:
 
 Apps live under `apps/` in one of three category directories:
 - `apps/languages/` — language toolchains (e.g. `golang`, `rust`)
-- `apps/programs/` — regular programs (e.g. `nvim`, `kitty`)
+- `apps/programs/` — regular programs (e.g. `helix`, `kitty`)
 - `apps/agents/` — agentic coding tools (e.g. `claude`)
 
 Each shizuku app follows this pattern:
@@ -61,14 +61,14 @@ Apps can optionally implement:
 Ask the user:
 1. **Category** - Which category does this app belong to?
    - `languages/` - language toolchains (e.g. golang, rust)
-   - `programs/` - regular programs (e.g. nvim, kitty)
+   - `programs/` - regular programs (e.g. helix, kitty)
    - `agents/` - agentic coding tools (e.g. claude)
-2. **App name** - What is the name of the application? (e.g., "tmux", "alacritty")
+2. **App name** - What is the name of the application? (e.g., "glow", "alacritty")
 3. **Default enabled** - Should this app be enabled by default? (most apps: true, optional services: false)
 4. **Installation** - Does the app need installation via Homebrew? (y/n)
    - If yes: package name, cask vs formula, any taps needed?
 5. **File syncing** - Does the app need to sync configuration files? (y/n)
-   - If yes: destination path (e.g., "~/.config/tmux/")
+   - If yes: destination path (e.g., "~/.config/glow/")
 6. **Template data** - Does the app need any template variables? (y/n)
 7. **Remote files** - Does the app need to download any remote resources like plugins? (y/n)
 8. **Environment** - Does the app need environment variables or aliases? (y/n)
@@ -237,10 +237,10 @@ func (a *App) Sync(outDir string, cfg *config.Config) error {
 func (a *App) Env() (*app.EnvSetup, error) {
 	return &app.EnvSetup{
 		Variables: []app.EnvVar{
-			{Key: "EDITOR", Value: "nvim"},
+			{Key: "EDITOR", Value: "hx"},
 		},
 		Aliases: []app.Alias{
-			{Name: "vim", Command: "nvim"},
+			{Name: "ls", Command: "lsd"},
 		},
 	}, nil
 }
@@ -303,7 +303,7 @@ Users can control apps in `~/.config/shizuku/shizuku.yml`:
 
 ```yaml
 apps:
-  nvim:
+  helix:
     enabled: false
   terraform:
     enabled: false
@@ -401,11 +401,11 @@ All utilities are **idempotent** - safe to call multiple times.
 - No file syncing
 
 ### App with File Syncing
-- App: nvim
+- App: helix
 - Default enabled: true
-- Installation: `InstallBrewPackage("neovim")`
-- Syncs to: ~/.config/nvim/
-- Provides: Environment variables (EDITOR=nvim, alias vim=nvim)
+- Installation: `pkg.Install(pkg.Spec{Brew: "helix", ...})`
+- Syncs to: ~/.config/helix/
+- Provides: Environment variables (EDITOR=hx, VISUAL=hx)
 
 ### Optional Service App
 - App: protonpass
@@ -421,11 +421,11 @@ All utilities are **idempotent** - safe to call multiple times.
 - Templates: Uses {{ .Theme }} and other variables
 
 ### App with Remote Files
-- App: zellij
+- App: terminal
 - Default enabled: true
-- Installation: `InstallBrewPackage("zellij")`
-- Syncs to: ~/.config/zellij/
-- Remote: Downloads zjstatus.wasm plugin from GitHub
+- Installation: `pkg.Install` for zsh and oh-my-posh
+- Syncs to: ~/.config/ohmyposh/
+- Remote: Clones the zsh-vi-mode plugin from GitHub
 
 ### App with Custom Installer
 - App: kitty
