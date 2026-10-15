@@ -43,8 +43,9 @@ func (a *App) Install(ctx *app.Context) error {
 
 func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 	fileMap, err := app.GenerateAppFiles("tuios", contents, map[string]any{
-		"Colors": ctx.Styles.Theme.Colors,
-		"Dark":   ctx.Styles.Theme.Type == "dark",
+		"Colors":     ctx.Styles.Theme.Colors,
+		"Dark":       ctx.Styles.Theme.Type == "dark",
+		"Background": ctx.Styles.TerminalBackground(),
 	}, ctx.OutDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate app files: %w", err)

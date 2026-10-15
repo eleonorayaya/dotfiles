@@ -1,5 +1,9 @@
 package styles
 
+import "github.com/eleonorayaya/shizuku/util"
+
+const terminalWhiteMix = 0.5
+
 type Gaps struct {
 	InnerHorizontal int
 	InnerVertical   int
@@ -47,4 +51,8 @@ func New(opts ...Option) Styles {
 		opt(&s)
 	}
 	return s
+}
+
+func (s Styles) TerminalBackground() string {
+	return util.MixHex(s.Theme.Colors.Surface, "#ffffff", terminalWhiteMix)
 }
