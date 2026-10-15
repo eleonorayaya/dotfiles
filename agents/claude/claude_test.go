@@ -833,7 +833,7 @@ func TestPrismantisThemeOptions(t *testing.T) {
 func TestPillFooterThemeOptions(t *testing.T) {
 	theme := styles.Theme{Colors: styles.ThemeColors{PrimaryVariant: "#c8306a", SurfaceBorder: "#eebccc"}}
 
-	options := PillFooter().ResolveOptions(theme)
+	options := PillFooter(PillFooterOptions{}).ResolveOptions(theme)
 
 	if options["heartColor"] != "#c8306a" {
 		t.Errorf("expected hearts from primary variant, got %v", options["heartColor"])
@@ -844,7 +844,44 @@ func TestPillFooterThemeOptions(t *testing.T) {
 	if _, ok := options["modelText"]; ok {
 		t.Error("expected empty theme colors to be omitted")
 	}
-	if PillFooter().PluginID() != "pill-footer@eleonorayaya-claude-code" {
-		t.Errorf("unexpected plugin id %s", PillFooter().PluginID())
+	if PillFooter(PillFooterOptions{}).PluginID() != "pill-footer@eleonorayaya-claude-code" {
+		t.Errorf("unexpected plugin id %s", PillFooter(PillFooterOptions{}).PluginID())
+	}
+}
+
+func TestPillFooterReportCommand(t *testing.T) {
+	options := PillFooter(PillFooterOptions{ReportCommand: "tuios agent-statusline claude-code"}).ResolveOptions(styles.Theme{})
+	if options["reportCommand"] != "tuios agent-statusline claude-code" {
+		t.Errorf("expected report command option, got %v", options["reportCommand"])
+	}
+}
+
+func TestMergeSettingsRemovesStatusLine(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	if err := os.MkdirAll(filepath.Join(home, ".claude"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(home, ".claude", "settings.json"), []byte(`{"statusLine":{"command":"old"}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	opts := testOptions()
+	opts.RemoveStatusLine = true
+	a := New(opts)
+
+	resultPath, err := a.mergeSettings(t.TempDir(), styles.Theme{}, app.AgentContext{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	data, err := os.ReadFile(resultPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var settings map[string]any
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatal(err)
+	}
+	if v, ok := settings["statusLine"]; ok {
+		t.Errorf("expected statusLine removed, got %v", v)
 	}
 }

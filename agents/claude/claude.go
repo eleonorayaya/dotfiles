@@ -21,6 +21,7 @@ type Options struct {
 	DisabledMcpJsonServers  []string
 	Env                     map[string]string
 	StatusLine              map[string]any
+	RemoveStatusLine        bool
 	SandboxAllowedDomains   []string
 	SandboxAllowRead        []string
 	SandboxAllowWrite       []string
@@ -390,7 +391,9 @@ func (a *App) mergeSettings(outDir string, theme styles.Theme, agents app.AgentC
 	if theme.Name != "" {
 		settings["theme"] = themeSetting
 	}
-	if a.opts.StatusLine != nil {
+	if a.opts.RemoveStatusLine {
+		delete(settings, "statusLine")
+	} else if a.opts.StatusLine != nil {
 		settings["statusLine"] = a.opts.StatusLine
 	}
 

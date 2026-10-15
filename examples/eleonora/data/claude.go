@@ -17,7 +17,9 @@ func ClaudeOptions() claude.Options {
 		},
 		Mods: []app.Mod{
 			claude.Prismantis(),
-			claude.PillFooter(),
+			claude.PillFooter(claude.PillFooterOptions{
+				ReportCommand: "tuios agent-statusline claude-code --integration 1 --turn-end",
+			}),
 		},
 		Env: map[string]string{
 			"CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
@@ -28,11 +30,7 @@ func ClaudeOptions() claude.Options {
 			"leftArrowOpensAgents":  false,
 			"prStatusFooterEnabled": false,
 		},
-		StatusLine: map[string]any{
-			"type":    "command",
-			"command": "tuios agent-statusline claude-code --integration 1",
-			"padding": 0,
-		},
+		RemoveStatusLine: true,
 		SandboxAllowedDomains: []string{
 			"api.anthropic.com",
 			"code.claude.com",
