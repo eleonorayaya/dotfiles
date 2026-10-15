@@ -27,9 +27,8 @@ func TestThemeManifestMapsColors(t *testing.T) {
 	if got, want := colors["toolbar_button_icon"], [3]int{0xa8, 0x08, 0x48}; got != want {
 		t.Errorf("toolbar_button_icon = %v, want %v", got, want)
 	}
-	ntp := body["images"].(map[string]any)["theme_ntp_background"].(map[string]string)
-	if ntp["100_percent"] != patternImage || ntp["200_percent"] != patternHiDPI {
-		t.Errorf("unexpected new tab images %v", ntp)
+	if ntp := body["images"].(map[string]any)["theme_ntp_background"]; ntp != patternImage {
+		t.Errorf("unexpected new tab image %v", ntp)
 	}
 	if body["properties"].(map[string]string)["ntp_background_repeat"] != "repeat" {
 		t.Error("expected the pattern to tile")
@@ -65,7 +64,7 @@ func TestThemeManifestSkipsEmptyColors(t *testing.T) {
 }
 
 func TestDotTileDrawsCenteredDot(t *testing.T) {
-	data, err := dotTile("#fbeef6", "#eebccc", 2)
+	data, err := dotTile("#fbeef6", "#eebccc", 3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,10 +72,10 @@ func TestDotTileDrawsCenteredDot(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := img.Bounds().Dx(); got != dotSpacing*2 {
-		t.Errorf("tile width = %d, want %d", got, dotSpacing*2)
+	if got := img.Bounds().Dx(); got != dotSpacing*3 {
+		t.Errorf("tile width = %d, want %d", got, dotSpacing*3)
 	}
-	r, g, b, _ := img.At(dotSpacing, dotSpacing).RGBA()
+	r, g, b, _ := img.At(dotSpacing+dotSpacing/2, 2*dotSpacing+dotSpacing/2).RGBA()
 	if r>>8 != 0xee || g>>8 != 0xbc || b>>8 != 0xcc {
 		t.Errorf("center = %x%x%x, want the dot color", r>>8, g>>8, b>>8)
 	}
