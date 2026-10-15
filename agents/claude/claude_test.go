@@ -829,3 +829,22 @@ func TestPrismantisThemeOptions(t *testing.T) {
 		t.Error("expected empty theme colors to be omitted")
 	}
 }
+
+func TestPillFooterThemeOptions(t *testing.T) {
+	theme := styles.Theme{Colors: styles.ThemeColors{PrimaryVariant: "#c8306a", SurfaceBorder: "#eebccc"}}
+
+	options := PillFooter().ResolveOptions(theme)
+
+	if options["heartColor"] != "#c8306a" {
+		t.Errorf("expected hearts from primary variant, got %v", options["heartColor"])
+	}
+	if options["emptyHeartColor"] != "#eebccc" {
+		t.Errorf("expected empty hearts from surface border, got %v", options["emptyHeartColor"])
+	}
+	if _, ok := options["modelText"]; ok {
+		t.Error("expected empty theme colors to be omitted")
+	}
+	if PillFooter().PluginID() != "pill-footer@eleonorayaya-claude-code" {
+		t.Errorf("unexpected plugin id %s", PillFooter().PluginID())
+	}
+}
