@@ -18,8 +18,8 @@ const (
 	dotSpacing   = 22
 	dotRadius    = 1.3
 	dotSamples   = 4
+	dotRepeat    = 10
 	patternImage = "images/dots.png"
-	patternHiDPI = "images/dots@2x.png"
 )
 
 func themeColors(c styles.ThemeColors) map[string]string {
@@ -47,18 +47,14 @@ func patternImages(c styles.ThemeColors) (themeImages, error) {
 	if c.Surface == "" || c.SurfaceBorder == "" {
 		return nil, nil
 	}
-	images := themeImages{}
-	for path, scale := range map[string]int{patternImage: 1, patternHiDPI: 2} {
-		data, err := dotTile(c.Surface, c.SurfaceBorder, scale)
-		if err != nil {
-			return nil, err
-		}
-		images[path] = data
+	data, err := dotTile(c.Surface, c.SurfaceBorder, dotRepeat)
+	if err != nil {
+		return nil, err
 	}
-	return images, nil
+	return themeImages{patternImage: data}, nil
 }
 
-func dotTile(background, dot string, scale int) ([]byte, error) {
+func dotTile(background, dot string, repeat int) ([]byte, error) {
 	bg, err := util.HexToRGB(background)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert background: %w", err)
@@ -68,18 +64,18 @@ func dotTile(background, dot string, scale int) ([]byte, error) {
 		return nil, fmt.Errorf("failed to convert dot: %w", err)
 	}
 
-	size := dotSpacing * scale
-	center := float64(size) / 2
-	radius := dotRadius * float64(scale)
+	size := dotSpacing * repeat
+	center := float64(dotSpacing) / 2
 	img := image.NewNRGBA(image.Rect(0, 0, size, size))
 	for y := range size {
 		for x := range size {
+			lx, ly := x%dotSpacing, y%dotSpacing
 			covered := 0
 			for sy := range dotSamples {
 				for sx := range dotSamples {
-					px := float64(x) + (float64(sx)+0.5)/dotSamples - center
-					py := float64(y) + (float64(sy)+0.5)/dotSamples - center
-					if math.Hypot(px, py) <= radius {
+					px := float64(lx) + (float64(sx)+0.5)/dotSamples - center
+					py := float64(ly) + (float64(sy)+0.5)/dotSamples - center
+					if math.Hypot(px, py) <= dotRadius {
 						covered++
 					}
 				}
@@ -112,10 +108,7 @@ func themeManifest(theme styles.Theme, images themeImages) (map[string]any, erro
 	body := map[string]any{"colors": colors}
 	if len(images) > 0 {
 		body["images"] = map[string]any{
-			"theme_ntp_background": map[string]string{
-				"100_percent": patternImage,
-				"200_percent": patternHiDPI,
-			},
+			"theme_ntp_background": patternImage,
 		}
 		body["properties"] = map[string]string{
 			"ntp_background_alignment": "top",
