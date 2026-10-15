@@ -17,15 +17,20 @@ func ClaudeOptions() claude.Options {
 		},
 		Mods: []app.Mod{
 			claude.Prismantis(),
+			claude.PillFooter(),
 		},
 		Env: map[string]string{
 			"CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
 			"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS":  "1",
 			"JEST_WATCHMAN":                         "false",
 		},
+		GlobalConfig: map[string]any{
+			"leftArrowOpensAgents":  false,
+			"prStatusFooterEnabled": false,
+		},
 		StatusLine: map[string]any{
 			"type":    "command",
-			"command": "tuios agent-statusline claude-code --integration 1 --then 'npx -y ccstatusline@latest'",
+			"command": "tuios agent-statusline claude-code --integration 1",
 			"padding": 0,
 		},
 		SandboxAllowedDomains: []string{
