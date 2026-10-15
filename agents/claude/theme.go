@@ -52,8 +52,8 @@ func claudeTheme(theme styles.Theme) map[string]any {
 		"ide":                        c.Link,
 		"fastMode":                   c.Warning,
 		"fastModeShimmer":            shimmer(c.Warning),
-		"diffAdded":                  tint(c.Added, 0.3),
-		"diffRemoved":                tint(c.Removed, 0.3),
+		"diffAdded":                  diffBackground(c, c.Added),
+		"diffRemoved":                diffBackground(c, c.Removed),
 		"diffAddedDimmed":            tint(c.Added, 0.15),
 		"diffRemovedDimmed":          tint(c.Removed, 0.15),
 		"diffAddedWord":              tint(c.Added, 0.55),
@@ -103,4 +103,10 @@ func writeClaudeTheme(outDir string, theme styles.Theme) (string, string, error)
 		return "", "", fmt.Errorf("failed to write theme: %w", err)
 	}
 	return fileName, outPath, nil
+}
+
+const diffTint = 0.3
+
+func diffBackground(c styles.ThemeColors, color string) string {
+	return util.MixHex(c.Surface, color, diffTint)
 }
