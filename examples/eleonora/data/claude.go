@@ -17,6 +17,7 @@ func ClaudeOptions() claude.Options {
 		},
 		Mods: []app.Mod{
 			claude.Prismantis(),
+			claude.PillFooter(),
 		},
 		Env: map[string]string{
 			"CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
@@ -25,7 +26,7 @@ func ClaudeOptions() claude.Options {
 		},
 		StatusLine: map[string]any{
 			"type":    "command",
-			"command": "tuios agent-statusline claude-code --integration 1 --then 'npx -y ccstatusline@latest'",
+			"command": "tuios agent-statusline claude-code --integration 1",
 			"padding": 0,
 		},
 		SandboxAllowedDomains: []string{
