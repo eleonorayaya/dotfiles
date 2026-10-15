@@ -5,13 +5,21 @@ import (
 	"github.com/eleonorayaya/shizuku/styles"
 )
 
-func PillFooter() app.Mod {
-	return app.Mod{
+type PillFooterOptions struct {
+	ReportCommand string
+}
+
+func PillFooter(opts PillFooterOptions) app.Mod {
+	mod := app.Mod{
 		Name:         "pill-footer",
 		Marketplace:  "eleonorayaya-claude-code",
 		Repo:         "eleonorayaya/claude-plugins",
 		ThemeOptions: pillFooterThemeOptions,
 	}
+	if opts.ReportCommand != "" {
+		mod.Options = map[string]any{"reportCommand": opts.ReportCommand}
+	}
+	return mod
 }
 
 func pillFooterThemeOptions(theme styles.Theme) map[string]any {
