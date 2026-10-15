@@ -9,6 +9,8 @@ import (
 
 	"github.com/eleonorayaya/shizuku/app"
 	"github.com/eleonorayaya/shizuku/styles"
+	"github.com/eleonorayaya/shizuku/styles/themes"
+	"github.com/eleonorayaya/shizuku/util"
 )
 
 func testOptions() Options {
@@ -822,8 +824,8 @@ func TestPrismantisThemeOptions(t *testing.T) {
 	if options["tableRuleColor"] != "#4a3830" {
 		t.Errorf("expected table rule from surface border, got %v", options["tableRuleColor"])
 	}
-	if options["ruleColor"] != "#3c3c3c" {
-		t.Errorf("expected rule to be surface border in gray, got %v", options["ruleColor"])
+	if v, ok := options["codeFlagColor"]; ok {
+		t.Errorf("expected no flag colour without a removed colour, got %v", v)
 	}
 	if _, ok := options["linkColor"]; ok {
 		t.Error("expected empty theme colors to be omitted")
@@ -883,5 +885,22 @@ func TestMergeSettingsRemovesStatusLine(t *testing.T) {
 	}
 	if v, ok := settings["statusLine"]; ok {
 		t.Errorf("expected statusLine removed, got %v", v)
+	}
+}
+
+func TestPrismantisDiffRowsMatchClaudeTheme(t *testing.T) {
+	c := themes.Sylveon.WithDefaults().Colors
+	options := Prismantis().ResolveOptions(themes.Sylveon.WithDefaults())
+
+	row := util.MixHex(options["ruleColor"].(string), options["numberColor"].(string), prismantisMix)
+	want, _ := util.HexToRGB(diffBackground(c, c.Added))
+	got, _ := util.HexToRGB(row)
+	for i := range got {
+		if d := got[i] - want[i]; d < -2 || d > 2 {
+			t.Fatalf("added row %s, want close to %s", row, diffBackground(c, c.Added))
+		}
+	}
+	if options["codeFlagColor"] != c.Removed {
+		t.Errorf("expected flags in the removed colour, got %v", options["codeFlagColor"])
 	}
 }
