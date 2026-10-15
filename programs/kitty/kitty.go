@@ -11,6 +11,8 @@ import (
 //go:embed all:contents
 var contents embed.FS
 
+const backgroundWhiteMix = 0.5
+
 type App struct{}
 
 func New() *App {
@@ -37,6 +39,7 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 	data := map[string]any{
 		"Styles":          ctx.Styles,
 		"BackgroundAlpha": float64(ctx.Styles.WindowOpacity) / 100.0,
+		"Background":      util.MixHex(ctx.Styles.Theme.Colors.Surface, "#ffffff", backgroundWhiteMix),
 	}
 
 	fileMap, err := app.GenerateAppFiles("kitty", contents, data, ctx.OutDir)
