@@ -34,7 +34,7 @@ func prismantisThemeOptions(theme styles.Theme) map[string]any {
 		"codeCommentColor": c.Comment,
 		"linkColor":        c.Link,
 		"pathColor":        c.Path,
-		"numberColor":      c.Number,
+		"numberColor":      c.Added,
 		"quoteColor":       c.TextOnSurfaceVariant,
 		"ruleColor":        c.SurfaceBorder,
 		"tableHeaderColor": c.Secondary,
