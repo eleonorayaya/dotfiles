@@ -835,11 +835,11 @@ func TestPillFooterThemeOptions(t *testing.T) {
 
 	options := PillFooter().ResolveOptions(theme)
 
-	if options["barColor"] != "#c8306a" {
-		t.Errorf("expected bar from primary variant, got %v", options["barColor"])
+	if options["heartColor"] != "#c8306a" {
+		t.Errorf("expected hearts from primary variant, got %v", options["heartColor"])
 	}
-	if options["trackColor"] != "#eebccc" {
-		t.Errorf("expected track from surface border, got %v", options["trackColor"])
+	if options["emptyHeartColor"] != "#eebccc" {
+		t.Errorf("expected empty hearts from surface border, got %v", options["emptyHeartColor"])
 	}
 	if _, ok := options["modelText"]; ok {
 		t.Error("expected empty theme colors to be omitted")

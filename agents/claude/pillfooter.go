@@ -17,11 +17,10 @@ func PillFooter() app.Mod {
 func pillFooterThemeOptions(theme styles.Theme) map[string]any {
 	c := theme.Colors
 	colors := map[string]string{
-		"modelText":         c.TextOnSurface,
-		"modelBackground":   c.SurfaceBorder,
-		"contextBackground": c.SurfaceVariant,
-		"barColor":          c.PrimaryVariant,
-		"trackColor":        c.SurfaceBorder,
+		"modelText":       c.TextOnSurface,
+		"heartColor":      c.PrimaryVariant,
+		"emptyHeartColor": c.SurfaceBorder,
+		"separatorColor":  c.TextOnSurfaceMuted,
 	}
 	options := map[string]any{}
 	for key, color := range colors {
