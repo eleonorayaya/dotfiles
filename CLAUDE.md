@@ -71,7 +71,7 @@ This ensures consistent build processes and proper dependency management.
 
 5. **languages/, programs/, agents/** - Pre-built library of apps
    - `languages/` — language toolchains (e.g. `golang`, `rust`, `typescript`)
-   - `programs/` — regular programs (e.g. `nvim`, `kitty`, `git`)
+   - `programs/` — regular programs (e.g. `helix`, `kitty`, `git`)
    - `agents/` — agentic coding tools (e.g. `claude`)
 
    Each app implements `Generate(outDir, cfg) (*app.GenerateResult, error)` and `Sync(outDir, cfg) error` (or the contextual variants — see below). Apps embed their `contents/` directory with `//go:embed all:contents` so the library is consumable without vendoring template files.

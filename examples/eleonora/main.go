@@ -10,7 +10,6 @@ import (
 	"github.com/eleonorayaya/shizuku/agents/claude"
 	"github.com/eleonorayaya/shizuku/examples/eleonora/data"
 	"github.com/eleonorayaya/shizuku/languages/golang"
-	"github.com/eleonorayaya/shizuku/languages/lua"
 	"github.com/eleonorayaya/shizuku/languages/python"
 	"github.com/eleonorayaya/shizuku/languages/ruby"
 	"github.com/eleonorayaya/shizuku/languages/rust"
@@ -35,7 +34,6 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/lsd"
 	"github.com/eleonorayaya/shizuku/programs/mise"
 	"github.com/eleonorayaya/shizuku/programs/notion"
-	"github.com/eleonorayaya/shizuku/programs/nvim"
 	"github.com/eleonorayaya/shizuku/programs/protonpass"
 	"github.com/eleonorayaya/shizuku/programs/protonvpn"
 	"github.com/eleonorayaya/shizuku/programs/sfsymbols"
@@ -43,7 +41,6 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/terminal"
 	"github.com/eleonorayaya/shizuku/programs/terminalbrowser"
 	"github.com/eleonorayaya/shizuku/programs/terraform"
-	"github.com/eleonorayaya/shizuku/programs/tmux"
 	"github.com/eleonorayaya/shizuku/programs/tuios"
 	"github.com/eleonorayaya/shizuku/programs/utena"
 	"github.com/eleonorayaya/shizuku/programs/vesktop"
@@ -96,7 +93,6 @@ func main() {
 		shizuku.WithProfile("desktop",
 			shizuku.WithLanguages(
 				golang.New(),
-				lua.New(),
 				python.New(),
 				rust.New(),
 				typescript.New(),
@@ -110,12 +106,10 @@ func main() {
 				jankyborders.New(),
 				kitty.New(),
 				notion.New(notion.Options{DisableClaudeMCP: true}),
-				nvim.New(),
 				sfsymbols.New(),
 				sketchybar.New(sketchybar.Options{}),
 				terminalbrowser.New(),
 				terraform.New(),
-				tmux.New(),
 				utena.New(),
 			),
 			shizuku.WithAgents(
