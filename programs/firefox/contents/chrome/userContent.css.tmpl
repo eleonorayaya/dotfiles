@@ -1,0 +1,20 @@
+@-moz-document url("about:newtab"), url("about:home") {
+  :root {
+    color-scheme: {{.Type}} !important;
+    --newtab-background-color-secondary: {{.Colors.SurfaceVariant}} !important;
+    --newtab-background-card: {{.Colors.SurfaceVariant}} !important;
+    --newtab-text-primary-color: {{.Colors.TextOnSurface}} !important;
+    --newtab-text-secondary-text: {{.Colors.TextOnSurfaceVariant}} !important;
+    --newtab-primary-action-background: {{.Colors.Primary}} !important;
+    --color-accent-primary: {{.Colors.Primary}} !important;
+    --newtab-weather-background-color: {{.Colors.SurfaceVariant}} !important;
+  }
+
+  body {
+    background-color: {{.Colors.Surface}} !important;
+    background-image: radial-gradient(circle, {{.Colors.SurfaceBorder}} 1.3px, transparent 1.8px) !important;
+    background-size: 22px 22px !important;
+    background-repeat: repeat !important;
+    background-attachment: fixed !important;
+  }
+}
