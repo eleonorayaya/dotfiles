@@ -3,6 +3,7 @@ package claude
 import (
 	"github.com/eleonorayaya/shizuku/app"
 	"github.com/eleonorayaya/shizuku/styles"
+	"github.com/eleonorayaya/shizuku/util"
 )
 
 func Prismantis() app.Mod {
@@ -34,9 +35,9 @@ func prismantisThemeOptions(theme styles.Theme) map[string]any {
 		"codeCommentColor": c.Comment,
 		"linkColor":        c.Link,
 		"pathColor":        c.Path,
-		"numberColor":      c.Number,
+		"numberColor":      c.Added,
 		"quoteColor":       c.TextOnSurfaceVariant,
-		"ruleColor":        c.SurfaceBorder,
+		"ruleColor":        util.GrayHex(c.SurfaceBorder),
 		"tableHeaderColor": c.Secondary,
 		"tableRuleColor":   c.SurfaceBorder,
 		"bulletColor":      c.Secondary,
