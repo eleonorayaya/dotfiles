@@ -1,6 +1,7 @@
 package claude
 
 import (
+	"cmp"
 	"fmt"
 	"path/filepath"
 
@@ -24,6 +25,8 @@ func claudeTheme(theme styles.Theme) map[string]any {
 	shimmer := func(color string) string { return util.MixHex(color, "#ffffff", 0.3) }
 	tint := func(color string, t float64) string { return util.MixHex(c.Surface, color, t) }
 
+	autoMode := cmp.Or(c.TertiaryVariant, c.Warning)
+
 	tokens := map[string]string{
 		"claude":                     c.Primary,
 		"claudeShimmer":              shimmer(c.Primary),
@@ -38,8 +41,8 @@ func claudeTheme(theme styles.Theme) map[string]any {
 		"remember":                   c.Tertiary,
 		"success":                    c.Success,
 		"error":                      c.Error,
-		"warning":                    c.Warning,
-		"warningShimmer":             shimmer(c.Warning),
+		"warning":                    autoMode,
+		"warningShimmer":             shimmer(autoMode),
 		"merged":                     c.Tertiary,
 		"promptBorder":               c.TextOnSurfaceMuted,
 		"promptBorderShimmer":        c.TextOnSurfaceVariant,
