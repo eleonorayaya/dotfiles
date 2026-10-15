@@ -85,7 +85,7 @@ func (u *Utena) activeSession(ctx context.Context) (string, error) {
 func (u *Utena) waitForActivation(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, u.pollWindow)
 	defer cancel()
-	err := u.do(ctx, http.MethodGet, "/tmux/activations/next", nil)
+	err := u.do(ctx, http.MethodGet, "/mux/activations/next", nil)
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 		return nil
 	}
