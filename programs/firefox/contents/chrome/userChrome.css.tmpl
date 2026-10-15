@@ -1,12 +1,5 @@
 :root {
-  color-scheme: light !important;
-  --toolbox-bgcolor: {{.Colors.SurfaceHighlight}} !important;
-  --toolbox-bgcolor-inactive: {{.Colors.SurfaceVariant}} !important;
-  --toolbox-textcolor: {{.Colors.TextOnSurface}} !important;
-  --toolbox-textcolor-inactive: {{.Colors.TextOnSurfaceMuted}} !important;
-  --lwt-accent-color: {{.Colors.SurfaceHighlight}} !important;
-  --lwt-accent-color-inactive: {{.Colors.SurfaceVariant}} !important;
-  --lwt-text-color: {{.Colors.TextOnSurface}} !important;
+  color-scheme: {{.Type}} !important;
   --toolbar-bgcolor: {{.Colors.Surface}} !important;
   --toolbar-color: {{.Colors.TextOnSurface}} !important;
   --toolbarbutton-icon-fill: {{.Colors.Primary}} !important;
@@ -30,7 +23,6 @@
 
 #navigator-toolbox {
   background-color: {{.Colors.SurfaceHighlight}} !important;
-  color: {{.Colors.TextOnSurface}} !important;
 }
 
 #navigator-toolbox:-moz-window-inactive {
@@ -46,8 +38,7 @@
 
 #PersonalToolbar,
 .tabbrowser-tab,
-.tabbrowser-tab .tab-label,
-.tabbrowser-tab[selected] .tab-label {
+.tabbrowser-tab .tab-label {
   color: {{.Colors.TextOnSurface}} !important;
 }
 

@@ -4,14 +4,15 @@ import (
 	"embed"
 	"fmt"
 	"log/slog"
-	"os"
-	"path/filepath"
 
 	"github.com/eleonorayaya/shizuku/app"
+	"github.com/eleonorayaya/shizuku/util"
 )
 
 //go:embed all:contents
 var contents embed.FS
+
+const firefoxDataDir = "~/Library/Application Support/Firefox"
 
 type App struct{}
 
@@ -28,12 +29,12 @@ func (a *App) Install(ctx *app.Context) error {
 }
 
 func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
-	home, err := os.UserHomeDir()
+	firefoxDir, err := util.NormalizeFilePath(firefoxDataDir)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve home dir: %w", err)
+		return nil, fmt.Errorf("failed to resolve firefox dir: %w", err)
 	}
 
-	profileDir, err := defaultProfileDir(filepath.Join(home, "Library", "Application Support", "Firefox"))
+	profileDir, err := defaultProfileDir(firefoxDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find firefox profile: %w", err)
 	}
@@ -44,6 +45,7 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 
 	data := map[string]any{
 		"Colors": ctx.Styles.Theme.Colors,
+		"Type":   ctx.Styles.Theme.Type,
 	}
 
 	fileMap, err := app.GenerateAppFiles("firefox", contents, data, ctx.OutDir)

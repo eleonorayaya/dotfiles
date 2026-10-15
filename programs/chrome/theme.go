@@ -84,12 +84,8 @@ func dotTile(background, dot string, scale int) ([]byte, error) {
 					}
 				}
 			}
-			t := float64(covered) / (dotSamples * dotSamples)
-			var px [3]uint8
-			for i := range px {
-				px[i] = uint8(float64(bg[i]) + (float64(fg[i])-float64(bg[i]))*t + 0.5)
-			}
-			img.SetNRGBA(x, y, color.NRGBA{R: px[0], G: px[1], B: px[2], A: 0xff})
+			px := util.MixRGB(bg, fg, float64(covered)/(dotSamples*dotSamples))
+			img.SetNRGBA(x, y, color.NRGBA{R: uint8(px[0]), G: uint8(px[1]), B: uint8(px[2]), A: 0xff})
 		}
 	}
 

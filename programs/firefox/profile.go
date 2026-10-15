@@ -1,9 +1,7 @@
 package firefox
 
 import (
-	"errors"
 	"fmt"
-	"io/fs"
 	"path/filepath"
 
 	"gopkg.in/ini.v1"
@@ -30,9 +28,9 @@ func defaultProfileDir(firefoxDir string) (string, error) {
 }
 
 func installDefault(path string) (string, error) {
-	cfg, err := loadINI(path)
-	if err != nil || cfg == nil {
-		return "", err
+	cfg, err := ini.LooseLoad(path)
+	if err != nil {
+		return "", fmt.Errorf("failed to read %s: %w", path, err)
 	}
 	for _, section := range cfg.Sections() {
 		if p := section.Key("Default").String(); p != "" {
@@ -43,9 +41,9 @@ func installDefault(path string) (string, error) {
 }
 
 func profilesDefault(path string) (string, error) {
-	cfg, err := loadINI(path)
-	if err != nil || cfg == nil {
-		return "", err
+	cfg, err := ini.LooseLoad(path)
+	if err != nil {
+		return "", fmt.Errorf("failed to read %s: %w", path, err)
 	}
 	var fallback string
 	for _, section := range cfg.Sections() {
@@ -61,15 +59,4 @@ func profilesDefault(path string) (string, error) {
 		}
 	}
 	return fallback, nil
-}
-
-func loadINI(path string) (*ini.File, error) {
-	cfg, err := ini.Load(path)
-	if errors.Is(err, fs.ErrNotExist) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to read %s: %w", path, err)
-	}
-	return cfg, nil
 }
