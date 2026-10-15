@@ -1,48 +1,42 @@
 :root {
   color-scheme: {{.Type}} !important;
-  --toolbar-bgcolor: {{.Colors.Surface}} !important;
-  --toolbar-color: {{.Colors.TextOnSurface}} !important;
+  --toolbox-background-color: {{.Colors.SurfaceHighlight}} !important;
+  --toolbox-background-color-inactive: {{.Colors.SurfaceVariant}} !important;
+  --toolbox-text-color: {{.Colors.TextOnSurface}} !important;
+  --toolbox-text-color-inactive: {{.Colors.TextOnSurfaceMuted}} !important;
+  --toolbar-background-color: {{.Colors.Surface}} !important;
+  --toolbar-text-color: {{.Colors.TextOnSurface}} !important;
   --toolbarbutton-icon-fill: {{.Colors.Primary}} !important;
-  --tab-selected-bgcolor: {{.Colors.Surface}} !important;
-  --tab-selected-textcolor: {{.Colors.TextOnSurface}} !important;
   --toolbar-field-background-color: {{.Colors.SurfaceVariant}} !important;
-  --toolbar-field-color: {{.Colors.TextOnSurface}} !important;
-  --toolbar-field-focus-background-color: {{.Colors.Surface}} !important;
-  --toolbar-field-focus-color: {{.Colors.TextOnSurface}} !important;
-  --toolbar-field-focus-border-color: {{.Colors.Primary}} !important;
+  --toolbar-field-text-color: {{.Colors.TextOnSurface}} !important;
+  --toolbar-field-background-color-focus: {{.Colors.Surface}} !important;
+  --toolbar-field-text-color-focus: {{.Colors.TextOnSurface}} !important;
+  --toolbar-field-border-color-focus: {{.Colors.Primary}} !important;
+  --urlbar-box-background-color: {{.Colors.SurfaceHighlight}} !important;
   --focus-outline-color: {{.Colors.Primary}} !important;
   --chrome-content-separator-color: {{.Colors.SurfaceBorder}} !important;
-  --arrowpanel-background: {{.Colors.Surface}} !important;
-  --arrowpanel-color: {{.Colors.TextOnSurface}} !important;
-  --arrowpanel-border-color: {{.Colors.SurfaceBorder}} !important;
+  --panel-background-color: {{.Colors.Surface}} !important;
+  --panel-text-color: {{.Colors.TextOnSurface}} !important;
+  --panel-border-color: {{.Colors.SurfaceBorder}} !important;
   --sidebar-background-color: {{.Colors.SurfaceVariant}} !important;
   --sidebar-text-color: {{.Colors.TextOnSurface}} !important;
   --color-accent-primary: {{.Colors.Primary}} !important;
   --link-color: {{.Colors.Link}} !important;
+  --tab-background-color-selected: {{.Colors.Surface}} !important;
+  --tab-text-color-selected: {{.Colors.Primary}} !important;
+  --tab-border-color-selected: {{.Colors.Primary}} !important;
+  --tab-border-color-selected-leading: {{.Colors.Primary}} !important;
+  --tab-border-color-selected-trailing: {{.Colors.Primary}} !important;
 }
 
 #navigator-toolbox {
-  background-color: {{.Colors.SurfaceHighlight}} !important;
+  background-color: var(--toolbox-background-color) !important;
 }
 
 #navigator-toolbox:-moz-window-inactive {
-  background-color: {{.Colors.SurfaceVariant}} !important;
+  background-color: var(--toolbox-background-color-inactive) !important;
 }
 
-#nav-bar,
-#PersonalToolbar,
-#TabsToolbar .tab-background[selected] {
-  background-color: {{.Colors.Surface}} !important;
-  background-image: none !important;
-}
-
-#PersonalToolbar,
-.tabbrowser-tab,
-.tabbrowser-tab .tab-label {
-  color: {{.Colors.TextOnSurface}} !important;
-}
-
-#urlbar-searchmode-switcher {
-  background-color: {{.Colors.SurfaceHighlight}} !important;
-  color: {{.Colors.Primary}} !important;
+.tabbrowser-tab[selected] .tab-label {
+  font-weight: 700 !important;
 }
