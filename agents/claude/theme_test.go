@@ -77,3 +77,15 @@ func TestMergeSettingsSelectsCustomTheme(t *testing.T) {
 		t.Errorf("expected custom theme selected, got %v", settings["theme"])
 	}
 }
+
+func TestClaudeThemeWarningUsesTertiaryVariant(t *testing.T) {
+	overrides := claudeTheme(styles.Theme{Colors: styles.ThemeColors{TertiaryVariant: "#8a4cc0", Warning: "#a85a14"}})["overrides"].(map[string]any)
+	if overrides["warning"] != "#8a4cc0" {
+		t.Errorf("expected warning from tertiary variant, got %v", overrides["warning"])
+	}
+
+	fallback := claudeTheme(styles.Theme{Colors: styles.ThemeColors{Warning: "#a85a14"}})["overrides"].(map[string]any)
+	if fallback["warning"] != "#a85a14" {
+		t.Errorf("expected warning to fall back to the warning role, got %v", fallback["warning"])
+	}
+}
