@@ -17,6 +17,6 @@ curl -fsSL https://github.com/eleonorayaya/dotfiles/releases/latest/download/shi
 ~/.local/bin/shizuku install && ~/.local/bin/shizuku sync
 ```
 
-Update later with `shizuku upgrade` (downloads the latest release when there is no source checkout).
+Update shizuku later with `shizuku update` (downloads the latest release when there is no source checkout), and upgrade installed packages with `shizuku upgrade`.
 
 On a desktop, set a profile: `shizuku config set profile personal` (or `work`). Both extend the `desktop` profile.

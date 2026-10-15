@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/eleonorayaya/shizuku/app"
+	"github.com/eleonorayaya/shizuku/pkg"
 	"github.com/eleonorayaya/shizuku/styles"
 )
 
@@ -394,6 +395,18 @@ func (b *Builder) diffEnv(profile Profile, outDir string) (*app.GenerateResult, 
 }
 
 func (b *Builder) Install(ctx context.Context) error {
+	return b.runInstallers("install")
+}
+
+func (b *Builder) Upgrade(ctx context.Context) error {
+	if err := pkg.SetUpgrade(true); err != nil {
+		return fmt.Errorf("failed to enable upgrade mode: %w", err)
+	}
+	defer pkg.SetUpgrade(false)
+	return b.runInstallers("upgrade")
+}
+
+func (b *Builder) runInstallers(verb string) error {
 	outDir, err := b.resolveOutDir()
 	if err != nil {
 		return err
@@ -409,30 +422,30 @@ func (b *Builder) Install(ctx context.Context) error {
 		if !ok {
 			return nil
 		}
-		slog.Info("installing app dependencies", "appName", named.Name())
+		slog.Info("running "+verb+" for app dependencies", "appName", named.Name())
 		if err := installer.Install(appCtx); err != nil {
-			return fmt.Errorf("failed to install %s: %w", named.Name(), err)
+			return fmt.Errorf("failed to %s %s: %w", verb, named.Name(), err)
 		}
-		slog.Info("app dependencies installed", "appName", named.Name())
+		slog.Info("app dependencies "+verb+" complete", "appName", named.Name())
 		return nil
 	}
 
 	var errs []error
 	for _, l := range profile.Languages {
 		if err := install(l); err != nil {
-			slog.Error("install failed", "appName", l.Name(), "err", err)
+			slog.Error(verb+" failed", "appName", l.Name(), "err", err)
 			errs = append(errs, err)
 		}
 	}
 	for _, p := range profile.Programs {
 		if err := install(p); err != nil {
-			slog.Error("install failed", "appName", p.Name(), "err", err)
+			slog.Error(verb+" failed", "appName", p.Name(), "err", err)
 			errs = append(errs, err)
 		}
 	}
 	for _, a := range profile.Agents {
 		if err := install(a); err != nil {
-			slog.Error("install failed", "appName", a.Name(), "err", err)
+			slog.Error(verb+" failed", "appName", a.Name(), "err", err)
 			errs = append(errs, err)
 		}
 	}
