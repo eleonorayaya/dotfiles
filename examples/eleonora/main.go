@@ -152,7 +152,7 @@ func main() {
 		),
 	).Command()
 
-	cmd.AddCommand(upgradeCmd(), sketchybar.Command())
+	cmd.AddCommand(updateCmd(), sketchybar.Command())
 
 	if err := cmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -160,15 +160,15 @@ func main() {
 	}
 }
 
-func upgradeCmd() *cobra.Command {
+func updateCmd() *cobra.Command {
 	var (
 		branch      string
 		fromRelease bool
 	)
 
 	cmd := &cobra.Command{
-		Use:   "upgrade",
-		Short: "Upgrade shizuku from the source checkout or the latest GitHub release",
+		Use:   "update",
+		Short: "Update shizuku itself from the source checkout or the latest GitHub release (see 'upgrade' to upgrade packages)",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			repoDir, err := util.NormalizeFilePath(sourceDir)
 			if err != nil {
@@ -176,11 +176,11 @@ func upgradeCmd() *cobra.Command {
 			}
 
 			if _, err := os.Stat(repoDir); fromRelease || os.IsNotExist(err) {
-				slog.Info("upgrading from latest github release", "repo", releaseRepo)
+				slog.Info("updating from latest github release", "repo", releaseRepo)
 				if err := pkg.SelfUpdate(releaseRepo, "shizuku"); err != nil {
-					return fmt.Errorf("failed to upgrade from release: %w", err)
+					return fmt.Errorf("failed to update from release: %w", err)
 				}
-				slog.Info("upgrade complete, run 'shizuku install' and 'shizuku sync' to apply changes")
+				slog.Info("update complete, run 'shizuku install' and 'shizuku sync' to apply changes")
 				return nil
 			}
 
@@ -200,7 +200,7 @@ func upgradeCmd() *cobra.Command {
 				return fmt.Errorf("failed to build and install: %w", err)
 			}
 
-			slog.Info("upgrade complete, run 'shizuku install' and 'shizuku sync' to apply changes")
+			slog.Info("update complete, run 'shizuku install' and 'shizuku sync' to apply changes")
 			return nil
 		},
 	}

@@ -113,6 +113,17 @@ func (b *Builder) Command() *cobra.Command {
 		},
 	}
 
+	upgradeCmd := &cobra.Command{
+		Use:   "upgrade",
+		Short: "Upgrade installed application packages to their latest versions (see 'update' to update shizuku itself)",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := b.resolveProfile(); err != nil {
+				return err
+			}
+			return b.Upgrade(context.Background())
+		},
+	}
+
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List apps active in the current profile",
@@ -138,7 +149,7 @@ func (b *Builder) Command() *cobra.Command {
 		},
 	}
 
-	root.AddCommand(syncCmd, diffCmd, installCmd, listCmd, configCmd())
+	root.AddCommand(syncCmd, diffCmd, installCmd, upgradeCmd, listCmd, configCmd())
 	return root
 }
 

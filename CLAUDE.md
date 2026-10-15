@@ -47,6 +47,9 @@ This ensures consistent build processes and proper dependency management.
 # Preview with full diff output
 /task run diff -p
 
+# Upgrade installed packages to their latest versions
+/task run upgrade
+
 # Enable verbose logging
 /task run sync --verbose
 ```
@@ -77,7 +80,7 @@ This ensures consistent build processes and proper dependency management.
    Each app implements `Generate(outDir, cfg) (*app.GenerateResult, error)` and `Sync(outDir, cfg) error` (or the contextual variants — see below). Apps embed their `contents/` directory with `//go:embed all:contents` so the library is consumable without vendoring template files.
 
 6. **examples/eleonora/** - The canonical consumer binary.
-   - `main.go`: Cobra CLI (`init`, `sync`, `diff`, `install`, `list`, `upgrade`) that wires up the builder.
+   - `main.go`: Cobra CLI (`init`, `sync`, `diff`, `install`, `upgrade`, `list`, `update`) that wires up the builder.
    - `data/`: Personal user data (marketplaces, allowed commands, sandbox paths, etc.).
 
 ### Data Flow
@@ -227,6 +230,8 @@ pkg.Spec{
     Release: &pkg.Release{Repo: "lsd-rs/lsd", Asset: `lsd-v[0-9.]+-{arch}-unknown-linux-gnu\.tar\.gz`},
 }
 ```
+
+`shizuku upgrade` re-runs every app's `Install()` with the installer in upgrade mode (`pkg.SetUpgrade`). In this mode installed brew packages are upgraded, apt packages are upgraded with `--only-upgrade`, and binaries installed from GitHub releases are reinstalled from the latest release. Packages that aren't installed are skipped. Steps in `Install()` that don't go through `pkg` (e.g. `go install`, git clones) run exactly as they do for `install`.
 
 `util.InstallBrewPackage` remains for macOS-only apps. Aliases that depend on an optional binary should set `Requires` so the shell stays usable if the install failed.
 

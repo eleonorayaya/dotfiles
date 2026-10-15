@@ -16,17 +16,20 @@ import (
 type runFunc func(env []string, name string, args ...string) ([]byte, error)
 
 type Installer struct {
-	GOOS     string
-	GOARCH   string
-	Home     string
-	IsRoot   bool
-	APIBase  string
-	Token    string
-	HTTP     *http.Client
-	lookPath func(string) (string, error)
-	run      runFunc
-	aptReady bool
-	aptErr   error
+	GOOS      string
+	GOARCH    string
+	Home      string
+	IsRoot    bool
+	APIBase   string
+	Token     string
+	HTTP      *http.Client
+	Upgrade   bool
+	lookPath  func(string) (string, error)
+	run       runFunc
+	aptReady  bool
+	aptErr    error
+	brewReady bool
+	brewErr   error
 }
 
 func NewInstaller() (*Installer, error) {
@@ -55,6 +58,15 @@ func Install(s Spec) error {
 		return err
 	}
 	return i.Install(s)
+}
+
+func SetUpgrade(on bool) error {
+	i, err := defaultInstaller()
+	if err != nil {
+		return err
+	}
+	i.Upgrade = on
+	return nil
 }
 
 func runCommand(env []string, name string, args ...string) ([]byte, error) {
@@ -88,6 +100,10 @@ func (i *Installer) hasApt() bool {
 }
 
 func (i *Installer) Install(s Spec) error {
+	if i.Upgrade {
+		return i.upgrade(s)
+	}
+
 	if i.installed(s.Bin) {
 		slog.Debug("already installed, skipping", "bin", s.Bin)
 		return nil
