@@ -24,8 +24,8 @@ const (
 
 func themeColors(c styles.ThemeColors) map[string]string {
 	return map[string]string{
-		"frame":                        c.SurfaceHighlight,
-		"frame_inactive":               c.SurfaceVariant,
+		"frame":                        c.SurfaceBorder,
+		"frame_inactive":               c.SurfaceHighlight,
 		"toolbar":                      c.Surface,
 		"toolbar_text":                 c.TextOnSurface,
 		"toolbar_button_icon":          c.Primary,
