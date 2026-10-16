@@ -375,6 +375,50 @@ func TestMergeSettingsWritesAllowedDomainsAndStripsLegacyKey(t *testing.T) {
 	}
 }
 
+func TestMergeSettingsWritesPermissionsDefaultModeAndSettings(t *testing.T) {
+	fakeHome := t.TempDir()
+	t.Setenv("HOME", fakeHome)
+
+	if err := os.MkdirAll(filepath.Join(fakeHome, ".claude"), 0o755); err != nil {
+		t.Fatalf("failed to create fake .claude dir: %v", err)
+	}
+	legacy := []byte(`{"defaultMode":"default","editorMode":"normal"}`)
+	if err := os.WriteFile(filepath.Join(fakeHome, ".claude", "settings.json"), legacy, 0o644); err != nil {
+		t.Fatalf("failed to write fake settings.json: %v", err)
+	}
+
+	opts := testOptions()
+	opts.DefaultMode = "plan"
+	opts.Settings = map[string]any{"editorMode": "vim"}
+	a := New(opts)
+
+	result, err := a.mergeSettings(t.TempDir(), styles.Theme{}, app.AgentContext{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, err := os.ReadFile(result)
+	if err != nil {
+		t.Fatalf("failed to read output: %v", err)
+	}
+
+	var settings map[string]any
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatalf("failed to parse output: %v", err)
+	}
+
+	if _, hasLegacy := settings["defaultMode"]; hasLegacy {
+		t.Error("top-level defaultMode must be stripped on write")
+	}
+	permissions, _ := settings["permissions"].(map[string]any)
+	if got := permissions["defaultMode"]; got != "plan" {
+		t.Errorf("expected permissions.defaultMode %q, got %v", "plan", got)
+	}
+	if got := settings["editorMode"]; got != "vim" {
+		t.Errorf("expected editorMode %q, got %v", "vim", got)
+	}
+}
+
 func contains(slice []string, item string) bool {
 	return slices.Contains(slice, item)
 }

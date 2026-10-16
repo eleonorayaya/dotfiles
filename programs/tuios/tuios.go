@@ -3,7 +3,9 @@ package tuios
 import (
 	"embed"
 	"fmt"
+	"log/slog"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/eleonorayaya/shizuku/app"
@@ -36,6 +38,28 @@ var spec = pkg.Spec{
 func (a *App) Install(ctx *app.Context) error {
 	if err := pkg.Install(spec); err != nil {
 		return fmt.Errorf("failed to install tuios: %w", err)
+	}
+
+	if err := installClaudeIntegration(); err != nil {
+		return fmt.Errorf("failed to install tuios claude integration: %w", err)
+	}
+
+	return nil
+}
+
+func installClaudeIntegration() error {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get home directory: %w", err)
+	}
+	if _, err := os.Stat(filepath.Join(home, ".claude")); os.IsNotExist(err) {
+		slog.Info("~/.claude not found, skipping tuios claude integration")
+		return nil
+	}
+
+	cmd := exec.Command("tuios", "integration", "install", "claude-code")
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%s: %w", string(output), err)
 	}
 
 	return nil
