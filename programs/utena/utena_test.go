@@ -88,7 +88,7 @@ func TestGenerate_ThemeHasNoEmptyColors(t *testing.T) {
 		Styles: styles.New(styles.WithTheme(themes.MonadeDark)),
 	}
 
-	result, err := New().Generate(ctx)
+	result, err := New(Options{}).Generate(ctx)
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
@@ -115,8 +115,8 @@ func TestGenerate_DaemonBrowser(t *testing.T) {
 		app  *App
 		want string
 	}{
-		"default": {app: New(), want: "chrome"},
-		"firefox": {app: New(WithBrowser("firefox")), want: "firefox"},
+		"default": {app: New(Options{}), want: ""},
+		"firefox": {app: New(Options{Browser: "firefox"}), want: "firefox"},
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {

@@ -1,3 +1,5 @@
 {
-  "browser": "{{.Browser}}"
+{{- with .Browser}}
+  "browser": "{{.}}"
+{{- end}}
 }
