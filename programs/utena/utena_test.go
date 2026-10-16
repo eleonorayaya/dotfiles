@@ -109,3 +109,38 @@ func TestGenerate_ThemeHasNoEmptyColors(t *testing.T) {
 		}
 	}
 }
+
+func TestGenerate_DaemonBrowser(t *testing.T) {
+	cases := map[string]struct {
+		app  *App
+		want string
+	}{
+		"default": {app: New(), want: "chrome"},
+		"firefox": {app: New(WithBrowser("firefox")), want: "firefox"},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			ctx := &app.Context{
+				OutDir: t.TempDir(),
+				Styles: styles.New(styles.WithTheme(themes.MonadeDark)),
+			}
+			result, err := tc.app.Generate(ctx)
+			if err != nil {
+				t.Fatalf("Generate: %v", err)
+			}
+			raw, err := os.ReadFile(result.FileMap["daemon.json"])
+			if err != nil {
+				t.Fatalf("read daemon.json: %v", err)
+			}
+			var daemon struct {
+				Browser string `json:"browser"`
+			}
+			if err := json.Unmarshal(raw, &daemon); err != nil {
+				t.Fatalf("parse daemon.json: %v", err)
+			}
+			if daemon.Browser != tc.want {
+				t.Errorf("browser = %q, want %q", daemon.Browser, tc.want)
+			}
+		})
+	}
+}

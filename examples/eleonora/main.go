@@ -141,6 +141,7 @@ func main() {
 			),
 			shizuku.WithPrograms(
 				firefox.New(),
+				utena.New(utena.WithBrowser("firefox")),
 				protonpass.New(),
 				protonvpn.New(),
 				vesktop.New(),

@@ -18,10 +18,22 @@ const (
 	cloneDir = ".local/src/utena"
 )
 
-type App struct{}
+type App struct {
+	browser string
+}
 
-func New() *App {
-	return &App{}
+type Option func(*App)
+
+func WithBrowser(name string) Option {
+	return func(a *App) { a.browser = name }
+}
+
+func New(opts ...Option) *App {
+	a := &App{browser: "chrome"}
+	for _, opt := range opts {
+		opt(a)
+	}
+	return a
 }
 
 func (a *App) Name() string {
@@ -99,6 +111,7 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 		"BrightYellow":          colors.Palette.BrightYellow,
 		"Path":                  colors.Path,
 		"Error":                 colors.Error,
+		"Browser":               a.browser,
 	}
 
 	fileMap, err := app.GenerateAppFiles("utena", contents, data, ctx.OutDir)
