@@ -16,24 +16,25 @@ import (
 var contents embed.FS
 
 type Options struct {
-	Marketplaces            map[string]app.Marketplace
-	AlwaysOnPlugins         []string
-	Bundles                 map[string][]string
-	Mods                    []app.Mod
-	DisabledMcpJsonServers  []string
-	Env                     map[string]string
-	StatusLine              map[string]any
-	RemoveStatusLine        bool
-	SandboxAllowedDomains   []string
-	SandboxAllowRead        []string
-	SandboxAllowWrite       []string
-	SandboxExcludedCommands []string
-	AllowedBashCommands     []string
-	AllowedToolPermissions  []string
-	DeniedBashCommands      []string
-	DefaultMode             string
-	AdvisorModel            string
-	GlobalConfig            map[string]any
+	Marketplaces              map[string]app.Marketplace
+	AlwaysOnPlugins           []string
+	Bundles                   map[string][]string
+	Mods                      []app.Mod
+	DisabledMcpJsonServers    []string
+	DisableClaudeAiConnectors bool
+	Env                       map[string]string
+	StatusLine                map[string]any
+	RemoveStatusLine          bool
+	SandboxAllowedDomains     []string
+	SandboxAllowRead          []string
+	SandboxAllowWrite         []string
+	SandboxExcludedCommands   []string
+	AllowedBashCommands       []string
+	AllowedToolPermissions    []string
+	DeniedBashCommands        []string
+	DefaultMode               string
+	AdvisorModel              string
+	GlobalConfig              map[string]any
 }
 
 type App struct {
@@ -411,6 +412,11 @@ func (a *App) mergeSettings(outDir string, theme styles.Theme, agents app.AgentC
 	}
 	if a.opts.AdvisorModel != "" {
 		settings["advisorModel"] = a.opts.AdvisorModel
+	}
+	if a.opts.DisableClaudeAiConnectors {
+		settings["disableClaudeAiConnectors"] = true
+	} else {
+		delete(settings, "disableClaudeAiConnectors")
 	}
 	if theme.Name != "" {
 		settings["theme"] = themeSetting

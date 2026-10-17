@@ -955,3 +955,39 @@ func TestMergeSettingsDisablesBundledPlugins(t *testing.T) {
 		}
 	}
 }
+
+func TestMergeSettingsClaudeAiConnectors(t *testing.T) {
+	cases := map[string]struct {
+		disable  bool
+		existing map[string]any
+		want     any
+	}{
+		"disabled":          {disable: true, want: true},
+		"enabled removes":   {disable: false, existing: map[string]any{"disableClaudeAiConnectors": true}, want: nil},
+		"enabled untouched": {disable: false, want: nil},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			fakeHome := t.TempDir()
+			t.Setenv("HOME", fakeHome)
+			if tc.existing != nil {
+				if err := util.WriteJSONMap(filepath.Join(fakeHome, ".claude", "settings.json"), tc.existing); err != nil {
+					t.Fatalf("seed settings: %v", err)
+				}
+			}
+			opts := testOptions()
+			opts.DisableClaudeAiConnectors = tc.disable
+			resultPath, err := New(opts).mergeSettings(t.TempDir(), styles.Theme{}, app.AgentContext{})
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			settings, err := util.ReadJSONMap(resultPath)
+			if err != nil {
+				t.Fatalf("read output: %v", err)
+			}
+			if got := settings["disableClaudeAiConnectors"]; got != tc.want {
+				t.Errorf("disableClaudeAiConnectors = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}

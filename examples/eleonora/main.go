@@ -149,6 +149,9 @@ func main() {
 				notion.New(notion.Options{DisableClaudeMCP: false}),
 				sketchybar.New(sketchybar.Options{Badges: []string{"Proton Mail", "Vesktop"}}),
 			),
+			shizuku.WithAgents(
+				claude.New(data.PersonalClaudeOptions()),
+			),
 		),
 	).Command()
 

@@ -5,6 +5,12 @@ import (
 	"github.com/eleonorayaya/shizuku/app"
 )
 
+func PersonalClaudeOptions() claude.Options {
+	opts := ClaudeOptions()
+	opts.DisableClaudeAiConnectors = true
+	return opts
+}
+
 func ClaudeOptions() claude.Options {
 	return claude.Options{
 		Marketplaces: map[string]app.Marketplace{
