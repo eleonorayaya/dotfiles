@@ -32,6 +32,35 @@ func mergeGlobalConfig(path string, values map[string]any) error {
 		return nil
 	}
 
+	return writeGlobalConfig(path, cfg)
+}
+
+func removeGlobalMcpServers(path string, names []string) error {
+	if len(names) == 0 {
+		return nil
+	}
+
+	cfg, err := util.ReadJSONMap(path)
+	if err != nil {
+		return fmt.Errorf("failed to read global config: %w", err)
+	}
+
+	servers, _ := cfg["mcpServers"].(map[string]any)
+	removed := false
+	for _, name := range names {
+		if _, ok := servers[name]; ok {
+			delete(servers, name)
+			removed = true
+		}
+	}
+	if !removed {
+		return nil
+	}
+
+	return writeGlobalConfig(path, cfg)
+}
+
+func writeGlobalConfig(path string, cfg map[string]any) error {
 	normalized, err := util.NormalizeFilePath(path)
 	if err != nil {
 		return fmt.Errorf("failed to normalize global config path: %w", err)

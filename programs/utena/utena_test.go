@@ -153,13 +153,33 @@ func TestGenerate_DaemonBundles(t *testing.T) {
 		"none":    {opts: Options{}, want: `{}`},
 		"browser": {opts: Options{Browser: "firefox"}, want: `{"browser":"firefox"}`},
 		"bundles": {
-			opts: Options{Browser: "firefox", Bundles: map[string][]string{
-				"go":   {"gopls-lsp@claude-plugins-official", "go@go-skills"},
-				"docs": {"notion-workspace-plugin@notion-plugin-marketplace"},
+			opts: Options{Browser: "firefox", Bundles: map[string]app.Bundle{
+				"go":   {Plugins: []string{"gopls-lsp@claude-plugins-official", "go@go-skills"}},
+				"docs": {Plugins: []string{"notion-workspace-plugin@notion-plugin-marketplace"}},
 			}},
 			want: `{"browser":"firefox","bundles":{` +
 				`"docs":{"plugins":["notion-workspace-plugin@notion-plugin-marketplace"]},` +
 				`"go":{"plugins":["gopls-lsp@claude-plugins-official","go@go-skills"]}}}`,
+		},
+		"mcp servers": {
+			opts: Options{
+				Bundles: map[string]app.Bundle{
+					"homelab": {McpServers: []string{"homeassistant"}},
+					"mixed":   {Plugins: []string{"p@m"}, McpServers: []string{"zoo"}},
+					"empty":   {},
+				},
+				McpServers: map[string]map[string]any{
+					"homeassistant": {"type": "http", "url": "https://example.test/mcp"},
+					"zoo":           {"type": "stdio", "command": "uvx", "args": []any{"zoo-mcp"}},
+				},
+			},
+			want: `{"bundles":{` +
+				`"empty":{},` +
+				`"homelab":{"mcp_servers":["homeassistant"]},` +
+				`"mixed":{"mcp_servers":["zoo"],"plugins":["p@m"]}},` +
+				`"mcp_servers":{` +
+				`"homeassistant":{"type":"http","url":"https://example.test/mcp"},` +
+				`"zoo":{"args":["zoo-mcp"],"command":"uvx","type":"stdio"}}}`,
 		},
 	}
 	for name, tc := range cases {

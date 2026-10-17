@@ -18,7 +18,8 @@ var contents embed.FS
 type Options struct {
 	Marketplaces              map[string]app.Marketplace
 	AlwaysOnPlugins           []string
-	Bundles                   map[string][]string
+	Bundles                   map[string]app.Bundle
+	McpServers                map[string]map[string]any
 	Mods                      []app.Mod
 	DisabledMcpJsonServers    []string
 	DisableClaudeAiConnectors bool
@@ -49,11 +50,15 @@ func (a *App) Name() string {
 	return "claude"
 }
 
-const utenaShellInit = `eval "$(utena shell-init)"`
+const (
+	utenaShellInit   = `eval "$(utena shell-init)"`
+	secretsEnvSource = `[ -f "$HOME/.config/shizuku/secrets.env" ] && { set -a; . "$HOME/.config/shizuku/secrets.env"; set +a; }`
+)
 
 func (a *App) Env() (*app.EnvSetup, error) {
 	return &app.EnvSetup{
-		InitScripts: []string{utenaShellInit},
+		PreInitScripts: []string{secretsEnvSource},
+		InitScripts:    []string{utenaShellInit},
 	}, nil
 }
 
@@ -95,6 +100,10 @@ func (a *App) Sync(ctx *app.Context, agents app.AgentContext) error {
 
 	if err := mergeGlobalConfig(globalConfigPath, a.opts.GlobalConfig); err != nil {
 		return fmt.Errorf("failed to sync global config: %w", err)
+	}
+
+	if err := removeGlobalMcpServers(globalConfigPath, slices.Sorted(maps.Keys(a.opts.McpServers))); err != nil {
+		return fmt.Errorf("failed to remove user-scope mcp servers: %w", err)
 	}
 
 	return nil
@@ -162,7 +171,7 @@ func (a *App) collectBundledPlugins() []string {
 	}
 	var bundled []string
 	for _, name := range slices.Sorted(maps.Keys(a.opts.Bundles)) {
-		for _, p := range a.opts.Bundles[name] {
+		for _, p := range a.opts.Bundles[name].Plugins {
 			if !alwaysOn[p] {
 				bundled = append(bundled, p)
 			}

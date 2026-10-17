@@ -920,9 +920,10 @@ func TestMergeSettingsDisablesBundledPlugins(t *testing.T) {
 
 	opts := testOptions()
 	opts.Mods = []app.Mod{{Name: "pill-footer"}}
-	opts.Bundles = map[string][]string{
-		"go":         {"gopls-lsp@claude-plugins-official", "always-on@test-marketplace"},
-		"claude-dev": {"cc-toolkit@m", "pill-footer@pill-footer"},
+	opts.Bundles = map[string]app.Bundle{
+		"go":         {Plugins: []string{"gopls-lsp@claude-plugins-official", "always-on@test-marketplace"}},
+		"claude-dev": {Plugins: []string{"cc-toolkit@m", "pill-footer@pill-footer"}},
+		"homelab":    {McpServers: []string{"homeassistant"}},
 	}
 	a := New(opts)
 	ctx := app.AgentContext{
@@ -989,5 +990,19 @@ func TestMergeSettingsClaudeAiConnectors(t *testing.T) {
 				t.Errorf("disableClaudeAiConnectors = %v, want %v", got, tc.want)
 			}
 		})
+	}
+}
+
+func TestEnvSourcesSecretsFile(t *testing.T) {
+	setup, err := New(Options{}).Env()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := `[ -f "$HOME/.config/shizuku/secrets.env" ] && { set -a; . "$HOME/.config/shizuku/secrets.env"; set +a; }`
+	if !slices.Contains(setup.PreInitScripts, want) {
+		t.Errorf("PreInitScripts = %v, want to contain %q", setup.PreInitScripts, want)
+	}
+	if !slices.Contains(setup.InitScripts, utenaShellInit) {
+		t.Errorf("InitScripts = %v, want to contain %q", setup.InitScripts, utenaShellInit)
 	}
 }

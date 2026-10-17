@@ -20,8 +20,9 @@ const (
 )
 
 type Options struct {
-	Browser string
-	Bundles map[string][]string
+	Browser    string
+	Bundles    map[string]app.Bundle
+	McpServers map[string]map[string]any
 }
 
 type App struct {
@@ -133,10 +134,20 @@ func (a *App) daemonConfig() map[string]any {
 	}
 	if len(a.opts.Bundles) > 0 {
 		catalog := make(map[string]any, len(a.opts.Bundles))
-		for name, plugins := range a.opts.Bundles {
-			catalog[name] = map[string]any{"plugins": plugins}
+		for name, bundle := range a.opts.Bundles {
+			entry := map[string]any{}
+			if len(bundle.Plugins) > 0 {
+				entry["plugins"] = bundle.Plugins
+			}
+			if len(bundle.McpServers) > 0 {
+				entry["mcp_servers"] = bundle.McpServers
+			}
+			catalog[name] = entry
 		}
 		cfg["bundles"] = catalog
+	}
+	if len(a.opts.McpServers) > 0 {
+		cfg["mcp_servers"] = a.opts.McpServers
 	}
 	return cfg
 }
