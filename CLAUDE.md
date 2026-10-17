@@ -161,6 +161,8 @@ func (a *App) AgentConfig() app.AgentConfig {
 }
 ```
 
+`ShellInitScripts` lists shell init lines the agent's shells need (utena passes `eval "$(utena shell-init)"`); agents implementing `app.ContextualEnvProvider` (`Env(agents AgentContext)`) receive them when the env files are generated.
+
 The builder collects every enabled app's `AgentConfig()` into a `SyncContext` before agents run. Agents that need this data implement `ContextualSyncer` / `ContextualGenerator` and receive the context as a parameter — see `agents/claude/claude.go` for an example. This keeps language- and tool-specific data out of agent code.
 
 ### Configuration System
@@ -270,6 +272,8 @@ The validation and default config creation will automatically include the new la
 The `claude` shizuku app manages `~/.claude/settings.json` with additive merges for `enabledPlugins` and `permissions.allow`. To add allowed commands, plugins, or other managed fields, use the `/claude-config` skill.
 
 Claude Code mods are plugins, so `claude.Options.Mods` takes `app.Mod` entries. Each one registers its marketplace (which defaults to the mod name), enables `<name>@<marketplace>`, and merges `Options` into `pluginConfigs.<id>.options`. Option keys the mod doesn't set keep whatever the user picked in `/config`. `ThemeOptions` derives options from the shizuku theme, and explicit `Options` override them. `claude.Prismantis()` uses it to map `ThemeColors` onto prismantis's color slots.
+
+`utena.Options.Bundles` (`app.Bundle{Plugins, McpServers}`) defines utena plugin bundles, and `utena.Options.McpServers` holds MCP server definitions (with `${VAR}` placeholders for secrets). The utena app writes both into `~/.config/utena/daemon.json` and passes them to agents through its `AgentConfig()`. The claude app writes bundled plugins that aren't always-on or mods as `false` to `settings.json`; utena turns them on per session. On sync it removes the MCP servers from user scope in `~/.claude.json`, because utena writes the selected ones into each session's `.mcp.json`. The generated `shizuku.zshenv` (via `EnvSetup.ZshenvScripts`) sources `~/.config/shizuku/secrets.env` (untracked, `set -a`) if it exists, so the placeholders resolve in every zsh, including the non-interactive login shells utena launches. `DisableClaudeAiConnectors` sets `disableClaudeAiConnectors` per profile (the personal profile uses `data.PersonalClaudeOptions()`).
 
 The claude app also generates a Claude Code custom theme at `~/.claude/themes/shizuku.json` (base `light`/`dark` from `Theme.Type`, token overrides from `ThemeColors`; see `agents/claude/theme.go`) and selects it with `"theme": "custom:shizuku"` in settings.json.
 

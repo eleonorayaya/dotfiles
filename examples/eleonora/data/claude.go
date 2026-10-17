@@ -5,6 +5,12 @@ import (
 	"github.com/eleonorayaya/shizuku/app"
 )
 
+func PersonalClaudeOptions() claude.Options {
+	opts := ClaudeOptions()
+	opts.DisableClaudeAiConnectors = true
+	return opts
+}
+
 func ClaudeOptions() claude.Options {
 	return claude.Options{
 		Marketplaces: map[string]app.Marketplace{
@@ -14,6 +20,9 @@ func ClaudeOptions() claude.Options {
 		},
 		AlwaysOnPlugins: []string{
 			"superpowers@superpowers-marketplace",
+			"better-claude@eleonorayaya-claude-code",
+			"git-workflows@eleonorayaya-claude-code",
+			"utena-claude@utena",
 		},
 		Mods: []app.Mod{
 			claude.Prismantis(),

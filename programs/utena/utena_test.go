@@ -144,3 +144,77 @@ func TestGenerate_DaemonBrowser(t *testing.T) {
 		})
 	}
 }
+
+func TestGenerate_DaemonBundles(t *testing.T) {
+	cases := map[string]struct {
+		opts Options
+		want string
+	}{
+		"none":    {opts: Options{}, want: `{}`},
+		"browser": {opts: Options{Browser: "firefox"}, want: `{"browser":"firefox"}`},
+		"bundles": {
+			opts: Options{Browser: "firefox", Bundles: map[string]app.Bundle{
+				"go":   {Plugins: []string{"gopls-lsp@claude-plugins-official", "go@go-skills"}},
+				"docs": {Plugins: []string{"notion-workspace-plugin@notion-plugin-marketplace"}},
+			}},
+			want: `{"browser":"firefox","bundles":{` +
+				`"docs":{"plugins":["notion-workspace-plugin@notion-plugin-marketplace"]},` +
+				`"go":{"plugins":["gopls-lsp@claude-plugins-official","go@go-skills"]}}}`,
+		},
+		"mcp servers": {
+			opts: Options{
+				Bundles: map[string]app.Bundle{
+					"homelab": {McpServers: []string{"homeassistant"}},
+					"mixed":   {Plugins: []string{"p@m"}, McpServers: []string{"zoo"}},
+					"empty":   {},
+				},
+				McpServers: map[string]map[string]any{
+					"homeassistant": {"type": "http", "url": "https://example.test/mcp"},
+					"zoo":           {"type": "stdio", "command": "uvx", "args": []any{"zoo-mcp"}},
+				},
+			},
+			want: `{"bundles":{` +
+				`"empty":{},` +
+				`"homelab":{"mcp_servers":["homeassistant"]},` +
+				`"mixed":{"mcp_servers":["zoo"],"plugins":["p@m"]}},` +
+				`"mcp_servers":{` +
+				`"homeassistant":{"type":"http","url":"https://example.test/mcp"},` +
+				`"zoo":{"args":["zoo-mcp"],"command":"uvx","type":"stdio"}}}`,
+		},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			ctx := &app.Context{
+				OutDir: t.TempDir(),
+				Styles: styles.New(styles.WithTheme(themes.MonadeDark)),
+			}
+			result, err := New(tc.opts).Generate(ctx)
+			if err != nil {
+				t.Fatalf("Generate: %v", err)
+			}
+			raw, err := os.ReadFile(result.FileMap["daemon.json"])
+			if err != nil {
+				t.Fatalf("read daemon.json: %v", err)
+			}
+			var got, want any
+			if err := json.Unmarshal(raw, &got); err != nil {
+				t.Fatalf("parse daemon.json: %v\n%s", err, raw)
+			}
+			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
+				t.Fatal(err)
+			}
+			gotJSON, _ := json.Marshal(got)
+			wantJSON, _ := json.Marshal(want)
+			if string(gotJSON) != string(wantJSON) {
+				t.Errorf("daemon.json = %s, want %s", gotJSON, wantJSON)
+			}
+		})
+	}
+}
+
+func TestAgentConfigProvidesShellInit(t *testing.T) {
+	cfg := New(Options{}).AgentConfig()
+	if len(cfg.ShellInitScripts) != 1 || cfg.ShellInitScripts[0] != `eval "$(utena shell-init)"` {
+		t.Errorf("ShellInitScripts = %v", cfg.ShellInitScripts)
+	}
+}

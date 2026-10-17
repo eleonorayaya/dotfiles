@@ -152,3 +152,43 @@ func TestInstall_ContinuesAndJoinsErrors(t *testing.T) {
 		t.Errorf("expected both errors, got %v", err)
 	}
 }
+
+type fakeShellProgram struct{ name, script string }
+
+func (f fakeShellProgram) Name() string { return f.name }
+
+func (f fakeShellProgram) AgentConfig() app.AgentConfig {
+	return app.AgentConfig{ShellInitScripts: []string{f.script}}
+}
+
+type fakeContextualEnvAgent struct{ name string }
+
+func (f fakeContextualEnvAgent) Name() string { return f.name }
+
+func (f fakeContextualEnvAgent) Generate(*app.Context, app.AgentContext) (*app.GenerateResult, error) {
+	return nil, nil
+}
+
+func (f fakeContextualEnvAgent) Sync(*app.Context, app.AgentContext) error { return nil }
+
+func (f fakeContextualEnvAgent) Env(agents app.AgentContext) (*app.EnvSetup, error) {
+	var scripts []string
+	for _, ac := range agents.AgentConfigs {
+		scripts = append(scripts, ac.ShellInitScripts...)
+	}
+	return &app.EnvSetup{InitScripts: scripts}, nil
+}
+
+func TestCollectEnvSetups_PassesAgentContextToContextualEnv(t *testing.T) {
+	profile := Profile{
+		Programs: []app.Program{fakeShellProgram{name: "utena", script: "eval init"}},
+		Agents:   []app.Agent{fakeContextualEnvAgent{name: "claude"}},
+	}
+	setups, err := collectEnvSetups(profile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(setups) != 1 || len(setups[0].InitScripts) != 1 || setups[0].InitScripts[0] != "eval init" {
+		t.Fatalf("setups = %+v", setups)
+	}
+}

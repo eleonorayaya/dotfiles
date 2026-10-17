@@ -8,18 +8,22 @@ import (
 	"path/filepath"
 
 	"github.com/eleonorayaya/shizuku/app"
+	"github.com/eleonorayaya/shizuku/util"
 )
 
 //go:embed all:contents
 var contents embed.FS
 
 const (
-	repoURL  = "https://github.com/eleonorayaya/utena"
-	cloneDir = ".local/src/utena"
+	repoURL   = "https://github.com/eleonorayaya/utena"
+	cloneDir  = ".local/src/utena"
+	shellInit = `eval "$(utena shell-init)"`
 )
 
 type Options struct {
-	Browser string
+	Browser    string
+	Bundles    map[string]app.Bundle
+	McpServers map[string]map[string]any
 }
 
 type App struct {
@@ -105,7 +109,6 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 		"BrightYellow":          colors.Palette.BrightYellow,
 		"Path":                  colors.Path,
 		"Error":                 colors.Error,
-		"Browser":               a.opts.Browser,
 	}
 
 	fileMap, err := app.GenerateAppFiles("utena", contents, data, ctx.OutDir)
@@ -113,10 +116,38 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 		return nil, fmt.Errorf("failed to generate utena files: %w", err)
 	}
 
+	daemonPath := filepath.Join(ctx.OutDir, "utena", "daemon.json")
+	if err := util.WriteJSON(daemonPath, a.daemonConfig()); err != nil {
+		return nil, fmt.Errorf("failed to write daemon.json: %w", err)
+	}
+	fileMap["daemon.json"] = daemonPath
+
 	return &app.GenerateResult{
 		FileMap: fileMap,
 		DestDir: "~/.config/utena/",
 	}, nil
+}
+
+type daemonConfig struct {
+	Browser    string                    `json:"browser,omitempty"`
+	Bundles    map[string]app.Bundle     `json:"bundles,omitempty"`
+	McpServers map[string]map[string]any `json:"mcp_servers,omitempty"`
+}
+
+func (a *App) daemonConfig() daemonConfig {
+	return daemonConfig{
+		Browser:    a.opts.Browser,
+		Bundles:    a.opts.Bundles,
+		McpServers: a.opts.McpServers,
+	}
+}
+
+func (a *App) AgentConfig() app.AgentConfig {
+	return app.AgentConfig{
+		ShellInitScripts: []string{shellInit},
+		Bundles:          a.opts.Bundles,
+		McpServers:       a.opts.McpServers,
+	}
 }
 
 func (a *App) Sync(ctx *app.Context) error {

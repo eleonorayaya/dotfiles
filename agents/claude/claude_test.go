@@ -904,3 +904,123 @@ func TestPrismantisDiffRowsMatchClaudeTheme(t *testing.T) {
 		t.Errorf("expected flags in the removed colour, got %v", options["codeFlagColor"])
 	}
 }
+
+func TestMergeSettingsDisablesBundledPlugins(t *testing.T) {
+	fakeHome := t.TempDir()
+	t.Setenv("HOME", fakeHome)
+	existing := map[string]any{
+		"enabledPlugins": map[string]any{
+			"cc-toolkit@m": true,
+			"unmanaged@m":  true,
+		},
+	}
+	if err := util.WriteJSONMap(filepath.Join(fakeHome, ".claude", "settings.json"), existing); err != nil {
+		t.Fatalf("seed settings: %v", err)
+	}
+
+	opts := testOptions()
+	opts.Mods = []app.Mod{{Name: "pill-footer"}}
+	a := New(opts)
+	ctx := app.AgentContext{
+		AgentConfigs: []app.AgentConfig{
+			{Plugins: []string{"gopls-lsp@claude-plugins-official", "terminal-browser@tb"}},
+			{Bundles: map[string]app.Bundle{
+				"go":         {Plugins: []string{"gopls-lsp@claude-plugins-official", "always-on@test-marketplace"}},
+				"claude-dev": {Plugins: []string{"cc-toolkit@m", "pill-footer@pill-footer"}},
+				"homelab":    {McpServers: []string{"homeassistant"}},
+			}},
+		},
+	}
+
+	resultPath, err := a.mergeSettings(t.TempDir(), styles.Theme{}, ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	settings, err := util.ReadJSONMap(resultPath)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+	plugins, _ := settings["enabledPlugins"].(map[string]any)
+
+	want := map[string]any{
+		"gopls-lsp@claude-plugins-official": false,
+		"cc-toolkit@m":                      false,
+		"always-on@test-marketplace":        true,
+		"pill-footer@pill-footer":           true,
+		"terminal-browser@tb":               true,
+		"unmanaged@m":                       true,
+	}
+	for id, v := range want {
+		if plugins[id] != v {
+			t.Errorf("enabledPlugins[%q] = %v, want %v", id, plugins[id], v)
+		}
+	}
+}
+
+func TestMergeSettingsClaudeAiConnectors(t *testing.T) {
+	cases := map[string]struct {
+		disable  bool
+		existing map[string]any
+		want     any
+	}{
+		"disabled":          {disable: true, want: true},
+		"enabled removes":   {disable: false, existing: map[string]any{"disableClaudeAiConnectors": true}, want: nil},
+		"enabled untouched": {disable: false, want: nil},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			fakeHome := t.TempDir()
+			t.Setenv("HOME", fakeHome)
+			if tc.existing != nil {
+				if err := util.WriteJSONMap(filepath.Join(fakeHome, ".claude", "settings.json"), tc.existing); err != nil {
+					t.Fatalf("seed settings: %v", err)
+				}
+			}
+			opts := testOptions()
+			opts.DisableClaudeAiConnectors = tc.disable
+			resultPath, err := New(opts).mergeSettings(t.TempDir(), styles.Theme{}, app.AgentContext{})
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			settings, err := util.ReadJSONMap(resultPath)
+			if err != nil {
+				t.Fatalf("read output: %v", err)
+			}
+			if got := settings["disableClaudeAiConnectors"]; got != tc.want {
+				t.Errorf("disableClaudeAiConnectors = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestEnvSourcesSecretsFile(t *testing.T) {
+	setup, err := New(Options{}).Env(app.AgentContext{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := `if [ -f "$HOME/.config/shizuku/secrets.env" ]; then set -a; . "$HOME/.config/shizuku/secrets.env"; set +a; fi`
+	if !slices.Contains(setup.ZshenvScripts, want) {
+		t.Errorf("ZshenvScripts = %v, want to contain %q", setup.ZshenvScripts, want)
+	}
+	if slices.Contains(setup.PreInitScripts, want) {
+		t.Errorf("PreInitScripts = %v, want secrets line only in ZshenvScripts", setup.PreInitScripts)
+	}
+	if len(setup.InitScripts) != 0 {
+		t.Errorf("InitScripts = %v, want none without agent configs", setup.InitScripts)
+	}
+}
+
+func TestEnvEmitsAgentShellInitScripts(t *testing.T) {
+	agents := app.AgentContext{AgentConfigs: []app.AgentConfig{
+		{ShellInitScripts: []string{`eval "$(a init)"`}},
+		{ShellInitScripts: []string{`eval "$(b init)"`, `eval "$(a init)"`}},
+	}}
+	setup, err := New(Options{}).Env(agents)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{`eval "$(a init)"`, `eval "$(b init)"`}
+	if !slices.Equal(setup.InitScripts, want) {
+		t.Errorf("InitScripts = %v, want %v", setup.InitScripts, want)
+	}
+}

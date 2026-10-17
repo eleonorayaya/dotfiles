@@ -112,7 +112,7 @@ func main() {
 				sketchybar.New(sketchybar.Options{}),
 				terminalbrowser.New(),
 				terraform.New(),
-				utena.New(utena.Options{}),
+				utena.New(data.Utena("")),
 			),
 			shizuku.WithAgents(
 				claude.New(data.ClaudeOptions()),
@@ -131,7 +131,7 @@ func main() {
 				k9s.New(),
 				mise.New(),
 				sketchybar.New(sketchybar.Options{Badges: []string{"Mail", "Slack"}}),
-				utena.New(utena.Options{Browser: "chrome-applescript"}),
+				utena.New(data.Utena("chrome-applescript")),
 			),
 		),
 		shizuku.WithProfile("personal",
@@ -142,12 +142,15 @@ func main() {
 			),
 			shizuku.WithPrograms(
 				firefox.New(),
-				utena.New(utena.Options{Browser: "firefox"}),
+				utena.New(data.Utena("firefox")),
 				protonpass.New(),
 				protonvpn.New(),
 				vesktop.New(),
 				notion.New(notion.Options{DisableClaudeMCP: false}),
 				sketchybar.New(sketchybar.Options{Badges: []string{"Proton Mail", "Vesktop"}}),
+			),
+			shizuku.WithAgents(
+				claude.New(data.PersonalClaudeOptions()),
 			),
 		),
 	).Command()

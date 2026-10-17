@@ -3,6 +3,7 @@ package app
 import (
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -65,5 +66,76 @@ func TestGenerateEnv_AliasWithSingleQuotes(t *testing.T) {
 		if string(out) != want+"\n" {
 			t.Errorf("alias %s = %q, want %q", name, out, want)
 		}
+	}
+}
+
+const testSecretsLine = `if [ -f "$HOME/.config/shizuku/secrets.env" ]; then set -a; . "$HOME/.config/shizuku/secrets.env"; set +a; fi`
+
+func TestGenerateEnv_ZshenvScripts(t *testing.T) {
+	files, err := GenerateEnvFiles([]*EnvSetup{{
+		Variables:     []EnvVar{{Key: "EDITOR", Value: "hx"}},
+		ZshenvScripts: []string{testSecretsLine},
+	}}, t.TempDir())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	zshenv, err := os.ReadFile(files["shizuku.zshenv"])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(zshenv), testSecretsLine+"\n") {
+		t.Errorf("zshenv missing script:\n%s", zshenv)
+	}
+	if strings.Index(string(zshenv), testSecretsLine) < strings.Index(string(zshenv), "export EDITOR=") {
+		t.Errorf("expected scripts after variables:\n%s", zshenv)
+	}
+	sh, err := os.ReadFile(files["shizuku.sh"])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(sh), testSecretsLine) {
+		t.Errorf("shizuku.sh should not contain zshenv script:\n%s", sh)
+	}
+}
+
+func TestGenerateEnv_ZshenvScriptsLoadSecretsInZsh(t *testing.T) {
+	zsh, err := exec.LookPath("zsh")
+	if err != nil {
+		t.Skip("zsh not available")
+	}
+	files, err := GenerateEnvFiles([]*EnvSetup{{ZshenvScripts: []string{testSecretsLine}}}, t.TempDir())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	cases := map[string]struct {
+		secrets string
+		want    string
+	}{
+		"present": {secrets: "X=1\n", want: "1\n"},
+		"missing": {want: "\n"},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			home := t.TempDir()
+			if tc.secrets != "" {
+				dir := filepath.Join(home, ".config", "shizuku")
+				if err := os.MkdirAll(dir, 0o755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(dir, "secrets.env"), []byte(tc.secrets), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			cmd := exec.Command(zsh, "-f", "-c", "source "+files["shizuku.zshenv"]+"; zsh -f -c 'echo $X'")
+			cmd.Env = []string{"HOME=" + home, "PATH=" + os.Getenv("PATH")}
+			out, err := cmd.CombinedOutput()
+			if err != nil {
+				t.Fatalf("zsh failed: %v\n%s", err, out)
+			}
+			if string(out) != tc.want {
+				t.Errorf("echo $X = %q, want %q", out, tc.want)
+			}
+		})
 	}
 }
