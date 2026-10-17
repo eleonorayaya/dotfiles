@@ -211,3 +211,10 @@ func TestGenerate_DaemonBundles(t *testing.T) {
 		})
 	}
 }
+
+func TestAgentConfigProvidesShellInit(t *testing.T) {
+	cfg := New(Options{}).AgentConfig()
+	if len(cfg.ShellInitScripts) != 1 || cfg.ShellInitScripts[0] != `eval "$(utena shell-init)"` {
+		t.Errorf("ShellInitScripts = %v", cfg.ShellInitScripts)
+	}
+}

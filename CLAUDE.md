@@ -161,6 +161,8 @@ func (a *App) AgentConfig() app.AgentConfig {
 }
 ```
 
+`ShellInitScripts` lists shell init lines the agent's shells need (utena passes `eval "$(utena shell-init)"`); agents implementing `app.ContextualEnvProvider` (`Env(agents AgentContext)`) receive them when the env files are generated.
+
 The builder collects every enabled app's `AgentConfig()` into a `SyncContext` before agents run. Agents that need this data implement `ContextualSyncer` / `ContextualGenerator` and receive the context as a parameter — see `agents/claude/claude.go` for an example. This keeps language- and tool-specific data out of agent code.
 
 ### Configuration System

@@ -13,6 +13,10 @@ type EnvProvider interface {
 	Env() (*EnvSetup, error)
 }
 
+type ContextualEnvProvider interface {
+	Env(agents AgentContext) (*EnvSetup, error)
+}
+
 type EnvSetup struct {
 	ZshenvScripts   []string
 	PreInitScripts  []string

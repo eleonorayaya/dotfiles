@@ -48,15 +48,16 @@ func (a *App) Name() string {
 	return "claude"
 }
 
-const (
-	utenaShellInit   = `eval "$(utena shell-init)"`
-	secretsEnvSource = `if [ -f "$HOME/.config/shizuku/secrets.env" ]; then set -a; . "$HOME/.config/shizuku/secrets.env"; set +a; fi`
-)
+const secretsEnvSource = `if [ -f "$HOME/.config/shizuku/secrets.env" ]; then set -a; . "$HOME/.config/shizuku/secrets.env"; set +a; fi`
 
-func (a *App) Env() (*app.EnvSetup, error) {
+func (a *App) Env(agents app.AgentContext) (*app.EnvSetup, error) {
+	sources := make([][]string, 0, len(agents.AgentConfigs))
+	for _, ac := range agents.AgentConfigs {
+		sources = append(sources, ac.ShellInitScripts)
+	}
 	return &app.EnvSetup{
 		ZshenvScripts: []string{secretsEnvSource},
-		InitScripts:   []string{utenaShellInit},
+		InitScripts:   dedupeStrings(sources...),
 	}, nil
 }
 

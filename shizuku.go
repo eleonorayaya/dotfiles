@@ -201,12 +201,18 @@ func collectAgentContext(profile Profile) app.AgentContext {
 
 func collectEnvSetups(profile Profile) ([]*app.EnvSetup, error) {
 	envSetups := []*app.EnvSetup{}
+	agentContext := collectAgentContext(profile)
 	collect := func(named app.Named) error {
-		provider, ok := named.(app.EnvProvider)
-		if !ok {
+		var envSetup *app.EnvSetup
+		var err error
+		switch provider := named.(type) {
+		case app.ContextualEnvProvider:
+			envSetup, err = provider.Env(agentContext)
+		case app.EnvProvider:
+			envSetup, err = provider.Env()
+		default:
 			return nil
 		}
-		envSetup, err := provider.Env()
 		if err != nil {
 			return fmt.Errorf("failed to get env setup for %s: %w", named.Name(), err)
 		}

@@ -994,7 +994,7 @@ func TestMergeSettingsClaudeAiConnectors(t *testing.T) {
 }
 
 func TestEnvSourcesSecretsFile(t *testing.T) {
-	setup, err := New(Options{}).Env()
+	setup, err := New(Options{}).Env(app.AgentContext{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1005,7 +1005,22 @@ func TestEnvSourcesSecretsFile(t *testing.T) {
 	if slices.Contains(setup.PreInitScripts, want) {
 		t.Errorf("PreInitScripts = %v, want secrets line only in ZshenvScripts", setup.PreInitScripts)
 	}
-	if !slices.Contains(setup.InitScripts, utenaShellInit) {
-		t.Errorf("InitScripts = %v, want to contain %q", setup.InitScripts, utenaShellInit)
+	if len(setup.InitScripts) != 0 {
+		t.Errorf("InitScripts = %v, want none without agent configs", setup.InitScripts)
+	}
+}
+
+func TestEnvEmitsAgentShellInitScripts(t *testing.T) {
+	agents := app.AgentContext{AgentConfigs: []app.AgentConfig{
+		{ShellInitScripts: []string{`eval "$(a init)"`}},
+		{ShellInitScripts: []string{`eval "$(b init)"`, `eval "$(a init)"`}},
+	}}
+	setup, err := New(Options{}).Env(agents)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{`eval "$(a init)"`, `eval "$(b init)"`}
+	if !slices.Equal(setup.InitScripts, want) {
+		t.Errorf("InitScripts = %v, want %v", setup.InitScripts, want)
 	}
 }

@@ -15,8 +15,9 @@ import (
 var contents embed.FS
 
 const (
-	repoURL  = "https://github.com/eleonorayaya/utena"
-	cloneDir = ".local/src/utena"
+	repoURL   = "https://github.com/eleonorayaya/utena"
+	cloneDir  = ".local/src/utena"
+	shellInit = `eval "$(utena shell-init)"`
 )
 
 type Options struct {
@@ -143,8 +144,9 @@ func (a *App) daemonConfig() daemonConfig {
 
 func (a *App) AgentConfig() app.AgentConfig {
 	return app.AgentConfig{
-		Bundles:    a.opts.Bundles,
-		McpServers: a.opts.McpServers,
+		ShellInitScripts: []string{shellInit},
+		Bundles:          a.opts.Bundles,
+		McpServers:       a.opts.McpServers,
 	}
 }
 
