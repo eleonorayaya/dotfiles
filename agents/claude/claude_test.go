@@ -920,15 +920,15 @@ func TestMergeSettingsDisablesBundledPlugins(t *testing.T) {
 
 	opts := testOptions()
 	opts.Mods = []app.Mod{{Name: "pill-footer"}}
-	opts.Bundles = map[string]app.Bundle{
-		"go":         {Plugins: []string{"gopls-lsp@claude-plugins-official", "always-on@test-marketplace"}},
-		"claude-dev": {Plugins: []string{"cc-toolkit@m", "pill-footer@pill-footer"}},
-		"homelab":    {McpServers: []string{"homeassistant"}},
-	}
 	a := New(opts)
 	ctx := app.AgentContext{
 		AgentConfigs: []app.AgentConfig{
 			{Plugins: []string{"gopls-lsp@claude-plugins-official", "terminal-browser@tb"}},
+			{Bundles: map[string]app.Bundle{
+				"go":         {Plugins: []string{"gopls-lsp@claude-plugins-official", "always-on@test-marketplace"}},
+				"claude-dev": {Plugins: []string{"cc-toolkit@m", "pill-footer@pill-footer"}},
+				"homelab":    {McpServers: []string{"homeassistant"}},
+			}},
 		},
 	}
 

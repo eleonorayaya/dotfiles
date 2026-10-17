@@ -24,8 +24,6 @@ func ClaudeOptions() claude.Options {
 			"git-workflows@eleonorayaya-claude-code",
 			"utena-claude@utena",
 		},
-		Bundles:    Bundles(),
-		McpServers: McpServers(),
 		Mods: []app.Mod{
 			claude.Prismantis(),
 			claude.PillFooter(claude.PillFooterOptions{

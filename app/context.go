@@ -58,6 +58,8 @@ type AgentConfig struct {
 	SandboxExcludedCommands []string
 	Hooks                   []Hook
 	BashCommandPrefix       string
+	Bundles                 map[string]Bundle
+	McpServers              map[string]map[string]any
 }
 
 type AgentConfigProvider interface {

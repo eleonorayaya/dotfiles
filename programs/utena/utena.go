@@ -116,7 +116,7 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 	}
 
 	daemonPath := filepath.Join(ctx.OutDir, "utena", "daemon.json")
-	if err := util.WriteJSONMap(daemonPath, a.daemonConfig()); err != nil {
+	if err := util.WriteJSON(daemonPath, a.daemonConfig()); err != nil {
 		return nil, fmt.Errorf("failed to write daemon.json: %w", err)
 	}
 	fileMap["daemon.json"] = daemonPath
@@ -127,29 +127,25 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 	}, nil
 }
 
-func (a *App) daemonConfig() map[string]any {
-	cfg := map[string]any{}
-	if a.opts.Browser != "" {
-		cfg["browser"] = a.opts.Browser
+type daemonConfig struct {
+	Browser    string                    `json:"browser,omitempty"`
+	Bundles    map[string]app.Bundle     `json:"bundles,omitempty"`
+	McpServers map[string]map[string]any `json:"mcp_servers,omitempty"`
+}
+
+func (a *App) daemonConfig() daemonConfig {
+	return daemonConfig{
+		Browser:    a.opts.Browser,
+		Bundles:    a.opts.Bundles,
+		McpServers: a.opts.McpServers,
 	}
-	if len(a.opts.Bundles) > 0 {
-		catalog := make(map[string]any, len(a.opts.Bundles))
-		for name, bundle := range a.opts.Bundles {
-			entry := map[string]any{}
-			if len(bundle.Plugins) > 0 {
-				entry["plugins"] = bundle.Plugins
-			}
-			if len(bundle.McpServers) > 0 {
-				entry["mcp_servers"] = bundle.McpServers
-			}
-			catalog[name] = entry
-		}
-		cfg["bundles"] = catalog
+}
+
+func (a *App) AgentConfig() app.AgentConfig {
+	return app.AgentConfig{
+		Bundles:    a.opts.Bundles,
+		McpServers: a.opts.McpServers,
 	}
-	if len(a.opts.McpServers) > 0 {
-		cfg["mcp_servers"] = a.opts.McpServers
-	}
-	return cfg
 }
 
 func (a *App) Sync(ctx *app.Context) error {

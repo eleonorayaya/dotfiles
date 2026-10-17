@@ -18,8 +18,6 @@ var contents embed.FS
 type Options struct {
 	Marketplaces              map[string]app.Marketplace
 	AlwaysOnPlugins           []string
-	Bundles                   map[string]app.Bundle
-	McpServers                map[string]map[string]any
 	Mods                      []app.Mod
 	DisabledMcpJsonServers    []string
 	DisableClaudeAiConnectors bool
@@ -98,7 +96,7 @@ func (a *App) Sync(ctx *app.Context, agents app.AgentContext) error {
 		return fmt.Errorf("failed to sync app files: %w", err)
 	}
 
-	if err := syncGlobalConfig(globalConfigPath, a.opts.GlobalConfig, slices.Sorted(maps.Keys(a.opts.McpServers))); err != nil {
+	if err := syncGlobalConfig(globalConfigPath, a.opts.GlobalConfig, slices.Sorted(maps.Keys(collectMcpServers(agents)))); err != nil {
 		return fmt.Errorf("failed to sync global config: %w", err)
 	}
 
@@ -145,30 +143,45 @@ var baselineSandboxAllowWrite = []string{
 	"~/.claude/plugins/cache",
 }
 
-func (a *App) collectPlugins(agents app.AgentContext) []string {
+func (a *App) alwaysOnPluginIDs() []string {
 	modPlugins := make([]string, 0, len(a.opts.Mods))
 	for _, m := range a.opts.Mods {
 		modPlugins = append(modPlugins, m.PluginID())
 	}
-	sources := [][]string{a.opts.AlwaysOnPlugins, modPlugins}
+	return dedupeStrings(a.opts.AlwaysOnPlugins, modPlugins)
+}
+
+func (a *App) collectPlugins(agents app.AgentContext) []string {
+	sources := [][]string{a.alwaysOnPluginIDs()}
 	for _, ac := range agents.AgentConfigs {
 		sources = append(sources, ac.Plugins)
 	}
 	return dedupeStrings(sources...)
 }
 
-func (a *App) collectBundledPlugins() []string {
-	alwaysOn := map[string]bool{}
-	for _, p := range a.opts.AlwaysOnPlugins {
-		alwaysOn[p] = true
+func collectBundles(agents app.AgentContext) map[string]app.Bundle {
+	bundles := map[string]app.Bundle{}
+	for _, ac := range agents.AgentConfigs {
+		maps.Copy(bundles, ac.Bundles)
 	}
-	for _, m := range a.opts.Mods {
-		alwaysOn[m.PluginID()] = true
+	return bundles
+}
+
+func collectMcpServers(agents app.AgentContext) map[string]map[string]any {
+	servers := map[string]map[string]any{}
+	for _, ac := range agents.AgentConfigs {
+		maps.Copy(servers, ac.McpServers)
 	}
+	return servers
+}
+
+func (a *App) collectBundledPlugins(agents app.AgentContext) []string {
+	alwaysOn := a.alwaysOnPluginIDs()
+	bundles := collectBundles(agents)
 	var bundled []string
-	for _, name := range slices.Sorted(maps.Keys(a.opts.Bundles)) {
-		for _, p := range a.opts.Bundles[name].Plugins {
-			if !alwaysOn[p] {
+	for _, name := range slices.Sorted(maps.Keys(bundles)) {
+		for _, p := range bundles[name].Plugins {
+			if !slices.Contains(alwaysOn, p) {
 				bundled = append(bundled, p)
 			}
 		}
@@ -379,7 +392,7 @@ func (a *App) mergeSettings(outDir string, theme styles.Theme, agents app.AgentC
 	for _, plugin := range a.collectPlugins(agents) {
 		plugins[plugin] = true
 	}
-	for _, plugin := range a.collectBundledPlugins() {
+	for _, plugin := range a.collectBundledPlugins(agents) {
 		plugins[plugin] = false
 	}
 	settings["enabledPlugins"] = plugins
