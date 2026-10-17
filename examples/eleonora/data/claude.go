@@ -14,7 +14,11 @@ func ClaudeOptions() claude.Options {
 		},
 		AlwaysOnPlugins: []string{
 			"superpowers@superpowers-marketplace",
+			"better-claude@eleonorayaya-claude-code",
+			"git-workflows@eleonorayaya-claude-code",
+			"utena-claude@utena",
 		},
+		Bundles: PluginBundles(),
 		Mods: []app.Mod{
 			claude.Prismantis(),
 			claude.PillFooter(claude.PillFooterOptions{

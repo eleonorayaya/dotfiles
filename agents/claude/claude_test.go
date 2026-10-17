@@ -904,3 +904,54 @@ func TestPrismantisDiffRowsMatchClaudeTheme(t *testing.T) {
 		t.Errorf("expected flags in the removed colour, got %v", options["codeFlagColor"])
 	}
 }
+
+func TestMergeSettingsDisablesBundledPlugins(t *testing.T) {
+	fakeHome := t.TempDir()
+	t.Setenv("HOME", fakeHome)
+	existing := map[string]any{
+		"enabledPlugins": map[string]any{
+			"cc-toolkit@m": true,
+			"unmanaged@m":  true,
+		},
+	}
+	if err := util.WriteJSONMap(filepath.Join(fakeHome, ".claude", "settings.json"), existing); err != nil {
+		t.Fatalf("seed settings: %v", err)
+	}
+
+	opts := testOptions()
+	opts.Mods = []app.Mod{{Name: "pill-footer"}}
+	opts.Bundles = map[string][]string{
+		"go":         {"gopls-lsp@claude-plugins-official", "always-on@test-marketplace"},
+		"claude-dev": {"cc-toolkit@m", "pill-footer@pill-footer"},
+	}
+	a := New(opts)
+	ctx := app.AgentContext{
+		AgentConfigs: []app.AgentConfig{
+			{Plugins: []string{"gopls-lsp@claude-plugins-official", "terminal-browser@tb"}},
+		},
+	}
+
+	resultPath, err := a.mergeSettings(t.TempDir(), styles.Theme{}, ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	settings, err := util.ReadJSONMap(resultPath)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+	plugins, _ := settings["enabledPlugins"].(map[string]any)
+
+	want := map[string]any{
+		"gopls-lsp@claude-plugins-official": false,
+		"cc-toolkit@m":                      false,
+		"always-on@test-marketplace":        true,
+		"pill-footer@pill-footer":           true,
+		"terminal-browser@tb":               true,
+		"unmanaged@m":                       true,
+	}
+	for id, v := range want {
+		if plugins[id] != v {
+			t.Errorf("enabledPlugins[%q] = %v, want %v", id, plugins[id], v)
+		}
+	}
+}

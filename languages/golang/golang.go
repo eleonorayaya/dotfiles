@@ -50,7 +50,6 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"cobra-viper@go-skills",
 			"go-spec-reviewer@go-skills",
 			"go-release@go-skills",
-			"wails@go-skills",
 			"fileflow-pathologize@go-skills",
 		},
 		Marketplaces: map[string]app.Marketplace{

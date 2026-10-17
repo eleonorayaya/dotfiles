@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/eleonorayaya/shizuku/app"
+	"github.com/eleonorayaya/shizuku/util"
 )
 
 //go:embed all:contents
@@ -20,6 +21,7 @@ const (
 
 type Options struct {
 	Browser string
+	Bundles map[string][]string
 }
 
 type App struct {
@@ -105,7 +107,6 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 		"BrightYellow":          colors.Palette.BrightYellow,
 		"Path":                  colors.Path,
 		"Error":                 colors.Error,
-		"Browser":               a.opts.Browser,
 	}
 
 	fileMap, err := app.GenerateAppFiles("utena", contents, data, ctx.OutDir)
@@ -113,10 +114,31 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 		return nil, fmt.Errorf("failed to generate utena files: %w", err)
 	}
 
+	daemonPath := filepath.Join(ctx.OutDir, "utena", "daemon.json")
+	if err := util.WriteJSONMap(daemonPath, a.daemonConfig()); err != nil {
+		return nil, fmt.Errorf("failed to write daemon.json: %w", err)
+	}
+	fileMap["daemon.json"] = daemonPath
+
 	return &app.GenerateResult{
 		FileMap: fileMap,
 		DestDir: "~/.config/utena/",
 	}, nil
+}
+
+func (a *App) daemonConfig() map[string]any {
+	cfg := map[string]any{}
+	if a.opts.Browser != "" {
+		cfg["browser"] = a.opts.Browser
+	}
+	if len(a.opts.Bundles) > 0 {
+		catalog := make(map[string]any, len(a.opts.Bundles))
+		for name, plugins := range a.opts.Bundles {
+			catalog[name] = map[string]any{"plugins": plugins}
+		}
+		cfg["bundles"] = catalog
+	}
+	return cfg
 }
 
 func (a *App) Sync(ctx *app.Context) error {

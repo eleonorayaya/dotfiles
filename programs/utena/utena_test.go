@@ -144,3 +144,50 @@ func TestGenerate_DaemonBrowser(t *testing.T) {
 		})
 	}
 }
+
+func TestGenerate_DaemonBundles(t *testing.T) {
+	cases := map[string]struct {
+		opts Options
+		want string
+	}{
+		"none":    {opts: Options{}, want: `{}`},
+		"browser": {opts: Options{Browser: "firefox"}, want: `{"browser":"firefox"}`},
+		"bundles": {
+			opts: Options{Browser: "firefox", Bundles: map[string][]string{
+				"go":   {"gopls-lsp@claude-plugins-official", "go@go-skills"},
+				"docs": {"notion-workspace-plugin@notion-plugin-marketplace"},
+			}},
+			want: `{"browser":"firefox","bundles":{` +
+				`"docs":{"plugins":["notion-workspace-plugin@notion-plugin-marketplace"]},` +
+				`"go":{"plugins":["gopls-lsp@claude-plugins-official","go@go-skills"]}}}`,
+		},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			ctx := &app.Context{
+				OutDir: t.TempDir(),
+				Styles: styles.New(styles.WithTheme(themes.MonadeDark)),
+			}
+			result, err := New(tc.opts).Generate(ctx)
+			if err != nil {
+				t.Fatalf("Generate: %v", err)
+			}
+			raw, err := os.ReadFile(result.FileMap["daemon.json"])
+			if err != nil {
+				t.Fatalf("read daemon.json: %v", err)
+			}
+			var got, want any
+			if err := json.Unmarshal(raw, &got); err != nil {
+				t.Fatalf("parse daemon.json: %v\n%s", err, raw)
+			}
+			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
+				t.Fatal(err)
+			}
+			gotJSON, _ := json.Marshal(got)
+			wantJSON, _ := json.Marshal(want)
+			if string(gotJSON) != string(wantJSON) {
+				t.Errorf("daemon.json = %s, want %s", gotJSON, wantJSON)
+			}
+		})
+	}
+}

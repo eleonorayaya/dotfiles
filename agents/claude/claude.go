@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"maps"
 	"path/filepath"
+	"slices"
 
 	"github.com/eleonorayaya/shizuku/app"
 	"github.com/eleonorayaya/shizuku/styles"
@@ -17,6 +18,7 @@ var contents embed.FS
 type Options struct {
 	Marketplaces            map[string]app.Marketplace
 	AlwaysOnPlugins         []string
+	Bundles                 map[string][]string
 	Mods                    []app.Mod
 	DisabledMcpJsonServers  []string
 	Env                     map[string]string
@@ -147,6 +149,25 @@ func (a *App) collectPlugins(agents app.AgentContext) []string {
 		sources = append(sources, ac.Plugins)
 	}
 	return dedupeStrings(sources...)
+}
+
+func (a *App) collectBundledPlugins() []string {
+	alwaysOn := map[string]bool{}
+	for _, p := range a.opts.AlwaysOnPlugins {
+		alwaysOn[p] = true
+	}
+	for _, m := range a.opts.Mods {
+		alwaysOn[m.PluginID()] = true
+	}
+	var bundled []string
+	for _, name := range slices.Sorted(maps.Keys(a.opts.Bundles)) {
+		for _, p := range a.opts.Bundles[name] {
+			if !alwaysOn[p] {
+				bundled = append(bundled, p)
+			}
+		}
+	}
+	return dedupeStrings(bundled)
 }
 
 func (a *App) collectAllowedCommands(agents app.AgentContext) []string {
@@ -351,6 +372,9 @@ func (a *App) mergeSettings(outDir string, theme styles.Theme, agents app.AgentC
 
 	for _, plugin := range a.collectPlugins(agents) {
 		plugins[plugin] = true
+	}
+	for _, plugin := range a.collectBundledPlugins() {
+		plugins[plugin] = false
 	}
 	settings["enabledPlugins"] = plugins
 

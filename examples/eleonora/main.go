@@ -112,7 +112,7 @@ func main() {
 				sketchybar.New(sketchybar.Options{}),
 				terminalbrowser.New(),
 				terraform.New(),
-				utena.New(utena.Options{}),
+				utena.New(utena.Options{Bundles: data.PluginBundles()}),
 			),
 			shizuku.WithAgents(
 				claude.New(data.ClaudeOptions()),
@@ -142,7 +142,7 @@ func main() {
 			),
 			shizuku.WithPrograms(
 				firefox.New(),
-				utena.New(utena.Options{Browser: "firefox"}),
+				utena.New(utena.Options{Browser: "firefox", Bundles: data.PluginBundles()}),
 				protonpass.New(),
 				protonvpn.New(),
 				vesktop.New(),
