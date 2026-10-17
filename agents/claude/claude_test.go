@@ -998,7 +998,7 @@ func TestEnvSourcesSecretsFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := `[ -f "$HOME/.config/shizuku/secrets.env" ] && { set -a; . "$HOME/.config/shizuku/secrets.env"; set +a; }`
+	want := `if [ -f "$HOME/.config/shizuku/secrets.env" ]; then set -a; . "$HOME/.config/shizuku/secrets.env"; set +a; fi`
 	if !slices.Contains(setup.ZshenvScripts, want) {
 		t.Errorf("ZshenvScripts = %v, want to contain %q", setup.ZshenvScripts, want)
 	}

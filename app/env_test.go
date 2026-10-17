@@ -69,7 +69,7 @@ func TestGenerateEnv_AliasWithSingleQuotes(t *testing.T) {
 	}
 }
 
-const testSecretsLine = `[ -f "$HOME/.config/shizuku/secrets.env" ] && { set -a; . "$HOME/.config/shizuku/secrets.env"; set +a; }`
+const testSecretsLine = `if [ -f "$HOME/.config/shizuku/secrets.env" ]; then set -a; . "$HOME/.config/shizuku/secrets.env"; set +a; fi`
 
 func TestGenerateEnv_ZshenvScripts(t *testing.T) {
 	files, err := GenerateEnvFiles([]*EnvSetup{{

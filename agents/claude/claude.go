@@ -52,7 +52,7 @@ func (a *App) Name() string {
 
 const (
 	utenaShellInit   = `eval "$(utena shell-init)"`
-	secretsEnvSource = `[ -f "$HOME/.config/shizuku/secrets.env" ] && { set -a; . "$HOME/.config/shizuku/secrets.env"; set +a; }`
+	secretsEnvSource = `if [ -f "$HOME/.config/shizuku/secrets.env" ]; then set -a; . "$HOME/.config/shizuku/secrets.env"; set +a; fi`
 )
 
 func (a *App) Env() (*app.EnvSetup, error) {
