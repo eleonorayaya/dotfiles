@@ -131,6 +131,7 @@ func main() {
 				k9s.New(),
 				mise.New(),
 				sketchybar.New(sketchybar.Options{Badges: []string{"Mail", "Slack"}}),
+				utena.New(utena.Options{Browser: "chrome-applescript"}),
 			),
 		),
 		shizuku.WithProfile("personal",
