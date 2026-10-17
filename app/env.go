@@ -14,6 +14,7 @@ type EnvProvider interface {
 }
 
 type EnvSetup struct {
+	ZshenvScripts   []string
 	PreInitScripts  []string
 	Variables       []EnvVar
 	PathDirs        []PathDir
@@ -45,6 +46,7 @@ type ShellFunction struct {
 }
 
 func GenerateEnvFiles(envSetups []*EnvSetup, outDir string) (map[string]string, error) {
+	zshenvScripts := []string{}
 	preInitScripts := []string{}
 	vars := make(map[string]string)
 	pathDirs := []PathDir{}
@@ -54,6 +56,7 @@ func GenerateEnvFiles(envSetups []*EnvSetup, outDir string) (map[string]string, 
 	postInitScripts := []string{}
 
 	for _, setup := range envSetups {
+		zshenvScripts = append(zshenvScripts, setup.ZshenvScripts...)
 		preInitScripts = append(preInitScripts, setup.PreInitScripts...)
 		initScripts = append(initScripts, setup.InitScripts...)
 		postInitScripts = append(postInitScripts, setup.PostInitScripts...)
@@ -115,6 +118,17 @@ func GenerateEnvFiles(envSetups []*EnvSetup, outDir string) (map[string]string, 
 		pathParts = append(pathParts, "$PATH")
 
 		zshenv.WriteString(fmt.Sprintf("export PATH=\"%s\"\n", strings.Join(pathParts, ":")))
+		zshenv.WriteString("\n")
+	}
+
+	if len(zshenvScripts) > 0 {
+		zshenv.WriteString("# ============================================================\n")
+		zshenv.WriteString("# Scripts\n")
+		zshenv.WriteString("# ============================================================\n")
+		for _, script := range zshenvScripts {
+			zshenv.WriteString(script)
+			zshenv.WriteString("\n")
+		}
 		zshenv.WriteString("\n")
 	}
 

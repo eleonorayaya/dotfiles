@@ -57,8 +57,8 @@ const (
 
 func (a *App) Env() (*app.EnvSetup, error) {
 	return &app.EnvSetup{
-		PreInitScripts: []string{secretsEnvSource},
-		InitScripts:    []string{utenaShellInit},
+		ZshenvScripts: []string{secretsEnvSource},
+		InitScripts:   []string{utenaShellInit},
 	}, nil
 }
 
@@ -98,12 +98,8 @@ func (a *App) Sync(ctx *app.Context, agents app.AgentContext) error {
 		return fmt.Errorf("failed to sync app files: %w", err)
 	}
 
-	if err := mergeGlobalConfig(globalConfigPath, a.opts.GlobalConfig); err != nil {
+	if err := syncGlobalConfig(globalConfigPath, a.opts.GlobalConfig, slices.Sorted(maps.Keys(a.opts.McpServers))); err != nil {
 		return fmt.Errorf("failed to sync global config: %w", err)
-	}
-
-	if err := removeGlobalMcpServers(globalConfigPath, slices.Sorted(maps.Keys(a.opts.McpServers))); err != nil {
-		return fmt.Errorf("failed to remove user-scope mcp servers: %w", err)
 	}
 
 	return nil
