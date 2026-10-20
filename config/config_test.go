@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/eleonorayaya/shizuku/config"
+
+	"github.com/eleonorayaya/shizuku/internal/testutil"
 )
 
 func TestLoad_FileNotExist(t *testing.T) {
@@ -123,9 +125,5 @@ func TestYAML_AllFields(t *testing.T) {
 
 func writeConfig(t *testing.T, content string) string {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), "shizuku.yml")
-	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
-		t.Fatal(err)
-	}
-	return path
+	return testutil.WriteFile(t, filepath.Join(t.TempDir(), "shizuku.yml"), content)
 }

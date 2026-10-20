@@ -1,32 +1,24 @@
 package typescript
 
 import (
-	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
-)
 
-func writeFile(t *testing.T, dir, name, contents string) string {
-	t.Helper()
-	path := filepath.Join(dir, name)
-	if err := os.WriteFile(path, []byte(contents), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	return path
-}
+	"github.com/eleonorayaya/shizuku/internal/testutil"
+)
 
 func TestRegistryHosts_ReadsNpmrcAndYarnrc(t *testing.T) {
 	dir := t.TempDir()
-	npmrc := writeFile(t, dir, ".npmrc", `# comment
+	npmrc := testutil.WriteFile(t, filepath.Join(dir, ".npmrc"), `# comment
 ; also a comment
 registry=https://registry.example.test/npm/
 @acme:registry=https://scoped.example.test/acme/
 //auth.example.test/acme/:_authToken=secret-token
 always-auth=true
 `)
-	yarnrc := writeFile(t, dir, ".yarnrc.yml", `npmRegistryServer: "https://yarn.example.test"
+	yarnrc := testutil.WriteFile(t, filepath.Join(dir, ".yarnrc.yml"), `npmRegistryServer: "https://yarn.example.test"
 npmScopes:
   acme:
     npmRegistryServer: "https://yarn-scoped.example.test/acme/"
@@ -77,7 +69,7 @@ func TestRegistryHosts_MissingFilesAddNothing(t *testing.T) {
 
 func TestRegistryHosts_InvalidYarnrcErrors(t *testing.T) {
 	dir := t.TempDir()
-	yarnrc := writeFile(t, dir, ".yarnrc.yml", "npmScopes: [unterminated\n")
+	yarnrc := testutil.WriteFile(t, filepath.Join(dir, ".yarnrc.yml"), "npmScopes: [unterminated\n")
 
 	if _, err := registryHosts(filepath.Join(dir, ".npmrc"), yarnrc); err == nil {
 		t.Fatal("expected an error for invalid yarnrc")
@@ -86,7 +78,7 @@ func TestRegistryHosts_InvalidYarnrcErrors(t *testing.T) {
 
 func TestAgentConfig_AddsRegistryHosts(t *testing.T) {
 	dir := t.TempDir()
-	npmrc := writeFile(t, dir, ".npmrc", "registry=https://registry.example.test/\n")
+	npmrc := testutil.WriteFile(t, filepath.Join(dir, ".npmrc"), "registry=https://registry.example.test/\n")
 	a := &App{npmrcPath: npmrc, yarnrcPath: filepath.Join(dir, ".yarnrc.yml")}
 
 	domains := a.AgentConfig().SandboxAllowedDomains
