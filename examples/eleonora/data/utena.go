@@ -9,3 +9,9 @@ func Utena(browser string) utena.Options {
 		McpServers: McpServers(),
 	}
 }
+
+func CoderUtena() utena.Options {
+	opts := Utena("")
+	opts.Follower = true
+	return opts
+}

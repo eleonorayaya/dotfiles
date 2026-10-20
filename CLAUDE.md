@@ -247,6 +247,8 @@ Import iTerm2 schemes with `task theme:import -- [-name X] [-primary magenta] <f
 
 The base profile is server-safe. `desktop` holds macOS apps, languages and agents; `work` and `personal` use `shizuku.Extends("desktop")`. Only add apps to the base if they work on Debian/Ubuntu.
 
+`coder` is base plus remote-workspace variants: `tuios.Options{Remote: true}` (no laptop after-attach hook, no install), `utena.Options{Follower: true}` (no clone/build in `Install`) and `data.CoderClaudeOptions()` (`Remote: true` skips the sandbox, the `disableClaudeAiConnectors` deletion and `~/.claude.json`). The root `install.sh` bootstraps it on a Linux workspace.
+
 ## Adding a New Language
 
 1. Add language constant to `config/language.go`:

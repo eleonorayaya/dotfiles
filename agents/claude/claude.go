@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"maps"
+	"os"
 	"path/filepath"
 	"slices"
 
@@ -34,6 +35,8 @@ type Options struct {
 	DefaultMode               string
 	AdvisorModel              string
 	GlobalConfig              map[string]any
+	ClaudeMD                  string
+	Remote                    bool
 }
 
 type App struct {
@@ -73,6 +76,14 @@ func (a *App) Generate(ctx *app.Context, agents app.AgentContext) (*app.Generate
 	}
 	fileMap["settings.json"] = mergedPath
 
+	if a.opts.ClaudeMD != "" {
+		claudeMDPath := filepath.Join(ctx.OutDir, "claude", "CLAUDE.md")
+		if err := os.WriteFile(claudeMDPath, []byte(a.opts.ClaudeMD), 0o644); err != nil {
+			return nil, fmt.Errorf("failed to write CLAUDE.md: %w", err)
+		}
+		fileMap["CLAUDE.md"] = claudeMDPath
+	}
+
 	if ctx.Styles.Theme.Name != "" {
 		themeFile, themePath, err := writeClaudeTheme(ctx.OutDir, ctx.Styles.Theme)
 		if err != nil {
@@ -95,6 +106,10 @@ func (a *App) Sync(ctx *app.Context, agents app.AgentContext) error {
 
 	if err := app.SyncAppFiles(result.FileMap, result.DestDir); err != nil {
 		return fmt.Errorf("failed to sync app files: %w", err)
+	}
+
+	if a.opts.Remote {
+		return nil
 	}
 
 	if err := syncGlobalConfig(globalConfigPath, a.opts.GlobalConfig, slices.Sorted(maps.Keys(collectMcpServers(agents)))); err != nil {
@@ -434,7 +449,7 @@ func (a *App) mergeSettings(outDir string, theme styles.Theme, agents app.AgentC
 	}
 	if a.opts.DisableClaudeAiConnectors {
 		settings["disableClaudeAiConnectors"] = true
-	} else {
+	} else if !a.opts.Remote {
 		delete(settings, "disableClaudeAiConnectors")
 	}
 	if theme.Name != "" {
@@ -472,6 +487,22 @@ func (a *App) mergeSettings(outDir string, theme styles.Theme, agents app.AgentC
 		settings["disabledMcpjsonServers"] = mergeStringsIntoAnySlice(disabledMcpRaw, disabledServers)
 	}
 
+	if !a.opts.Remote {
+		settings["sandbox"] = a.mergeSandbox(settings, agents)
+	}
+
+	hooks, _ := settings["hooks"].(map[string]any)
+	settings["hooks"] = mergeHooks(hooks, a.collectHooks(agents))
+
+	outPath := filepath.Join(outDir, "claude", "settings.json")
+	if err := util.WriteJSONMap(outPath, settings); err != nil {
+		return "", fmt.Errorf("failed to write merged settings: %w", err)
+	}
+
+	return outPath, nil
+}
+
+func (a *App) mergeSandbox(settings map[string]any, agents app.AgentContext) map[string]any {
 	sandbox, _ := settings["sandbox"].(map[string]any)
 	if sandbox == nil {
 		sandbox = map[string]any{}
@@ -509,15 +540,5 @@ func (a *App) mergeSettings(outDir string, theme styles.Theme, agents app.AgentC
 
 	excludedRaw, _ := sandbox["excludedCommands"].([]any)
 	sandbox["excludedCommands"] = mergeStringsIntoAnySlice(excludedRaw, a.collectSandboxExcludedCommands(agents))
-	settings["sandbox"] = sandbox
-
-	hooks, _ := settings["hooks"].(map[string]any)
-	settings["hooks"] = mergeHooks(hooks, a.collectHooks(agents))
-
-	outPath := filepath.Join(outDir, "claude", "settings.json")
-	if err := util.WriteJSONMap(outPath, settings); err != nil {
-		return "", fmt.Errorf("failed to write merged settings: %w", err)
-	}
-
-	return outPath, nil
+	return sandbox
 }

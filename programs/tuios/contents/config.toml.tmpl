@@ -86,6 +86,8 @@ resume_agents = "auto"
 
 [dock]
 right = ["notifications", "clock"]
+{{- if not .Remote}}
 
 [hooks]
 after-attach = '''curl -sf --max-time 1 -X PUT -H 'Content-Type: application/json' -d "{\"session_name\":\"$TUIOS_SESSION_ID\"}" http://localhost:3333/mux/hooks/client-session-changed'''
+{{- end}}

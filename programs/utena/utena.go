@@ -22,6 +22,7 @@ const (
 
 type Options struct {
 	Browser    string
+	Follower   bool
 	Bundles    map[string]app.Bundle
 	McpServers map[string]map[string]any
 }
@@ -39,6 +40,10 @@ func (a *App) Name() string {
 }
 
 func (a *App) Install(ctx *app.Context) error {
+	if a.opts.Follower {
+		return nil
+	}
+
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return fmt.Errorf("failed to get home directory: %w", err)
