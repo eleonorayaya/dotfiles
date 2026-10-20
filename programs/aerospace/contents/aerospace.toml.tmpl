@@ -138,6 +138,12 @@ T = 'main'
 ]
 
 
+# utena picker
+[[on-window-detected]]
+if.app-id = 'net.kovidgoyal.kitty'
+if.window-title-regex-substring = '^utena-picker$'
+run = [ 'layout floating' ]
+
 # Kitty
 [[on-window-detected]]
 if.app-id = 'net.kovidgoyal.kitty'

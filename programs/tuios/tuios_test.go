@@ -94,3 +94,53 @@ func TestRemoteInstallIsNoop(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
+
+const pickerCommand = "$HOME/.local/bin/utena picker --app-id com.example.term --title utena-picker -- /opt/term --title utena-picker -o a=b+c"
+
+const pickerBinding = `[[keybindings.command]]
+key = "prefix+p"
+type = "shell"
+command = '''` + pickerCommand + `'''
+description = "utena sessions"
+`
+
+const popupBinding = `[[keybindings.command]]
+key = "prefix+p"
+type = "popup"
+command = "UTENA_POPUP=1 $HOME/.local/bin/utena"
+description = "utena sessions"
+`
+
+func TestGenerateConfigWithPickerUsesShellBinding(t *testing.T) {
+	config := generateConfig(t, Options{Picker: pickerCommand})
+
+	if !strings.Contains(config, "start_in_terminal_mode = true\n\n"+pickerBinding+"\n[[keybindings.command]]\nkey = \"prefix+n\"") {
+		t.Errorf("expected the picker shell binding, got:\n%s", config)
+	}
+	for _, unwanted := range []string{`type = "popup"`, "UTENA_POPUP", "&#", "&quot;"} {
+		if strings.Contains(config, unwanted) {
+			t.Errorf("expected picker config to not contain %s", unwanted)
+		}
+	}
+}
+
+func TestGenerateConfigWithoutPickerKeepsPopup(t *testing.T) {
+	config := generateConfig(t, Options{})
+
+	if !strings.Contains(config, "start_in_terminal_mode = true\n\n"+popupBinding+"\n[[keybindings.command]]\nkey = \"prefix+n\"") {
+		t.Errorf("expected the popup binding, got:\n%s", config)
+	}
+}
+
+func TestGenerateRemoteConfigHasNoSessionPicker(t *testing.T) {
+	for _, opts := range []Options{{Remote: true}, {Remote: true, Picker: pickerCommand}} {
+		config := generateConfig(t, opts)
+
+		if strings.Contains(config, "prefix+p") {
+			t.Errorf("expected remote config to not bind prefix+p, got:\n%s", config)
+		}
+		if !strings.Contains(config, "start_in_terminal_mode = true\n\n[[keybindings.command]]\nkey = \"prefix+n\"") {
+			t.Errorf("unexpected remote keybindings:\n%s", config)
+		}
+	}
+}

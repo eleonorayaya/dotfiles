@@ -3,6 +3,7 @@ package tuios
 import (
 	"embed"
 	"fmt"
+	"html/template"
 	"os"
 	"path/filepath"
 
@@ -15,6 +16,7 @@ var contents embed.FS
 
 type Options struct {
 	Remote bool
+	Picker string
 }
 
 type App struct {
@@ -57,6 +59,7 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 		"Dark":       ctx.Styles.Theme.Type == "dark",
 		"Background": ctx.Styles.TerminalBackground(),
 		"Remote":     a.opts.Remote,
+		"Picker":     template.HTML(a.opts.Picker),
 	}, ctx.OutDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate app files: %w", err)

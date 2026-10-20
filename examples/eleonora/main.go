@@ -121,6 +121,7 @@ func main() {
 				sketchybar.New(sketchybar.Options{}),
 				terminalbrowser.New(),
 				terraform.New(),
+				tuios.New(tuios.Options{Picker: data.UtenaPicker()}),
 				utena.New(data.Utena("")),
 			),
 			shizuku.WithAgents(
