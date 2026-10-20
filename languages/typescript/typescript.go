@@ -1,20 +1,42 @@
 package typescript
 
 import (
+	"log/slog"
+
 	"github.com/eleonorayaya/shizuku/app"
 )
 
-type App struct{}
+const yarnProxyEnv = `if [ -n "$HTTP_PROXY" ]; then export YARN_HTTP_PROXY="$HTTP_PROXY"; fi
+if [ -n "$HTTPS_PROXY" ]; then export YARN_HTTPS_PROXY="$HTTPS_PROXY"; fi`
+
+type App struct {
+	npmrcPath  string
+	yarnrcPath string
+}
 
 func New() *App {
-	return &App{}
+	return &App{
+		npmrcPath:  "~/.npmrc",
+		yarnrcPath: "~/.yarnrc.yml",
+	}
 }
 
 func (a *App) Name() string {
 	return "typescript"
 }
 
+func (a *App) Env() (*app.EnvSetup, error) {
+	return &app.EnvSetup{
+		ZshenvScripts: []string{yarnProxyEnv},
+	}, nil
+}
+
 func (a *App) AgentConfig() app.AgentConfig {
+	registries, err := registryHosts(a.npmrcPath, a.yarnrcPath)
+	if err != nil {
+		slog.Warn("failed to read package registry hosts", "error", err)
+	}
+
 	return app.AgentConfig{
 		Plugins: []string{
 			"typescript-lsp@claude-plugins-official",
@@ -25,9 +47,16 @@ func (a *App) AgentConfig() app.AgentConfig {
 		AllowedBashCommands: []string{
 			"npm install",
 		},
-		SandboxAllowedDomains: []string{
+		SandboxAllowedDomains: append([]string{
 			"registry.npmjs.org",
-		},
+			"registry.yarnpkg.com",
+			"repo.yarnpkg.com",
+			"versions.backstage.io",
+			"codeload.github.com",
+			"objects.githubusercontent.com",
+			"release-assets.githubusercontent.com",
+			"nodejs.org",
+		}, registries...),
 		SandboxAllowWrite: []string{
 			"~/.npm",
 			"~/.node-gyp",
