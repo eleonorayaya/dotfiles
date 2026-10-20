@@ -1,22 +1,16 @@
 package firefox
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
-)
 
-func writeFile(t *testing.T, path, body string) {
-	t.Helper()
-	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
-		t.Fatal(err)
-	}
-}
+	"github.com/eleonorayaya/shizuku/internal/testutil"
+)
 
 func TestDefaultProfileDirPrefersInstallDefault(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "installs.ini"), "[2656FF1E876E9973]\nDefault=Profiles/abc.Main\nLocked=1\n")
-	writeFile(t, filepath.Join(dir, "profiles.ini"), "[Profile0]\nName=default\nIsRelative=1\nPath=Profiles/xyz.default\nDefault=1\n")
+	testutil.WriteFile(t, filepath.Join(dir, "installs.ini"), "[2656FF1E876E9973]\nDefault=Profiles/abc.Main\nLocked=1\n")
+	testutil.WriteFile(t, filepath.Join(dir, "profiles.ini"), "[Profile0]\nName=default\nIsRelative=1\nPath=Profiles/xyz.default\nDefault=1\n")
 
 	got, err := defaultProfileDir(dir)
 	if err != nil {
@@ -29,7 +23,7 @@ func TestDefaultProfileDirPrefersInstallDefault(t *testing.T) {
 
 func TestDefaultProfileDirFallsBackToProfilesDefault(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "profiles.ini"), "[General]\nVersion=2\n\n[Profile1]\nPath=Profiles/one\n\n[Profile0]\nPath=Profiles/two\nDefault=1\n")
+	testutil.WriteFile(t, filepath.Join(dir, "profiles.ini"), "[General]\nVersion=2\n\n[Profile1]\nPath=Profiles/one\n\n[Profile0]\nPath=Profiles/two\nDefault=1\n")
 
 	got, err := defaultProfileDir(dir)
 	if err != nil {

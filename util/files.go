@@ -116,7 +116,7 @@ func EnsureDirExists(dirPath string) error {
 	return nil
 }
 
-func ReadJSONMap(path string) (map[string]any, error) {
+func ReadFileIfExists(path string) ([]byte, error) {
 	normalized, err := NormalizeFilePath(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to normalize path: %w", err)
@@ -125,9 +125,21 @@ func ReadJSONMap(path string) (map[string]any, error) {
 	data, err := os.ReadFile(normalized)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return map[string]any{}, nil
+			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to read %s: %w", path, err)
+	}
+
+	return data, nil
+}
+
+func ReadJSONMap(path string) (map[string]any, error) {
+	data, err := ReadFileIfExists(path)
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return map[string]any{}, nil
 	}
 
 	var result map[string]any

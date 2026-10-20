@@ -41,6 +41,14 @@ func (a *App) Install(ctx *app.Context) error {
 	return nil
 }
 
+func (a *App) AgentConfig() app.AgentConfig {
+	return app.AgentConfig{
+		SandboxAllowedDomains: []string{
+			"releases.hashicorp.com",
+		},
+	}
+}
+
 func (a *App) Env() (*app.EnvSetup, error) {
 	return &app.EnvSetup{
 		Aliases: []app.Alias{
