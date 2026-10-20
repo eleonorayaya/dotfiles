@@ -1,11 +1,8 @@
 package typescript
 
 import (
-	"bufio"
 	"fmt"
 	"net/url"
-	"os"
-	"slices"
 	"strings"
 
 	"github.com/eleonorayaya/shizuku/util"
@@ -32,37 +29,18 @@ func registryHosts(npmrcPath, yarnrcPath string) ([]string, error) {
 		return nil, err
 	}
 
-	hosts := append(npmHosts, yarnHosts...)
-	slices.Sort(hosts)
-	return slices.Compact(hosts), nil
-}
-
-func readOptional(path string) ([]byte, error) {
-	normalized, err := util.NormalizeFilePath(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to normalize path: %w", err)
-	}
-
-	data, err := os.ReadFile(normalized)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to read %s: %w", path, err)
-	}
-	return data, nil
+	return append(npmHosts, yarnHosts...), nil
 }
 
 func npmrcHosts(path string) ([]string, error) {
-	data, err := readOptional(path)
+	data, err := util.ReadFileIfExists(path)
 	if err != nil || data == nil {
 		return nil, err
 	}
 
 	var hosts []string
-	scanner := bufio.NewScanner(strings.NewReader(string(data)))
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
+	for line := range strings.Lines(string(data)) {
+		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") {
 			continue
 		}
@@ -78,14 +56,11 @@ func npmrcHosts(path string) ([]string, error) {
 			hosts = appendHost(hosts, strings.TrimSpace(value))
 		}
 	}
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("failed to scan %s: %w", path, err)
-	}
 	return hosts, nil
 }
 
 func yarnrcHosts(path string) ([]string, error) {
-	data, err := readOptional(path)
+	data, err := util.ReadFileIfExists(path)
 	if err != nil || data == nil {
 		return nil, err
 	}

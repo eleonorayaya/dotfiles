@@ -51,11 +51,7 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"registry.npmjs.org",
 			"registry.yarnpkg.com",
 			"repo.yarnpkg.com",
-			"versions.backstage.io",
 			"codeload.github.com",
-			"objects.githubusercontent.com",
-			"release-assets.githubusercontent.com",
-			"nodejs.org",
 		}, registries...),
 		SandboxAllowWrite: []string{
 			"~/.npm",

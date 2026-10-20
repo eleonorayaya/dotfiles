@@ -44,6 +44,7 @@ func ClaudeOptions() claude.Options {
 			"api.anthropic.com",
 			"code.claude.com",
 			"formulae.brew.sh",
+			"versions.backstage.io",
 		},
 		SandboxAllowWrite: []string{
 			"/tmp",

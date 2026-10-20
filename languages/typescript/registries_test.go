@@ -43,6 +43,8 @@ npmRegistries:
 		t.Fatalf("registryHosts: %v", err)
 	}
 
+	slices.Sort(got)
+	got = slices.Compact(got)
 	want := []string{
 		"auth.example.test",
 		"registry.example.test",

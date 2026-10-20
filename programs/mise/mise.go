@@ -20,6 +20,9 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"mise.jdx.dev",
 			"mise-versions.jdx.dev",
 			"hk.jdx.dev",
+			"nodejs.org",
+			"objects.githubusercontent.com",
+			"release-assets.githubusercontent.com",
 		},
 		SandboxAllowWrite: []string{
 			"~/.cache/mise",
