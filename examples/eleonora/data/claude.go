@@ -104,22 +104,6 @@ func ClaudeOptions() claude.Options {
 			"aws",
 			"aws:*",
 		},
-		AskBashCommands: []string{
-			"git push *--force*",
-			"git push -f *",
-			"git push * -f",
-			"git push * -f *",
-			"git reset *--hard*",
-			"git clean *",
-			"git rm *",
-			"docker compose up *",
-			"docker compose down *",
-		},
-		AskToolPermissions: []string{
-			"mcp__*__notion-update-data-source",
-			"mcp__*__notion-delete-pages",
-			"mcp__*__notion-delete-databases",
-		},
 		DefaultMode:  "plan",
 		AdvisorModel: "opus",
 	}
