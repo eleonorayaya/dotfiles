@@ -85,7 +85,7 @@ func main() {
 			styles.WithGapOverride("built-in retina", laptopGaps),
 		)),
 		shizuku.WithPrograms(
-			git.New(),
+			git.New(data.GitOptions()),
 			terminal.New(),
 			helix.New(),
 			bat.New(),

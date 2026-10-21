@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"log/slog"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -26,10 +27,26 @@ var desiredGitConfigs = map[string]string{
 	"push.autoSetupRemote": "true",
 }
 
-type App struct{}
+type Identity struct {
+	Name           string
+	Email          string
+	RemotePatterns []string
+}
 
-func New() *App {
-	return &App{}
+type Options struct {
+	Identities []Identity
+}
+
+type App struct {
+	opts Options
+}
+
+func New(opts Options) *App {
+	return &App{opts: opts}
+}
+
+func identityFileName(id Identity) string {
+	return ".config/git/identity-" + id.Name + ".gitconfig"
 }
 
 func (a *App) Name() string {
@@ -133,11 +150,22 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 		return nil, fmt.Errorf("failed to generate app files: %w", err)
 	}
 
-	mergedPath, err := mergeGitConfig(ctx.OutDir)
+	mergedPath, err := mergeGitConfig(ctx.OutDir, a.opts.Identities)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge gitconfig: %w", err)
 	}
 	fileMap[".gitconfig"] = mergedPath
+
+	for _, id := range a.opts.Identities {
+		idPath := filepath.Join(ctx.OutDir, "git", identityFileName(id))
+		if err := util.EnsureDirExists(filepath.Dir(idPath)); err != nil {
+			return nil, fmt.Errorf("failed to create identity dir: %w", err)
+		}
+		if err := os.WriteFile(idPath, []byte("[user]\n\temail = "+id.Email+"\n"), 0o644); err != nil {
+			return nil, fmt.Errorf("failed to write %s identity: %w", id.Name, err)
+		}
+		fileMap[identityFileName(id)] = idPath
+	}
 
 	return &app.GenerateResult{
 		FileMap: fileMap,
@@ -158,7 +186,7 @@ func (a *App) Sync(ctx *app.Context) error {
 	return nil
 }
 
-func mergeGitConfig(outDir string) (string, error) {
+func mergeGitConfig(outDir string, identities []Identity) (string, error) {
 	gitConfigPath, err := util.NormalizeFilePath("~/.gitconfig")
 	if err != nil {
 		return "", fmt.Errorf("failed to normalize gitconfig path: %w", err)
@@ -174,6 +202,13 @@ func mergeGitConfig(outDir string) (string, error) {
 		section := key[:lastDot]
 		keyName := key[lastDot+1:]
 		cfg.Section(section).Key(keyName).SetValue(value)
+	}
+
+	for _, id := range identities {
+		for _, pattern := range id.RemotePatterns {
+			section := `includeIf "hasconfig:remote.*.url:` + pattern + `"`
+			cfg.Section(section).Key("path").SetValue("~/" + identityFileName(id))
+		}
 	}
 
 	outPath := filepath.Join(outDir, "git", ".gitconfig")

@@ -679,6 +679,77 @@ func TestMergeSettingsWritesDeniedCommands(t *testing.T) {
 	}
 }
 
+func TestCollectAskCommandsWrapsBashCommandsAndPassesThroughToolPermissions(t *testing.T) {
+	opts := testOptions()
+	opts.AskBashCommands = []string{"git reset --hard *", "git reset --hard *"}
+	opts.AskToolPermissions = []string{"mcp__*__notion-delete-pages"}
+	a := New(opts)
+
+	cmds := a.collectAskCommands()
+
+	if len(cmds) != 2 {
+		t.Fatalf("expected 2 ask rules, got %d: %v", len(cmds), cmds)
+	}
+	for _, want := range []string{"Bash(git reset --hard *)", "mcp__*__notion-delete-pages"} {
+		if !contains(cmds, want) {
+			t.Errorf("expected %q to be present, got %v", want, cmds)
+		}
+	}
+}
+
+func TestCollectAskCommandsEmpty(t *testing.T) {
+	a := New(testOptions())
+
+	cmds := a.collectAskCommands()
+
+	if len(cmds) != 0 {
+		t.Errorf("expected no ask rules, got %d: %v", len(cmds), cmds)
+	}
+}
+
+func TestMergeSettingsWritesAskCommands(t *testing.T) {
+	opts := testOptions()
+	opts.AskBashCommands = []string{"git clean *"}
+	opts.AskToolPermissions = []string{"mcp__*__notion-delete-pages"}
+	a := New(opts)
+
+	outDir := t.TempDir()
+	resultPath, err := a.mergeSettings(outDir, styles.Theme{}, app.AgentContext{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, err := os.ReadFile(resultPath)
+	if err != nil {
+		t.Fatalf("failed to read output: %v", err)
+	}
+
+	var settings map[string]any
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatalf("failed to parse output: %v", err)
+	}
+
+	permissions, ok := settings["permissions"].(map[string]any)
+	if !ok {
+		t.Fatal("expected permissions to be a map")
+	}
+	askRaw, ok := permissions["ask"].([]any)
+	if !ok {
+		t.Fatal("expected permissions.ask to be a slice")
+	}
+	ask := make([]string, 0, len(askRaw))
+	for _, entry := range askRaw {
+		if s, ok := entry.(string); ok {
+			ask = append(ask, s)
+		}
+	}
+	for _, want := range []string{"Bash(git clean *)", "mcp__*__notion-delete-pages"} {
+		if !contains(ask, want) {
+			t.Errorf("expected %q in permissions.ask, got %v", want, ask)
+		}
+	}
+}
+
 func TestModPluginIDDefaultsMarketplaceToName(t *testing.T) {
 	if got := (app.Mod{Name: "prismantis"}).PluginID(); got != "prismantis@prismantis" {
 		t.Errorf("expected prismantis@prismantis, got %q", got)

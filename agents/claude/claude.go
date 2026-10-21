@@ -32,6 +32,8 @@ type Options struct {
 	AllowedBashCommands       []string
 	AllowedToolPermissions    []string
 	DeniedBashCommands        []string
+	AskBashCommands           []string
+	AskToolPermissions        []string
 	DefaultMode               string
 	AdvisorModel              string
 	GlobalConfig              map[string]any
@@ -236,6 +238,16 @@ func (a *App) collectDeniedCommands() []string {
 	return permissions
 }
 
+func (a *App) collectAskCommands() []string {
+	cmds := dedupeStrings(a.opts.AskBashCommands)
+	toolPerms := dedupeStrings(a.opts.AskToolPermissions)
+	permissions := make([]string, 0, len(cmds)+len(toolPerms))
+	for _, cmd := range cmds {
+		permissions = append(permissions, "Bash("+cmd+")")
+	}
+	return append(permissions, toolPerms...)
+}
+
 func collectBashPrefixes(agents app.AgentContext) []string {
 	var raw []string
 	for _, ac := range agents.AgentConfigs {
@@ -428,6 +440,11 @@ func (a *App) mergeSettings(outDir string, theme styles.Theme, agents app.AgentC
 
 	denyRaw, _ := permissions["deny"].([]any)
 	permissions["deny"] = mergeStringsIntoAnySlice(denyRaw, a.collectDeniedCommands())
+
+	if askCmds := a.collectAskCommands(); len(askCmds) > 0 {
+		askRaw, _ := permissions["ask"].([]any)
+		permissions["ask"] = mergeStringsIntoAnySlice(askRaw, askCmds)
+	}
 	settings["permissions"] = permissions
 
 	if len(a.opts.Env) > 0 {
