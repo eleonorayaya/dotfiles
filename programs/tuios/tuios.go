@@ -3,6 +3,7 @@ package tuios
 import (
 	"embed"
 	"fmt"
+	"html/template"
 	"os"
 	"path/filepath"
 
@@ -13,10 +14,17 @@ import (
 //go:embed all:contents
 var contents embed.FS
 
-type App struct{}
+type Options struct {
+	Remote bool
+	Picker string
+}
 
-func New() *App {
-	return &App{}
+type App struct {
+	opts Options
+}
+
+func New(opts Options) *App {
+	return &App{opts: opts}
 }
 
 func (a *App) Name() string {
@@ -34,6 +42,10 @@ var spec = pkg.Spec{
 }
 
 func (a *App) Install(ctx *app.Context) error {
+	if a.opts.Remote {
+		return nil
+	}
+
 	if err := pkg.Install(spec); err != nil {
 		return fmt.Errorf("failed to install tuios: %w", err)
 	}
@@ -46,6 +58,8 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 		"Colors":     ctx.Styles.Theme.Colors,
 		"Dark":       ctx.Styles.Theme.Type == "dark",
 		"Background": ctx.Styles.TerminalBackground(),
+		"Remote":     a.opts.Remote,
+		"Picker":     template.HTML(a.opts.Picker),
 	}, ctx.OutDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate app files: %w", err)

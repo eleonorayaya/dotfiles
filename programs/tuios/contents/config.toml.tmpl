@@ -50,13 +50,19 @@ terminal_focus_right = ['ctrl+l', 'alt+right']
 tiled = true
 open_default_window = true
 start_in_terminal_mode = true
-
+{{if .Remote}}{{else if .Picker}}
+[[keybindings.command]]
+key = "prefix+p"
+type = "shell"
+command = '''{{.Picker}}'''
+description = "utena sessions"
+{{else}}
 [[keybindings.command]]
 key = "prefix+p"
 type = "popup"
 command = "UTENA_POPUP=1 $HOME/.local/bin/utena"
 description = "utena sessions"
-
+{{end}}
 [[keybindings.command]]
 key = "prefix+n"
 type = "shell"
@@ -86,6 +92,8 @@ resume_agents = "auto"
 
 [dock]
 right = ["notifications", "clock"]
+{{- if not .Remote}}
 
 [hooks]
 after-attach = '''curl -sf --max-time 1 -X PUT -H 'Content-Type: application/json' -d "{\"session_name\":\"$TUIOS_SESSION_ID\"}" http://localhost:3333/mux/hooks/client-session-changed'''
+{{- end}}

@@ -218,3 +218,47 @@ func TestAgentConfigProvidesShellInit(t *testing.T) {
 		t.Errorf("ShellInitScripts = %v", cfg.ShellInitScripts)
 	}
 }
+
+func TestFollowerInstallSkipsCloneAndBuild(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("PATH", t.TempDir())
+
+	if err := New(Options{Follower: true}).Install(&app.Context{}); err != nil {
+		t.Fatalf("Install: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(os.Getenv("HOME"), cloneDir)); !os.IsNotExist(err) {
+		t.Errorf("expected no clone, got err %v", err)
+	}
+}
+
+func TestFollowerSyncWritesDaemonConfigAndGitHook(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(home, "gitconfig"))
+
+	ctx := &app.Context{
+		OutDir: t.TempDir(),
+		Styles: styles.New(styles.WithTheme(themes.MonadeDark)),
+	}
+	opts := Options{
+		Follower: true,
+		Bundles:  map[string]app.Bundle{"go": {Plugins: []string{"go@go-skills"}}},
+	}
+	if err := New(opts).Sync(ctx); err != nil {
+		t.Fatalf("Sync: %v", err)
+	}
+
+	raw, err := os.ReadFile(filepath.Join(home, ".config", "utena", "daemon.json"))
+	if err != nil {
+		t.Fatalf("read daemon.json: %v", err)
+	}
+	if want := `"go@go-skills"`; !strings.Contains(string(raw), want) {
+		t.Errorf("daemon.json missing %s: %s", want, raw)
+	}
+	if strings.Contains(string(raw), "follower") {
+		t.Errorf("daemon.json should not carry the follower option: %s", raw)
+	}
+	if got := gitConfigGetAll(t, "hook.utena.command"); len(got) != 1 || got[0] != hookCommand {
+		t.Fatalf("hook.utena.command = %v", got)
+	}
+}

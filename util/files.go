@@ -1,9 +1,9 @@
 package util
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/fs"
 	"log/slog"
 	"os"
@@ -19,38 +19,12 @@ func CopyFileFromFS(srcFS fs.FS, srcName, outFile string) error {
 		return fmt.Errorf("failed to normalize out file path: %w", err)
 	}
 
-	if _, err := os.Lstat(normalizedOutFile); err == nil {
-		backupPath := normalizedOutFile + ".bak"
-		if err := os.Rename(normalizedOutFile, backupPath); err != nil {
-			return fmt.Errorf("failed to back up existing destination file: %w", err)
-		}
-	}
-
-	sourceFile, err := srcFS.Open(srcName)
+	content, err := fs.ReadFile(srcFS, srcName)
 	if err != nil {
-		return fmt.Errorf("failed to open source file: %w", err)
-	}
-	defer sourceFile.Close()
-
-	destinationFile, err := os.Create(normalizedOutFile)
-	if err != nil {
-		return fmt.Errorf("failed to create destination file: %w", err)
-	}
-	defer destinationFile.Close()
-
-	if _, err := io.Copy(destinationFile, sourceFile); err != nil {
-		return fmt.Errorf("failed to copy file: %w", err)
+		return fmt.Errorf("failed to read source file: %w", err)
 	}
 
-	if err := destinationFile.Sync(); err != nil {
-		return fmt.Errorf("failed to sync destination file: %w", err)
-	}
-
-	if err := os.Chmod(normalizedOutFile, os.ModePerm); err != nil {
-		return fmt.Errorf("failed to set destination file perms: %w", err)
-	}
-
-	return nil
+	return writeSyncedFile(normalizedOutFile, content, 0)
 }
 
 func CopyFile(inFile, outFile string) error {
@@ -66,40 +40,73 @@ func CopyFile(inFile, outFile string) error {
 		return fmt.Errorf("failed to normalize out file path: %w", err)
 	}
 
-	if _, err := os.Lstat(normalizedOutFile); err == nil {
-		backupPath := normalizedOutFile + ".bak"
-		if err := os.Rename(normalizedOutFile, backupPath); err != nil {
-			return fmt.Errorf("failed to back up existing destination file: %w", err)
-		}
+	info, err := os.Stat(normalizedInFile)
+	if err != nil {
+		return fmt.Errorf("failed to stat source file: %w", err)
 	}
 
-	sourceFile, err := os.Open(normalizedInFile)
+	content, err := os.ReadFile(normalizedInFile)
 	if err != nil {
-		return fmt.Errorf("failed to open source file: %w", err)
-	}
-	defer sourceFile.Close()
-
-	destinationFile, err := os.Create(normalizedOutFile)
-	if err != nil {
-		return fmt.Errorf("failed to create destination file: %w", err)
-	}
-	defer destinationFile.Close()
-
-	_, err = io.Copy(destinationFile, sourceFile)
-	if err != nil {
-		return fmt.Errorf("failed to copy file: %w", err)
+		return fmt.Errorf("failed to read source file: %w", err)
 	}
 
-	err = destinationFile.Sync()
-	if err != nil {
-		return fmt.Errorf("failed to sync destination file: %w", err)
+	return writeSyncedFile(normalizedOutFile, content, info.Mode())
+}
+
+func syncedFileMode(content []byte, srcMode fs.FileMode) fs.FileMode {
+	if srcMode.Perm()&0o111 != 0 || bytes.HasPrefix(content, []byte("#!")) {
+		return 0o755
+	}
+	return 0o644
+}
+
+func writeSyncedFile(dest string, content []byte, srcMode fs.FileMode) error {
+	if err := replaceDestination(dest, content); err != nil {
+		return err
 	}
 
-	err = os.Chmod(normalizedOutFile, os.ModePerm)
-	if err != nil {
+	mode := syncedFileMode(content, srcMode)
+	if err := os.WriteFile(dest, content, mode); err != nil {
+		return fmt.Errorf("failed to write destination file: %w", err)
+	}
+
+	if err := os.Chmod(dest, mode); err != nil {
 		return fmt.Errorf("failed to set destination file perms: %w", err)
 	}
 
+	return nil
+}
+
+func replaceDestination(dest string, content []byte) error {
+	info, err := os.Lstat(dest)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("failed to stat destination file: %w", err)
+	}
+
+	if info.Mode().IsRegular() {
+		existing, err := os.ReadFile(dest)
+		if err != nil {
+			return fmt.Errorf("failed to read destination file: %w", err)
+		}
+		if bytes.Equal(existing, content) {
+			return nil
+		}
+	}
+
+	backupPath := dest + ".bak"
+	if _, err := os.Lstat(backupPath); os.IsNotExist(err) {
+		if err := os.Rename(dest, backupPath); err != nil {
+			return fmt.Errorf("failed to back up existing destination file: %w", err)
+		}
+		return nil
+	}
+
+	if err := os.Remove(dest); err != nil {
+		return fmt.Errorf("failed to remove existing destination file: %w", err)
+	}
 	return nil
 }
 
@@ -165,7 +172,7 @@ func WriteJSON(path string, data any) error {
 	}
 	merged = append(merged, '\n')
 
-	if err := os.WriteFile(path, merged, os.ModePerm); err != nil {
+	if err := os.WriteFile(path, merged, 0o644); err != nil {
 		return fmt.Errorf("failed to write %s: %w", path, err)
 	}
 

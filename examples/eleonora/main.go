@@ -90,7 +90,16 @@ func main() {
 			helix.New(),
 			bat.New(),
 			lsd.New(),
-			tuios.New(),
+			tuios.New(tuios.Options{}),
+		),
+		shizuku.WithProfile("coder",
+			shizuku.WithPrograms(
+				tuios.New(tuios.Options{Remote: true}),
+				utena.New(data.CoderUtena()),
+			),
+			shizuku.WithAgents(
+				claude.New(data.CoderClaudeOptions()),
+			),
 		),
 		shizuku.WithProfile("desktop",
 			shizuku.WithLanguages(
@@ -112,6 +121,7 @@ func main() {
 				sketchybar.New(sketchybar.Options{}),
 				terminalbrowser.New(),
 				terraform.New(),
+				tuios.New(tuios.Options{Picker: data.UtenaPicker()}),
 				utena.New(data.Utena("")),
 			),
 			shizuku.WithAgents(

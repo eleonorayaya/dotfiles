@@ -1024,3 +1024,124 @@ func TestEnvEmitsAgentShellInitScripts(t *testing.T) {
 		t.Errorf("InitScripts = %v, want %v", setup.InitScripts, want)
 	}
 }
+
+func TestMergeSettingsRemoteLeavesSandboxAndConnectors(t *testing.T) {
+	fakeHome := t.TempDir()
+	t.Setenv("HOME", fakeHome)
+	existing := map[string]any{
+		"sandbox":                   map[string]any{"enabled": false},
+		"disableClaudeAiConnectors": true,
+	}
+	if err := util.WriteJSONMap(filepath.Join(fakeHome, ".claude", "settings.json"), existing); err != nil {
+		t.Fatalf("seed settings: %v", err)
+	}
+
+	opts := testOptions()
+	opts.Remote = true
+	ctx := app.AgentContext{AgentConfigs: []app.AgentConfig{
+		{SandboxAllowedDomains: []string{"example.com"}},
+		{Bundles: map[string]app.Bundle{"go": {Plugins: []string{"go@go-skills"}}}},
+	}}
+	resultPath, err := New(opts).mergeSettings(t.TempDir(), styles.Theme{}, ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	settings, err := util.ReadJSONMap(resultPath)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+
+	if sandbox, _ := settings["sandbox"].(map[string]any); len(sandbox) != 1 || sandbox["enabled"] != false {
+		t.Errorf("sandbox = %v, want existing value untouched", settings["sandbox"])
+	}
+	if settings["disableClaudeAiConnectors"] != true {
+		t.Errorf("disableClaudeAiConnectors = %v, want existing value untouched", settings["disableClaudeAiConnectors"])
+	}
+	plugins, _ := settings["enabledPlugins"].(map[string]any)
+	if plugins["go@go-skills"] != false || plugins["always-on@test-marketplace"] != true {
+		t.Errorf("enabledPlugins = %v", plugins)
+	}
+	known, _ := settings["extraKnownMarketplaces"].(map[string]any)
+	if _, ok := known["test-marketplace"]; !ok {
+		t.Errorf("extraKnownMarketplaces = %v, want test-marketplace", known)
+	}
+}
+
+func TestMergeSettingsRemoteAddsNoSandbox(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	opts := testOptions()
+	opts.Remote = true
+	resultPath, err := New(opts).mergeSettings(t.TempDir(), styles.Theme{}, app.AgentContext{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	settings, err := util.ReadJSONMap(resultPath)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+	if _, ok := settings["sandbox"]; ok {
+		t.Errorf("sandbox = %v, want unset", settings["sandbox"])
+	}
+}
+
+func TestGenerateWritesClaudeMD(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	content := "- use `code` and <placeholders> verbatim\n"
+	opts := testOptions()
+	opts.ClaudeMD = content
+	ctx := &app.Context{OutDir: t.TempDir()}
+
+	result, err := New(opts).Generate(ctx, app.AgentContext{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	data, err := os.ReadFile(result.FileMap["CLAUDE.md"])
+	if err != nil {
+		t.Fatalf("read CLAUDE.md: %v", err)
+	}
+	if string(data) != content {
+		t.Errorf("CLAUDE.md = %q, want %q", data, content)
+	}
+}
+
+func TestGenerateWithoutClaudeMDLeavesItUnmanaged(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	result, err := New(testOptions()).Generate(&app.Context{OutDir: t.TempDir()}, app.AgentContext{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, ok := result.FileMap["CLAUDE.md"]; ok {
+		t.Error("expected CLAUDE.md to be unmanaged without ClaudeMD")
+	}
+}
+
+func TestRemoteSyncLeavesGlobalConfigAlone(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	globalPath := filepath.Join(home, ".claude.json")
+	seed := `{"mcpServers":{"homeassistant":{}}}`
+	if err := os.WriteFile(globalPath, []byte(seed), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	opts := testOptions()
+	opts.Remote = true
+	opts.GlobalConfig = map[string]any{"leftArrowOpensAgents": false}
+	agents := app.AgentContext{AgentConfigs: []app.AgentConfig{
+		{McpServers: map[string]map[string]any{"homeassistant": {"type": "http"}}},
+	}}
+	if err := New(opts).Sync(&app.Context{OutDir: t.TempDir()}, agents); err != nil {
+		t.Fatalf("Sync: %v", err)
+	}
+
+	data, err := os.ReadFile(globalPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != seed {
+		t.Errorf("~/.claude.json = %s, want unchanged", data)
+	}
+	if _, err := os.Stat(filepath.Join(home, ".claude", "settings.json")); err != nil {
+		t.Errorf("expected settings.json to be synced: %v", err)
+	}
+}

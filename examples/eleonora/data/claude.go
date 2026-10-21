@@ -1,9 +1,17 @@
 package data
 
 import (
+	_ "embed"
+	"maps"
+	"slices"
+	"strings"
+
 	"github.com/eleonorayaya/shizuku/agents/claude"
 	"github.com/eleonorayaya/shizuku/app"
 )
+
+//go:embed claude-global.md
+var claudeMD string
 
 func PersonalClaudeOptions() claude.Options {
 	opts := ClaudeOptions()
@@ -11,8 +19,28 @@ func PersonalClaudeOptions() claude.Options {
 	return opts
 }
 
+func CoderClaudeOptions() claude.Options {
+	opts := ClaudeOptions()
+	opts.Remote = true
+	opts.GlobalConfig = nil
+	opts.SandboxAllowedDomains = nil
+	opts.SandboxAllowWrite = nil
+	opts.AllowedBashCommands = slices.DeleteFunc(slices.Clone(opts.AllowedBashCommands), func(c string) bool {
+		return strings.HasPrefix(c, "brew ")
+	})
+	opts.Marketplaces = maps.Clone(opts.Marketplaces)
+	maps.Copy(opts.Marketplaces, map[string]app.Marketplace{
+		"claude-plugins-official":   {Repo: "anthropics/claude-plugins-official"},
+		"go-skills":                 {Repo: "spf13/go-skills"},
+		"charm-dev-skills":          {Repo: "williavs/charm-dev-skill-marketplace"},
+		"notion-plugin-marketplace": {Repo: "makenotion/claude-code-notion-plugin"},
+	})
+	return opts
+}
+
 func ClaudeOptions() claude.Options {
 	return claude.Options{
+		ClaudeMD: claudeMD,
 		Marketplaces: map[string]app.Marketplace{
 			"superpowers-marketplace":  {Repo: "obra/superpowers-marketplace"},
 			"eleonorayaya-claude-code": {Repo: "eleonorayaya/claude-plugins"},
