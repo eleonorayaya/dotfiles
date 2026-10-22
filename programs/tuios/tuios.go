@@ -68,10 +68,15 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve user config dir: %w", err)
 	}
+	destDir := filepath.Join(configDir, "tuios")
+
+	if err := keepHosts(fileMap["config.toml"], filepath.Join(destDir, "config.toml")); err != nil {
+		return nil, fmt.Errorf("failed to keep tuios hosts: %w", err)
+	}
 
 	return &app.GenerateResult{
 		FileMap: fileMap,
-		DestDir: filepath.Join(configDir, "tuios"),
+		DestDir: destDir,
 	}, nil
 }
 

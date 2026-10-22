@@ -2,6 +2,7 @@ package tuios
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -10,7 +11,24 @@ import (
 	"github.com/eleonorayaya/shizuku/styles/themes"
 )
 
+func isolateConfigDir(t *testing.T) string {
+	t.Helper()
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(home, ".config"))
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		t.Fatalf("failed to resolve user config dir: %v", err)
+	}
+	dir := filepath.Join(configDir, "tuios")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatalf("failed to create config dir: %v", err)
+	}
+	return dir
+}
+
 func TestGenerateConfigUsesThemeColors(t *testing.T) {
+	isolateConfigDir(t)
 	ctx := &app.Context{
 		OutDir: t.TempDir(),
 		Styles: styles.New(styles.WithTheme(themes.Sylveon)),
@@ -44,6 +62,12 @@ func TestGenerateConfigUsesThemeColors(t *testing.T) {
 }
 
 func generateConfig(t *testing.T, opts Options) string {
+	t.Helper()
+	isolateConfigDir(t)
+	return generateConfigInPlace(t, opts)
+}
+
+func generateConfigInPlace(t *testing.T, opts Options) string {
 	t.Helper()
 	ctx := &app.Context{
 		OutDir: t.TempDir(),
@@ -142,5 +166,58 @@ func TestGenerateRemoteConfigHasNoSessionPicker(t *testing.T) {
 		if !strings.Contains(config, "start_in_terminal_mode = true\n\n[[keybindings.command]]\nkey = \"prefix+n\"") {
 			t.Errorf("unexpected remote keybindings:\n%s", config)
 		}
+	}
+}
+
+func writeExistingConfig(t *testing.T, contents string) {
+	t.Helper()
+	dir := isolateConfigDir(t)
+	if err := os.WriteFile(filepath.Join(dir, "config.toml"), []byte(contents), 0o644); err != nil {
+		t.Fatalf("failed to write existing config: %v", err)
+	}
+}
+
+func TestGenerateConfigKeepsExistingHosts(t *testing.T) {
+	writeExistingConfig(t, `[appearance]
+theme = "stale"
+
+[hosts.build]
+address = "build.example"
+ssh_options = ["-A"]
+
+[hosts."*"]
+connect_timeout = "10s"
+`)
+
+	config := generateConfigInPlace(t, Options{})
+
+	for _, want := range []string{
+		"[hosts.build]\naddress = \"build.example\"\nssh_options = [\"-A\"]\n",
+		"[hosts.\"*\"]\nconnect_timeout = \"10s\"\n",
+		"/mux/hooks/client-session-changed'''\n\n[hosts]\n",
+	} {
+		if !strings.Contains(config, want) {
+			t.Errorf("expected config to contain %q, got:\n%s", want, config)
+		}
+	}
+	if strings.Contains(config, `theme = "stale"`) {
+		t.Error("expected only the hosts table to be kept")
+	}
+}
+
+func TestGenerateConfigWithoutExistingHostsAddsNone(t *testing.T) {
+	writeExistingConfig(t, "[appearance]\ntheme = \"stale\"\n")
+
+	if config := generateConfigInPlace(t, Options{}); strings.Contains(config, "[hosts") {
+		t.Errorf("expected no hosts table, got:\n%s", config)
+	}
+}
+
+func TestGenerateConfigRejectsUnparsableExistingConfig(t *testing.T) {
+	writeExistingConfig(t, "[hosts\n")
+
+	ctx := &app.Context{OutDir: t.TempDir(), Styles: styles.New(styles.WithTheme(themes.Sylveon))}
+	if _, err := New(Options{}).Generate(ctx); err == nil {
+		t.Error("expected an unparsable config to stop the sync rather than drop its hosts")
 	}
 }
