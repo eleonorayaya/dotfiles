@@ -115,7 +115,7 @@ func main() {
 				fastfetch.New(),
 				glow.New(),
 				jankyborders.New(),
-				kitty.New(),
+				kitty.New(kitty.Options{OpenURLWith: data.UtenaOpen()}),
 				notion.New(notion.Options{DisableClaudeMCP: true}),
 				sfsymbols.New(),
 				sketchybar.New(sketchybar.Options{}),

@@ -14,6 +14,10 @@ func Utena(browser string) utena.Options {
 	}
 }
 
+func UtenaOpen() string {
+	return "~/.local/bin/utena-open --attached"
+}
+
 func CoderUtena() utena.Options {
 	opts := Utena("")
 	opts.Follower = true

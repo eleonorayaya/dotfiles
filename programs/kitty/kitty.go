@@ -11,10 +11,16 @@ import (
 //go:embed all:contents
 var contents embed.FS
 
-type App struct{}
+type Options struct {
+	OpenURLWith string
+}
 
-func New() *App {
-	return &App{}
+type App struct {
+	opts Options
+}
+
+func New(opts Options) *App {
+	return &App{opts: opts}
 }
 
 func (a *App) Name() string {
@@ -34,7 +40,12 @@ func (a *App) Install(ctx *app.Context) error {
 }
 
 func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
+	openURLWith := a.opts.OpenURLWith
+	if openURLWith == "" {
+		openURLWith = "default"
+	}
 	data := map[string]any{
+		"OpenURLWith":     openURLWith,
 		"Styles":          ctx.Styles,
 		"BackgroundAlpha": float64(ctx.Styles.WindowOpacity) / 100.0,
 		"Background":      ctx.Styles.TerminalBackground(),
