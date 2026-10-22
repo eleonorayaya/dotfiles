@@ -161,6 +161,12 @@ func (i *Installer) privileged(name string, args ...string) ([]byte, error) {
 	return i.run(env, "sudo", append([]string{"DEBIAN_FRONTEND=noninteractive", name}, args...)...)
 }
 
+const aptLockTimeout = "DPkg::Lock::Timeout=600"
+
+func (i *Installer) aptGet(args ...string) ([]byte, error) {
+	return i.privileged("apt-get", append([]string{"-o", aptLockTimeout}, args...)...)
+}
+
 func (i *Installer) aptUpdate() error {
 	if i.aptReady {
 		return nil
@@ -168,7 +174,7 @@ func (i *Installer) aptUpdate() error {
 	if i.aptErr != nil {
 		return i.aptErr
 	}
-	if _, err := i.privileged("apt-get", "update"); err != nil {
+	if _, err := i.aptGet("update"); err != nil {
 		i.aptErr = fmt.Errorf("apt-get update failed: %w", err)
 		return i.aptErr
 	}
@@ -198,7 +204,7 @@ func parseCandidate(out string) bool {
 }
 
 func (i *Installer) aptInstall(s Spec) error {
-	if _, err := i.privileged("apt-get", "install", "-y", s.Apt); err != nil {
+	if _, err := i.aptGet("install", "-y", s.Apt); err != nil {
 		return fmt.Errorf("apt-get install %s failed: %w", s.Apt, err)
 	}
 	if s.AptBin != "" && s.Bin != "" && s.AptBin != s.Bin {
