@@ -20,3 +20,9 @@ func TestUtenaPickerOpensKittyWithPickerTitle(t *testing.T) {
 		t.Error("picker command must not contain ''' because it is a TOML literal string")
 	}
 }
+
+func TestUtenaOpenRoutesLinksToAttachedSession(t *testing.T) {
+	if got, want := UtenaOpen(), "~/.local/bin/utena-open --attached"; got != want {
+		t.Errorf("UtenaOpen() = %q, want %q", got, want)
+	}
+}

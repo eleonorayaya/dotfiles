@@ -251,6 +251,8 @@ The base profile is server-safe. `desktop` holds macOS apps, languages and agent
 
 `tuios.Options.Picker` replaces the `prefix+p` popup (`UTENA_POPUP=1 utena`) with a `type = "shell"` binding running that command, so it runs on the laptop even in a remote session. `desktop` sets it to `data.UtenaPicker()` (`utena picker` opening a kitty window titled `utena-picker`, which the aerospace config floats); the base profile keeps the popup and `Remote` binds no `prefix+p`.
 
+`kitty.Options.OpenURLWith` sets kitty's `open_url_with` (default `default`, the system opener). `desktop` sets it to `data.UtenaOpen()` (`utena-open --attached`), so ctrl+clicked links open in the attached utena session's browser window.
+
 ## Adding a New Language
 
 1. Add language constant to `config/language.go`:
