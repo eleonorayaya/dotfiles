@@ -3,6 +3,7 @@ module github.com/eleonorayaya/shizuku
 go 1.25.6
 
 require (
+	github.com/BurntSushi/toml v1.6.0
 	github.com/spf13/cobra v1.10.2
 	gopkg.in/ini.v1 v1.67.1
 	gopkg.in/yaml.v3 v3.0.1
