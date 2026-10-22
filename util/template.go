@@ -2,11 +2,11 @@ package util
 
 import (
 	"fmt"
-	"html/template"
 	"io/fs"
 	"log/slog"
 	"os"
 	"path"
+	"text/template"
 )
 
 func GenerateTemplateFromFS(srcFS fs.FS, name string, data map[string]any, outFile string) error {

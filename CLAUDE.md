@@ -185,7 +185,7 @@ languages:
 
 ### Template Engine
 
-- Uses Go's `html/template` package
+- Uses Go's `text/template` package, so values are written as-is (no HTML escaping)
 - Files ending in `.tmpl` are processed with template data
 - The `.tmpl` extension is stripped from output filenames
 - Non-template files are copied directly

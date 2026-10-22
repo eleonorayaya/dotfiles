@@ -3,7 +3,6 @@ package kitty
 import (
 	"embed"
 	"fmt"
-	"html/template"
 
 	"github.com/eleonorayaya/shizuku/app"
 	"github.com/eleonorayaya/shizuku/util"
@@ -46,7 +45,7 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 		openURLWith = "default"
 	}
 	data := map[string]any{
-		"OpenURLWith":     template.HTML(openURLWith),
+		"OpenURLWith":     openURLWith,
 		"Styles":          ctx.Styles,
 		"BackgroundAlpha": float64(ctx.Styles.WindowOpacity) / 100.0,
 		"Background":      ctx.Styles.TerminalBackground(),
