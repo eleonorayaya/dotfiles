@@ -249,6 +249,8 @@ The base profile is server-safe. `desktop` holds macOS apps, languages and agent
 
 `coder` is base plus remote-workspace variants: `tuios.Options{Remote: true}` (no laptop after-attach hook, no install), `utena.Options{Follower: true}` (no clone/build in `Install`) and `data.CoderClaudeOptions()` (`Remote: true` skips the sandbox, the `disableClaudeAiConnectors` deletion and `~/.claude.json`). The root `install.sh` bootstraps it on a Linux workspace.
 
+The tuios config sets `preferred_shell = '/bin/zsh'` on every profile (`/bin/zsh` exists on macOS and on usrmerged Ubuntu; tuios falls back to `$SHELL` without it), so panes are zsh even when the tuios daemon started before `chsh`.
+
 `tuios.Options.Picker` replaces the `prefix+p` popup (`UTENA_POPUP=1 utena`) with a `type = "shell"` binding running that command, so it runs on the laptop even in a remote session. `desktop` sets it to `data.UtenaPicker()` (`utena picker` opening a kitty window titled `utena-picker`, which the aerospace config floats); the base profile keeps the popup and `Remote` binds no `prefix+p`.
 
 `kitty.Options.OpenURLWith` sets kitty's `open_url_with` (default `default`, the system opener). `desktop` sets it to `data.UtenaOpen()` (`utena-open --attached`), so ctrl+clicked links open in the attached utena session's browser window.

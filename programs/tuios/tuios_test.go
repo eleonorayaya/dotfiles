@@ -113,6 +113,14 @@ func TestGenerateRemoteConfig(t *testing.T) {
 	}
 }
 
+func TestGenerateConfigPrefersZsh(t *testing.T) {
+	for _, opts := range []Options{{}, {Remote: true}} {
+		if config := generateConfig(t, opts); !strings.HasPrefix(config, "[appearance]\npreferred_shell = '/bin/zsh'\nhide_window_buttons = true\n") {
+			t.Errorf("expected config to prefer zsh (remote=%v), got:\n%s", opts.Remote, config[:120])
+		}
+	}
+}
+
 func TestRemoteInstallIsNoop(t *testing.T) {
 	if err := New(Options{Remote: true}).Install(&app.Context{}); err != nil {
 		t.Fatalf("unexpected error: %v", err)
