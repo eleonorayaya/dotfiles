@@ -103,9 +103,6 @@ func TestGenerateRemoteConfig(t *testing.T) {
 	if !strings.Contains(config, "[daemon]\nresume_agents = \"auto\"\n") {
 		t.Error(`expected remote config to keep resume_agents = "auto"`)
 	}
-	if !strings.HasPrefix(config, "[appearance]\npreferred_shell = '/usr/bin/zsh'\nhide_window_buttons = true\n") {
-		t.Errorf("expected remote config to prefer zsh, got:\n%s", config[:120])
-	}
 	for _, unwanted := range []string{"[hooks]", "localhost:3333", "&#", "&quot;"} {
 		if strings.Contains(config, unwanted) {
 			t.Errorf("expected remote config to not contain %s", unwanted)
@@ -116,9 +113,11 @@ func TestGenerateRemoteConfig(t *testing.T) {
 	}
 }
 
-func TestGenerateLocalConfigLeavesShellToSHELL(t *testing.T) {
-	if config := generateConfig(t, Options{}); strings.Contains(config, "preferred_shell") {
-		t.Error("expected the local config to not set preferred_shell")
+func TestGenerateConfigPrefersZsh(t *testing.T) {
+	for _, opts := range []Options{{}, {Remote: true}} {
+		if config := generateConfig(t, opts); !strings.HasPrefix(config, "[appearance]\npreferred_shell = '/bin/zsh'\nhide_window_buttons = true\n") {
+			t.Errorf("expected config to prefer zsh (remote=%v), got:\n%s", opts.Remote, config[:120])
+		}
 	}
 }
 
