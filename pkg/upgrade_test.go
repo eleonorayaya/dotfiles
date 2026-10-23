@@ -87,7 +87,7 @@ func TestUpgrade_AptOnlyUpgrade(t *testing.T) {
 	if err := i.Install(Spec{Brew: "git", Apt: "git", Bin: "git"}); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	want := "apt-get update|apt-cache policy git|apt-get install --only-upgrade -y git"
+	want := "apt-get -o DPkg::Lock::Timeout=600 update|apt-cache policy git|apt-get -o DPkg::Lock::Timeout=600 install --only-upgrade -y git"
 	if got := strings.Join(fr.calls, "|"); got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}
@@ -102,7 +102,7 @@ func TestUpgrade_AptSkipsWhenNotInstalled(t *testing.T) {
 	if err := i.Install(Spec{Apt: "lsd", Bin: "lsd"}); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	want := "apt-get update|apt-cache policy lsd"
+	want := "apt-get -o DPkg::Lock::Timeout=600 update|apt-cache policy lsd"
 	if got := strings.Join(fr.calls, "|"); got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}
@@ -116,7 +116,7 @@ func TestUpgrade_AptSkipsUnknownPackage(t *testing.T) {
 	if err := i.Install(Spec{Apt: "oh-my-posh", Bin: "oh-my-posh"}); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	want := "apt-get update|apt-cache policy oh-my-posh"
+	want := "apt-get -o DPkg::Lock::Timeout=600 update|apt-cache policy oh-my-posh"
 	if got := strings.Join(fr.calls, "|"); got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}
@@ -138,7 +138,7 @@ func TestUpgrade_AptSymlinkedBinUsesApt(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	want := "apt-get update|apt-cache policy bat|apt-get install --only-upgrade -y bat"
+	want := "apt-get -o DPkg::Lock::Timeout=600 update|apt-cache policy bat|apt-get -o DPkg::Lock::Timeout=600 install --only-upgrade -y bat"
 	if got := strings.Join(fr.calls, "|"); got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}

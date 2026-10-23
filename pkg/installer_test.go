@@ -119,7 +119,7 @@ func TestInstall_AptAsRoot(t *testing.T) {
 	if err := i.Install(Spec{Brew: "lsd", Apt: "lsd", Bin: "lsd"}); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	want := "apt-get update|apt-cache policy lsd|apt-get install -y lsd"
+	want := "apt-get -o DPkg::Lock::Timeout=600 update|apt-cache policy lsd|apt-get -o DPkg::Lock::Timeout=600 install -y lsd"
 	if got := strings.Join(fr.calls, "|"); got != want {
 		t.Fatalf("got %q, want %q", got, want)
 	}
@@ -127,7 +127,7 @@ func TestInstall_AptAsRoot(t *testing.T) {
 		t.Errorf("apt-cache policy env = %q, want LC_ALL=C", fr.envs[1])
 	}
 	if !strings.Contains(fr.envs[2], "DEBIAN_FRONTEND=noninteractive") {
-		t.Errorf("apt-get install env = %q, want DEBIAN_FRONTEND=noninteractive", fr.envs[2])
+		t.Errorf("apt-get -o DPkg::Lock::Timeout=600 install env = %q, want DEBIAN_FRONTEND=noninteractive", fr.envs[2])
 	}
 }
 
@@ -135,7 +135,7 @@ func TestInstall_AptUpdateFailureFallsBackToRelease(t *testing.T) {
 	i, fr := testInstaller(t, "linux")
 	i.IsRoot = true
 	fr.paths["apt-get"] = "/usr/bin/apt-get"
-	fr.fail["apt-get update"] = true
+	fr.fail["apt-get -o DPkg::Lock::Timeout=600 update"] = true
 	srv := releaseServer(t, map[string][]byte{"posh-linux-amd64": []byte("POSH")})
 	i.APIBase = srv.URL
 
@@ -153,7 +153,7 @@ func TestInstall_AptUpdateFailureAptOnlyErrors(t *testing.T) {
 	i, fr := testInstaller(t, "linux")
 	i.IsRoot = true
 	fr.paths["apt-get"] = "/usr/bin/apt-get"
-	fr.fail["apt-get update"] = true
+	fr.fail["apt-get -o DPkg::Lock::Timeout=600 update"] = true
 	if err := i.Install(Spec{Apt: "zsh", Bin: "zsh"}); err == nil {
 		t.Fatal("expected error")
 	}
@@ -163,7 +163,7 @@ func TestInstall_AptUpdateFailureCached(t *testing.T) {
 	i, fr := testInstaller(t, "linux")
 	i.IsRoot = true
 	fr.paths["apt-get"] = "/usr/bin/apt-get"
-	fr.fail["apt-get update"] = true
+	fr.fail["apt-get -o DPkg::Lock::Timeout=600 update"] = true
 	for _, s := range []Spec{{Apt: "zsh"}, {Apt: "git"}} {
 		if err := i.Install(s); err == nil {
 			t.Fatalf("expected error for %s", s.Apt)
@@ -171,12 +171,12 @@ func TestInstall_AptUpdateFailureCached(t *testing.T) {
 	}
 	count := 0
 	for _, c := range fr.calls {
-		if c == "apt-get update" {
+		if c == "apt-get -o DPkg::Lock::Timeout=600 update" {
 			count++
 		}
 	}
 	if count != 1 {
-		t.Errorf("expected 1 apt-get update, got %d (%v)", count, fr.calls)
+		t.Errorf("expected 1 apt-get -o DPkg::Lock::Timeout=600 update, got %d (%v)", count, fr.calls)
 	}
 }
 
@@ -190,10 +190,10 @@ func TestInstall_AptUsesSudoWhenNotRoot(t *testing.T) {
 	if len(fr.calls) != 3 {
 		t.Fatalf("expected 3 calls, got %v", fr.calls)
 	}
-	if fr.calls[0] != "sudo DEBIAN_FRONTEND=noninteractive apt-get update" {
+	if fr.calls[0] != "sudo DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=600 update" {
 		t.Errorf("got %q", fr.calls[0])
 	}
-	if fr.calls[2] != "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y zsh" {
+	if fr.calls[2] != "sudo DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=600 install -y zsh" {
 		t.Errorf("got %q", fr.calls[2])
 	}
 }
@@ -211,12 +211,12 @@ func TestInstall_AptUpdateRunsOnce(t *testing.T) {
 	}
 	count := 0
 	for _, c := range fr.calls {
-		if c == "apt-get update" {
+		if c == "apt-get -o DPkg::Lock::Timeout=600 update" {
 			count++
 		}
 	}
 	if count != 1 {
-		t.Errorf("expected 1 apt-get update, got %d (%v)", count, fr.calls)
+		t.Errorf("expected 1 apt-get -o DPkg::Lock::Timeout=600 update, got %d (%v)", count, fr.calls)
 	}
 }
 

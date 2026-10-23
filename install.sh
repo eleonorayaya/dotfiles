@@ -27,14 +27,24 @@ export PATH="$bin_dir:$PATH"
 export SHIZUKU_PROFILE=coder
 "$shizuku" config set profile coder
 
-# One failed app install must not skip sync.
-"$shizuku" install || true
+# A failed app install must not skip sync or the login shell, but the script
+# still exits non-zero so the workspace shows the failure.
+status=0
+"$shizuku" install || status=$?
 "$shizuku" sync
 
 user="${USER:-$(id -un)}"
 if zsh_path="$(command -v zsh)"; then
   current_shell="$(getent passwd "$user" | cut -d: -f7)"
   if [ "$current_shell" != "$zsh_path" ]; then
-    sudo -n chsh -s "$zsh_path" "$user" || echo "could not change login shell to $zsh_path"
+    if ! sudo -n chsh -s "$zsh_path" "$user"; then
+      echo "could not change login shell to $zsh_path" >&2
+      status=1
+    fi
   fi
+else
+  echo "zsh is not installed; the login shell stays $(getent passwd "$user" | cut -d: -f7)" >&2
+  status=1
 fi
+
+exit "$status"

@@ -86,7 +86,7 @@ func (i *Installer) aptUpgrade(name string) error {
 		slog.Debug("apt package not installed, skipping upgrade", "package", name)
 		return nil
 	}
-	if _, err := i.privileged("apt-get", "install", "--only-upgrade", "-y", name); err != nil {
+	if _, err := i.aptGet("install", "--only-upgrade", "-y", name); err != nil {
 		return fmt.Errorf("apt-get upgrade %s failed: %w", name, err)
 	}
 	return nil
