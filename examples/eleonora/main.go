@@ -46,6 +46,7 @@ import (
 	"github.com/eleonorayaya/shizuku/programs/tuios"
 	"github.com/eleonorayaya/shizuku/programs/utena"
 	"github.com/eleonorayaya/shizuku/programs/vesktop"
+	"github.com/eleonorayaya/shizuku/programs/vorssaint"
 	"github.com/eleonorayaya/shizuku/styles"
 	"github.com/eleonorayaya/shizuku/styles/themes"
 	"github.com/eleonorayaya/shizuku/util"
@@ -123,6 +124,10 @@ func main() {
 				terraform.New(),
 				tuios.New(tuios.Options{Picker: data.UtenaPicker()}),
 				utena.New(data.Utena("")),
+				vorssaint.New(vorssaint.Options{
+					Features:           []string{"commandBar"},
+					CommandBarShortcut: "command:49",
+				}),
 			),
 			shizuku.WithAgents(
 				claude.New(data.ClaudeOptions()),
