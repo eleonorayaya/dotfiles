@@ -105,7 +105,7 @@ func ClaudeOptions() claude.Options {
 			"aws",
 			"aws:*",
 		},
-		DefaultMode:  "plan",
+		DefaultMode:  "auto",
 		AdvisorModel: "opus",
 	}
 }
