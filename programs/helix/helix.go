@@ -19,6 +19,7 @@ const (
 	steelBranch   = "steel-event-system"
 	steelCloneDir = ".local/src/helix"
 	steelGitURL   = "https://github.com/mattwparas/steel.git"
+	forestGitURL  = "https://github.com/Ra77a3l3-jar/forest.hx.git"
 )
 
 type Options struct {
@@ -88,6 +89,7 @@ func installSteel() error {
 		{filepath.Join(cargoBin, "forge"), "pkg", "refresh"},
 		{"cargo", "xtask", "code-gen"},
 		{"cargo", "install", "--path", "helix-term", "--features", "steel,git", "--locked", "--force"},
+		{filepath.Join(cargoBin, "forge"), "pkg", "install", "--git", forestGitURL},
 	}
 	for _, step := range steps {
 		if err := run(repoPath, step[0], step[1:]...); err != nil {
@@ -122,6 +124,9 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 	}, ctx.OutDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate app files: %w", err)
+	}
+	if !a.opts.Steel {
+		delete(fileMap, "init.scm")
 	}
 
 	return &app.GenerateResult{
