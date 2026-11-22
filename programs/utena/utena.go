@@ -3,7 +3,6 @@ package utena
 import (
 	"embed"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -44,26 +43,9 @@ func (a *App) Install(ctx *app.Context) error {
 		return nil
 	}
 
-	homeDir, err := os.UserHomeDir()
+	repoPath, err := util.CloneOrPull(repoURL, "main", "~/"+cloneDir)
 	if err != nil {
-		return fmt.Errorf("failed to get home directory: %w", err)
-	}
-
-	repoPath := filepath.Join(homeDir, cloneDir)
-
-	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
-		if err := os.MkdirAll(filepath.Dir(repoPath), 0755); err != nil {
-			return fmt.Errorf("failed to create parent directory: %w", err)
-		}
-		cmd := exec.Command("git", "clone", repoURL, repoPath)
-		if output, err := cmd.CombinedOutput(); err != nil {
-			return fmt.Errorf("failed to clone utena: %s: %w", string(output), err)
-		}
-	} else {
-		cmd := exec.Command("git", "-C", repoPath, "pull", "origin", "main")
-		if output, err := cmd.CombinedOutput(); err != nil {
-			return fmt.Errorf("failed to pull latest utena: %s: %w", string(output), err)
-		}
+		return fmt.Errorf("failed to update utena: %w", err)
 	}
 
 	taskCmd := exec.Command("task", "install")

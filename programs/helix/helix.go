@@ -3,23 +3,22 @@ package helix
 import (
 	"embed"
 	"fmt"
-	"os"
-	"os/exec"
-	"path/filepath"
+	"strings"
 
 	"github.com/eleonorayaya/shizuku/app"
 	"github.com/eleonorayaya/shizuku/pkg"
+	"github.com/eleonorayaya/shizuku/util"
 )
 
 //go:embed all:contents
 var contents embed.FS
 
 const (
-	steelRepoURL  = "https://github.com/mattwparas/helix"
-	steelBranch   = "steel-event-system"
-	steelCloneDir = ".local/src/helix"
-	steelGitURL   = "https://github.com/mattwparas/steel.git"
-	forestGitURL  = "https://github.com/Ra77a3l3-jar/forest.hx.git"
+	helixForkURL    = "https://github.com/mattwparas/helix"
+	helixForkBranch = "steel-event-system"
+	helixForkDir    = "~/.local/src/helix"
+	steelURL        = "https://github.com/mattwparas/steel.git"
+	forestURL       = "https://github.com/Ra77a3l3-jar/forest.hx.git"
 )
 
 type Options struct {
@@ -62,49 +61,27 @@ func (a *App) Install(ctx *app.Context) error {
 }
 
 func installSteel() error {
-	homeDir, err := os.UserHomeDir()
+	repoPath, err := util.CloneOrPull(helixForkURL, helixForkBranch, helixForkDir)
 	if err != nil {
-		return fmt.Errorf("failed to get home directory: %w", err)
+		return fmt.Errorf("failed to update helix fork: %w", err)
 	}
 
-	repoPath := filepath.Join(homeDir, steelCloneDir)
-
-	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
-		if err := os.MkdirAll(filepath.Dir(repoPath), 0755); err != nil {
-			return fmt.Errorf("failed to create parent directory: %w", err)
-		}
-		if err := run("", "git", "clone", "--branch", steelBranch, steelRepoURL, repoPath); err != nil {
-			return fmt.Errorf("failed to clone helix: %w", err)
-		}
-	} else {
-		if err := run(repoPath, "git", "pull", "origin", steelBranch); err != nil {
-			return fmt.Errorf("failed to pull latest helix: %w", err)
-		}
+	forge, err := util.NormalizeFilePath("~/.cargo/bin/forge")
+	if err != nil {
+		return err
 	}
 
-	cargoBin := filepath.Join(homeDir, ".cargo", "bin")
 	steps := [][]string{
-		{"cargo", "install", "--git", steelGitURL, "steel-interpreter", "steel-language-server", "cargo-steel-lib", "--locked", "--force"},
-		{"cargo", "install", "--git", steelGitURL, "steel-forge", "--locked", "--force"},
-		{filepath.Join(cargoBin, "forge"), "pkg", "refresh"},
+		{"cargo", "install", "--git", steelURL, "steel-interpreter", "steel-language-server", "cargo-steel-lib", "steel-forge", "--locked"},
+		{forge, "pkg", "refresh"},
 		{"cargo", "xtask", "code-gen"},
-		{"cargo", "install", "--path", "helix-term", "--features", "steel,git", "--locked", "--force"},
-		{filepath.Join(cargoBin, "forge"), "pkg", "install", "--git", forestGitURL},
+		{"cargo", "install", "--path", "helix-term", "--features", "steel,git", "--locked"},
+		{forge, "pkg", "install", "--git", forestURL},
 	}
 	for _, step := range steps {
-		if err := run(repoPath, step[0], step[1:]...); err != nil {
+		if err := util.Run(repoPath, step[0], step[1:]...); err != nil {
 			return fmt.Errorf("failed to install helix with steel: %w", err)
 		}
-	}
-
-	return nil
-}
-
-func run(dir string, name string, args ...string) error {
-	cmd := exec.Command(name, args...)
-	cmd.Dir = dir
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("%s %v: %s: %w", name, args, string(output), err)
 	}
 
 	return nil
@@ -154,7 +131,7 @@ func (a *App) Env() (*app.EnvSetup, error) {
 		{Key: "VISUAL", Value: "hx"},
 	}
 	if a.opts.Steel {
-		vars = append(vars, app.EnvVar{Key: "HELIX_RUNTIME", Value: "$HOME/" + steelCloneDir + "/runtime"})
+		vars = append(vars, app.EnvVar{Key: "HELIX_RUNTIME", Value: strings.Replace(helixForkDir, "~", "$HOME", 1) + "/runtime"})
 	}
 
 	return &app.EnvSetup{
