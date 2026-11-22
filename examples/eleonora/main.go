@@ -87,7 +87,7 @@ func main() {
 		shizuku.WithPrograms(
 			git.New(data.GitOptions()),
 			terminal.New(),
-			helix.New(),
+			helix.New(helix.Options{}),
 			bat.New(),
 			lsd.New(),
 			tuios.New(tuios.Options{}),
@@ -114,6 +114,7 @@ func main() {
 				dock.New(),
 				fastfetch.New(),
 				glow.New(),
+				helix.New(helix.Options{Steel: true}),
 				jankyborders.New(),
 				kitty.New(kitty.Options{OpenURLWith: data.UtenaOpen()}),
 				notion.New(notion.Options{DisableClaudeMCP: true}),
