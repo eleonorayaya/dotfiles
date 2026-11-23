@@ -3,6 +3,7 @@ package helix
 import (
 	"embed"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/eleonorayaya/shizuku/app"
@@ -50,6 +51,17 @@ var spec = pkg.Spec{
 
 func (a *App) Install(ctx *app.Context) error {
 	if a.opts.Steel {
+		upgrading, err := pkg.Upgrading()
+		if err != nil {
+			return err
+		}
+		hx, err := util.NormalizeFilePath("~/.cargo/bin/hx")
+		if err != nil {
+			return err
+		}
+		if _, err := os.Stat(hx); err == nil && !upgrading {
+			return nil
+		}
 		return installSteel()
 	}
 

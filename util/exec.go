@@ -5,7 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
+
+	"github.com/eleonorayaya/shizuku/pkg"
 )
 
 func BinaryExists(name string) bool {
@@ -14,13 +15,8 @@ func BinaryExists(name string) bool {
 }
 
 func Run(dir string, name string, args ...string) error {
-	cmd := exec.Command(name, args...)
-	cmd.Dir = dir
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("%s %s: %w: %s", name, strings.Join(args, " "), err, strings.TrimSpace(string(output)))
-	}
-
-	return nil
+	_, err := pkg.Run(dir, nil, name, args...)
+	return err
 }
 
 func CloneOrPull(url, branch, dest string) (string, error) {
@@ -33,7 +29,7 @@ func CloneOrPull(url, branch, dest string) (string, error) {
 		if err := EnsureDirExists(filepath.Dir(repoPath)); err != nil {
 			return "", err
 		}
-		if err := Run("", "git", "clone", "--branch", branch, url, repoPath); err != nil {
+		if err := Run("", "git", "clone", "--depth", "1", "--branch", branch, url, repoPath); err != nil {
 			return "", fmt.Errorf("failed to clone %s: %w", url, err)
 		}
 	} else if err := Run(repoPath, "git", "pull", "origin", branch); err != nil {
