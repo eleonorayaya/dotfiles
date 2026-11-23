@@ -233,7 +233,7 @@ pkg.Spec{
 }
 ```
 
-`shizuku upgrade` re-runs every app's `Install()` with the installer in upgrade mode (`pkg.SetUpgrade`). In this mode installed brew packages are upgraded, apt packages are upgraded with `--only-upgrade`, and binaries installed from GitHub releases are reinstalled from the latest release. Packages that aren't installed are skipped. Steps in `Install()` that don't go through `pkg` (e.g. `go install`, git clones) run exactly as they do for `install`.
+`shizuku upgrade` re-runs every app's `Install()` with the installer in upgrade mode (`pkg.SetUpgrade`). In this mode installed brew packages are upgraded, apt packages are upgraded with `--only-upgrade`, and binaries installed from GitHub releases are reinstalled from the latest release. Packages that aren't installed are skipped. Steps in `Install()` that don't go through `pkg` (e.g. `go install`, git clones) run exactly as they do for `install`, unless the app checks `pkg.Upgrading()`: the steel helix build skips when `~/.cargo/bin/hx` exists and only rebuilds on `upgrade`. `pkg.Run` is the shared command runner (`util.Run` wraps it), and `util.CloneOrPull` shallow-clones or pulls a source checkout.
 
 `util.InstallBrewPackage` remains for macOS-only apps. Aliases that depend on an optional binary should set `Requires` so the shell stays usable if the install failed.
 

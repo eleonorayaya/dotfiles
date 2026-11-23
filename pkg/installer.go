@@ -69,14 +69,27 @@ func SetUpgrade(on bool) error {
 	return nil
 }
 
-func runCommand(env []string, name string, args ...string) ([]byte, error) {
+func Upgrading() (bool, error) {
+	i, err := defaultInstaller()
+	if err != nil {
+		return false, err
+	}
+	return i.Upgrade, nil
+}
+
+func Run(dir string, env []string, name string, args ...string) ([]byte, error) {
 	cmd := exec.Command(name, args...)
+	cmd.Dir = dir
 	cmd.Env = append(os.Environ(), env...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return out, fmt.Errorf("%s %s: %w: %s", name, strings.Join(args, " "), err, strings.TrimSpace(string(out)))
 	}
 	return out, nil
+}
+
+func runCommand(env []string, name string, args ...string) ([]byte, error) {
+	return Run("", env, name, args...)
 }
 
 func (i *Installer) BinDir() string {

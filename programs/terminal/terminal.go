@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -67,11 +66,7 @@ var packages = []terminalPackage{
 var installPkg = pkg.Install
 
 var cloneRepo = func(repo, dest string) error {
-	output, err := exec.Command("git", "clone", "--depth", "1", repo, dest).CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("git clone %s: %w\nOutput: %s", repo, err, string(output))
-	}
-	return nil
+	return util.Run("", "git", "clone", "--depth", "1", repo, dest)
 }
 
 type App struct{}

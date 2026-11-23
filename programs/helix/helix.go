@@ -3,18 +3,35 @@ package helix
 import (
 	"embed"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/eleonorayaya/shizuku/app"
 	"github.com/eleonorayaya/shizuku/pkg"
+	"github.com/eleonorayaya/shizuku/util"
 )
 
 //go:embed all:contents
 var contents embed.FS
 
-type App struct{}
+const (
+	helixForkURL    = "https://github.com/mattwparas/helix"
+	helixForkBranch = "steel-event-system"
+	helixForkDir    = "~/.local/src/helix"
+	steelURL        = "https://github.com/mattwparas/steel.git"
+	forestURL       = "https://github.com/Ra77a3l3-jar/forest.hx.git"
+)
 
-func New() *App {
-	return &App{}
+type Options struct {
+	Steel bool
+}
+
+type App struct {
+	opts Options
+}
+
+func New(opts Options) *App {
+	return &App{opts: opts}
 }
 
 func (a *App) Name() string {
@@ -33,8 +50,50 @@ var spec = pkg.Spec{
 }
 
 func (a *App) Install(ctx *app.Context) error {
+	if a.opts.Steel {
+		upgrading, err := pkg.Upgrading()
+		if err != nil {
+			return err
+		}
+		hx, err := util.NormalizeFilePath("~/.cargo/bin/hx")
+		if err != nil {
+			return err
+		}
+		if _, err := os.Stat(hx); err == nil && !upgrading {
+			return nil
+		}
+		return installSteel()
+	}
+
 	if err := pkg.Install(spec); err != nil {
 		return fmt.Errorf("failed to install helix: %w", err)
+	}
+
+	return nil
+}
+
+func installSteel() error {
+	repoPath, err := util.CloneOrPull(helixForkURL, helixForkBranch, helixForkDir)
+	if err != nil {
+		return fmt.Errorf("failed to update helix fork: %w", err)
+	}
+
+	forge, err := util.NormalizeFilePath("~/.cargo/bin/forge")
+	if err != nil {
+		return err
+	}
+
+	steps := [][]string{
+		{"cargo", "install", "--git", steelURL, "steel-interpreter", "steel-language-server", "cargo-steel-lib", "steel-forge", "--locked"},
+		{forge, "pkg", "refresh"},
+		{"cargo", "xtask", "code-gen"},
+		{"cargo", "install", "--path", "helix-term", "--features", "steel,git", "--locked"},
+		{forge, "pkg", "install", "--git", forestURL},
+	}
+	for _, step := range steps {
+		if err := util.Run(repoPath, step[0], step[1:]...); err != nil {
+			return fmt.Errorf("failed to install helix with steel: %w", err)
+		}
 	}
 
 	return nil
@@ -54,6 +113,9 @@ func (a *App) Generate(ctx *app.Context) (*app.GenerateResult, error) {
 	}, ctx.OutDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate app files: %w", err)
+	}
+	if !a.opts.Steel {
+		delete(fileMap, "init.scm")
 	}
 
 	return &app.GenerateResult{
@@ -76,11 +138,16 @@ func (a *App) Sync(ctx *app.Context) error {
 }
 
 func (a *App) Env() (*app.EnvSetup, error) {
+	vars := []app.EnvVar{
+		{Key: "EDITOR", Value: "hx"},
+		{Key: "VISUAL", Value: "hx"},
+	}
+	if a.opts.Steel {
+		vars = append(vars, app.EnvVar{Key: "HELIX_RUNTIME", Value: strings.Replace(helixForkDir, "~", "$HOME", 1) + "/runtime"})
+	}
+
 	return &app.EnvSetup{
-		Variables: []app.EnvVar{
-			{Key: "EDITOR", Value: "hx"},
-			{Key: "VISUAL", Value: "hx"},
-		},
+		Variables: vars,
 		Aliases: []app.Alias{
 			{Name: "vim", Command: "hx", Requires: "hx"},
 		},
