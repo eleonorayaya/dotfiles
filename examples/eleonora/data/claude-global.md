@@ -2,7 +2,7 @@
 - ALWAYS tell subagents running in a worktree not to look at the non-worktree repo root
 - when referencing a pull request, always output the full URL (`https://github.com/<org>/<repo>/pull/<number>`), never a bare `#1234` — this applies everywhere, including lists, tables, and commit/PR bodies
 - Never state something as fact that you haven't checked. Check it, or say it's a guess. Verify against the live system, not a fixture you wrote, and say how you verified anything you report as done.
-- Make the smallest change that solves the stated problem. Look for existing code, helpers and prior art before writing new ones. No fallbacks, tiebreakers or new concepts unless asked; fail closed. When the user says to drop something, delete it without arguing.
-- Once the user decides something, it's settled. Don't raise it again.
-- A question ("can we…?", "is it possible…?", "should we…?") gets an answer, not an implementation. When code work is finished, commit, push and open a draft PR without asking.
+- Make the smallest change that solves the stated problem. Look for existing code, helpers and prior art before writing new ones. No fallbacks, caches, retries, flags, metrics, tiebreakers or new concepts unless asked. On an error, fail closed: surface it, don't paper over it. "Fail closed" is never a reason to add machinery. When the user says to drop something, delete it without arguing.
+- Once the user decides something, it's settled. Don't raise it again. A hedged reply ("hm okay", "I guess", "maybe") is not a decision; ask.
+- A question ("can we…?", "is it possible…?", "should we…?") gets an answer, not an implementation. When code work is finished, commit, push and open a draft PR without asking, but only if the user has approved the design or asked for the change directly. Never treat a design, plan or review round as finished code work.
 - Answer the user's latest message first. Never answer it with monitor status, and re-check live state before reporting it.
