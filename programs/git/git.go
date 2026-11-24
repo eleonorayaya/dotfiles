@@ -101,19 +101,13 @@ func ghExtensionInstalled(repo string) bool {
 func (a *App) AgentConfig() app.AgentConfig {
 	return app.AgentConfig{
 		AllowedBashCommands: []string{
-			"git add:*",
-			"git commit:*",
 			"git --version:*",
 			"git status:*",
 			"git diff:*",
 			"git log:*",
-			"git fetch:*",
-			"git push:*",
-			"git rebase:*",
 			"git stash:*",
 			"git grep:*",
 			"git ls-remote:*",
-			"git cherry-pick:*",
 			"gh pr view:*",
 			"gh pr list:*",
 			"gh pr checks:*",
