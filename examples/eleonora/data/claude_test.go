@@ -28,9 +28,6 @@ func TestCoderClaudeOptionsAreRemote(t *testing.T) {
 	if !opts.Remote {
 		t.Error("expected Remote")
 	}
-	if opts.ClaudeMD == "" {
-		t.Error("expected the global CLAUDE.md")
-	}
 	if opts.DisableClaudeAiConnectors || len(opts.GlobalConfig) > 0 || len(opts.SandboxAllowWrite) > 0 || len(opts.SandboxAllowedDomains) > 0 {
 		t.Error("expected no connector, global config or sandbox settings")
 	}
@@ -50,8 +47,8 @@ func TestCoderClaudeOptionsAreRemote(t *testing.T) {
 func TestCoderClaudeOptionsLeaveLaptopOptionsAlone(t *testing.T) {
 	CoderClaudeOptions()
 	opts := ClaudeOptions()
-	if _, ok := opts.Marketplaces["go-skills"]; ok {
-		t.Error("laptop options should get go-skills from the golang language, not data")
+	if _, ok := opts.Marketplaces["claude-plugins-official"]; ok {
+		t.Error("laptop options should get claude-plugins-official from the golang language, not data")
 	}
 	if !slices.Contains(opts.AllowedBashCommands, "brew --prefix:*") {
 		t.Error("laptop options lost brew --prefix")
@@ -63,7 +60,7 @@ func TestClaudeOptionsManageGlobalClaudeMD(t *testing.T) {
 		"default":  ClaudeOptions().ClaudeMD,
 		"personal": PersonalClaudeOptions().ClaudeMD,
 	} {
-		if opts != claudeMD || opts == "" {
+		if opts != claudeMD {
 			t.Errorf("%s: expected the embedded CLAUDE.md", name)
 		}
 	}

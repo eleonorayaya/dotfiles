@@ -30,10 +30,7 @@ func CoderClaudeOptions() claude.Options {
 	})
 	opts.Marketplaces = maps.Clone(opts.Marketplaces)
 	maps.Copy(opts.Marketplaces, map[string]app.Marketplace{
-		"claude-plugins-official":   {Repo: "anthropics/claude-plugins-official"},
-		"go-skills":                 {Repo: "spf13/go-skills"},
-		"charm-dev-skills":          {Repo: "williavs/charm-dev-skill-marketplace"},
-		"notion-plugin-marketplace": {Repo: "makenotion/claude-code-notion-plugin"},
+		"claude-plugins-official": {Repo: "anthropics/claude-plugins-official"},
 	})
 	return opts
 }
@@ -42,18 +39,15 @@ func ClaudeOptions() claude.Options {
 	return claude.Options{
 		ClaudeMD: claudeMD,
 		Marketplaces: map[string]app.Marketplace{
-			"superpowers-marketplace":  {Repo: "obra/superpowers-marketplace"},
 			"eleonorayaya-claude-code": {Repo: "eleonorayaya/claude-plugins"},
 			"utena":                    {Repo: "eleonorayaya/utena"},
 		},
 		AlwaysOnPlugins: []string{
-			"superpowers@superpowers-marketplace",
 			"better-claude@eleonorayaya-claude-code",
 			"git-workflows@eleonorayaya-claude-code",
 			"utena-claude@utena",
 		},
 		Mods: []app.Mod{
-			claude.Prismantis(),
 			claude.PillFooter(claude.PillFooterOptions{
 				ReportCommand: "tuios agent-statusline claude-code --integration 1 --turn-end",
 			}),
@@ -84,16 +78,6 @@ func ClaudeOptions() claude.Options {
 			"~/.colima",
 		},
 		AllowedBashCommands: []string{
-			"grep:*",
-			"find:*",
-			"ls:*",
-			"tree:*",
-			"cat:*",
-			"wc:*",
-			"xargs:*",
-			"echo:*",
-			"head:*",
-			"tail:*",
 			"brew --prefix:*",
 			"npx nx:*",
 		},
@@ -107,5 +91,20 @@ func ClaudeOptions() claude.Options {
 		},
 		DefaultMode:  "auto",
 		AdvisorModel: "opus",
+		SkillOverrides: map[string]string{
+			"anthropic-skills:artifact-emulator": "off",
+			"anthropic-skills:built-in-browser":  "off",
+			"anthropic-skills:chrome-browser":    "off",
+			"anthropic-skills:computer-use":      "off",
+			"anthropic-skills:deep-research":     "off",
+			"anthropic-skills:docs":              "off",
+			"anthropic-skills:docx":              "off",
+			"anthropic-skills:google-workspace":  "off",
+			"anthropic-skills:import-memory":     "off",
+			"anthropic-skills:morning":           "off",
+			"anthropic-skills:pdf":               "off",
+			"anthropic-skills:pptx":              "off",
+			"anthropic-skills:xlsx":              "off",
+		},
 	}
 }

@@ -2,11 +2,7 @@ package notion
 
 import "github.com/eleonorayaya/shizuku/app"
 
-const (
-	marketplaceName = "notion-plugin-marketplace"
-	pluginName      = "notion-workspace-plugin"
-	mcpServerName   = "notion"
-)
+const mcpServerName = "notion"
 
 type Options struct {
 	DisableClaudeMCP bool
@@ -25,12 +21,7 @@ func (a *App) Name() string {
 }
 
 func (a *App) AgentConfig() app.AgentConfig {
-	cfg := app.AgentConfig{
-		Plugins: []string{pluginName + "@" + marketplaceName},
-		Marketplaces: map[string]app.Marketplace{
-			marketplaceName: {Repo: "makenotion/claude-code-notion-plugin"},
-		},
-	}
+	cfg := app.AgentConfig{}
 	if a.opts.DisableClaudeMCP {
 		cfg.DisabledMcpJsonServers = []string{mcpServerName}
 	}

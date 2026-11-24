@@ -34,6 +34,7 @@ type Options struct {
 	DeniedBashCommands        []string
 	DefaultMode               string
 	AdvisorModel              string
+	SkillOverrides            map[string]string
 	GlobalConfig              map[string]any
 	ClaudeMD                  string
 	Remote                    bool
@@ -441,8 +442,19 @@ func (a *App) mergeSettings(outDir string, theme styles.Theme, agents app.AgentC
 		settings["env"] = env
 	}
 
+	delete(settings, "defaultMode")
 	if a.opts.DefaultMode != "" {
-		settings["defaultMode"] = a.opts.DefaultMode
+		permissions["defaultMode"] = a.opts.DefaultMode
+	}
+	if len(a.opts.SkillOverrides) > 0 {
+		overrides, _ := settings["skillOverrides"].(map[string]any)
+		if overrides == nil {
+			overrides = map[string]any{}
+		}
+		for k, v := range a.opts.SkillOverrides {
+			overrides[k] = v
+		}
+		settings["skillOverrides"] = overrides
 	}
 	if a.opts.AdvisorModel != "" {
 		settings["advisorModel"] = a.opts.AdvisorModel

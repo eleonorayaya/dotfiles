@@ -6,23 +6,14 @@ func Bundles() map[string]app.Bundle {
 	return map[string]app.Bundle{
 		"go": {Plugins: []string{
 			"gopls-lsp@claude-plugins-official",
-			"go@go-skills",
-			"go-patterns@eleonorayaya-claude-code",
-			"go-spec-reviewer@go-skills",
-			"cobra-viper@go-skills",
-			"fileflow-pathologize@go-skills",
-			"go-release@go-skills",
 			"bubbletea-tui@eleonorayaya-claude-code",
-			"charm-dev@charm-dev-skills",
 		}},
-		"web":        {Plugins: []string{"typescript-lsp@claude-plugins-official"}},
-		"rust":       {Plugins: []string{"rust-analyzer-lsp@claude-plugins-official"}},
-		"lua":        {Plugins: []string{"lua-lsp@claude-plugins-official"}},
-		"swift":      {Plugins: []string{"swift-lsp@claude-plugins-official"}},
-		"claude-dev": {Plugins: []string{"cc-toolkit@eleonorayaya-claude-code", "skill-creator@claude-plugins-official"}},
-		"docs":       {Plugins: []string{"notion-workspace-plugin@notion-plugin-marketplace"}},
-		"homelab":    {McpServers: []string{"homeassistant"}},
-		"cad":        {McpServers: []string{"zoo", "bambuddy-local"}},
+		"web":     {Plugins: []string{"typescript-lsp@claude-plugins-official"}},
+		"rust":    {Plugins: []string{"rust-analyzer-lsp@claude-plugins-official"}},
+		"lua":     {Plugins: []string{"lua-lsp@claude-plugins-official"}},
+		"swift":   {Plugins: []string{"swift-lsp@claude-plugins-official"}},
+		"homelab": {McpServers: []string{"homeassistant"}},
+		"cad":     {McpServers: []string{"zoo", "bambuddy-local"}},
 	}
 }
 
