@@ -50,8 +50,8 @@ func TestCoderClaudeOptionsAreRemote(t *testing.T) {
 func TestCoderClaudeOptionsLeaveLaptopOptionsAlone(t *testing.T) {
 	CoderClaudeOptions()
 	opts := ClaudeOptions()
-	if _, ok := opts.Marketplaces["go-skills"]; ok {
-		t.Error("laptop options should get go-skills from the golang language, not data")
+	if _, ok := opts.Marketplaces["claude-plugins-official"]; ok {
+		t.Error("laptop options should get claude-plugins-official from the golang language, not data")
 	}
 	if !slices.Contains(opts.AllowedBashCommands, "brew --prefix:*") {
 		t.Error("laptop options lost brew --prefix")

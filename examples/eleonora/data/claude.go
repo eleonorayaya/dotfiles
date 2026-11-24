@@ -30,10 +30,7 @@ func CoderClaudeOptions() claude.Options {
 	})
 	opts.Marketplaces = maps.Clone(opts.Marketplaces)
 	maps.Copy(opts.Marketplaces, map[string]app.Marketplace{
-		"claude-plugins-official":   {Repo: "anthropics/claude-plugins-official"},
-		"go-skills":                 {Repo: "spf13/go-skills"},
-		"charm-dev-skills":          {Repo: "williavs/charm-dev-skill-marketplace"},
-		"notion-plugin-marketplace": {Repo: "makenotion/claude-code-notion-plugin"},
+		"claude-plugins-official": {Repo: "anthropics/claude-plugins-official"},
 	})
 	return opts
 }
@@ -42,12 +39,10 @@ func ClaudeOptions() claude.Options {
 	return claude.Options{
 		ClaudeMD: claudeMD,
 		Marketplaces: map[string]app.Marketplace{
-			"superpowers-marketplace":  {Repo: "obra/superpowers-marketplace"},
 			"eleonorayaya-claude-code": {Repo: "eleonorayaya/claude-plugins"},
 			"utena":                    {Repo: "eleonorayaya/utena"},
 		},
 		AlwaysOnPlugins: []string{
-			"superpowers@superpowers-marketplace",
 			"better-claude@eleonorayaya-claude-code",
 			"git-workflows@eleonorayaya-claude-code",
 			"utena-claude@utena",
@@ -85,12 +80,10 @@ func ClaudeOptions() claude.Options {
 		},
 		AllowedBashCommands: []string{
 			"grep:*",
-			"find:*",
 			"ls:*",
 			"tree:*",
 			"cat:*",
 			"wc:*",
-			"xargs:*",
 			"echo:*",
 			"head:*",
 			"tail:*",

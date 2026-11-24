@@ -441,8 +441,9 @@ func (a *App) mergeSettings(outDir string, theme styles.Theme, agents app.AgentC
 		settings["env"] = env
 	}
 
+	delete(settings, "defaultMode")
 	if a.opts.DefaultMode != "" {
-		settings["defaultMode"] = a.opts.DefaultMode
+		permissions["defaultMode"] = a.opts.DefaultMode
 	}
 	if a.opts.AdvisorModel != "" {
 		settings["advisorModel"] = a.opts.AdvisorModel

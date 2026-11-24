@@ -888,6 +888,40 @@ func TestMergeSettingsRemovesStatusLine(t *testing.T) {
 	}
 }
 
+func TestMergeSettingsWritesDefaultModeUnderPermissions(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	if err := os.MkdirAll(filepath.Join(home, ".claude"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(home, ".claude", "settings.json"), []byte(`{"defaultMode":"auto"}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	opts := testOptions()
+	opts.DefaultMode = "auto"
+	a := New(opts)
+
+	resultPath, err := a.mergeSettings(t.TempDir(), styles.Theme{}, app.AgentContext{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	data, err := os.ReadFile(resultPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var settings map[string]any
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatal(err)
+	}
+	if v, ok := settings["defaultMode"]; ok {
+		t.Errorf("expected top-level defaultMode removed, got %v", v)
+	}
+	permissions, _ := settings["permissions"].(map[string]any)
+	if permissions["defaultMode"] != "auto" {
+		t.Errorf("expected permissions.defaultMode auto, got %v", permissions["defaultMode"])
+	}
+}
+
 func TestPrismantisDiffRowsMatchClaudeTheme(t *testing.T) {
 	c := themes.Sylveon.WithDefaults().Colors
 	options := Prismantis().ResolveOptions(themes.Sylveon.WithDefaults())
