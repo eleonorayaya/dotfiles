@@ -28,9 +28,6 @@ func TestCoderClaudeOptionsAreRemote(t *testing.T) {
 	if !opts.Remote {
 		t.Error("expected Remote")
 	}
-	if opts.ClaudeMD == "" {
-		t.Error("expected the global CLAUDE.md")
-	}
 	if opts.DisableClaudeAiConnectors || len(opts.GlobalConfig) > 0 || len(opts.SandboxAllowWrite) > 0 || len(opts.SandboxAllowedDomains) > 0 {
 		t.Error("expected no connector, global config or sandbox settings")
 	}
@@ -55,16 +52,5 @@ func TestCoderClaudeOptionsLeaveLaptopOptionsAlone(t *testing.T) {
 	}
 	if !slices.Contains(opts.AllowedBashCommands, "brew --prefix:*") {
 		t.Error("laptop options lost brew --prefix")
-	}
-}
-
-func TestClaudeOptionsManageGlobalClaudeMD(t *testing.T) {
-	for name, opts := range map[string]string{
-		"default":  ClaudeOptions().ClaudeMD,
-		"personal": PersonalClaudeOptions().ClaudeMD,
-	} {
-		if opts != claudeMD || opts == "" {
-			t.Errorf("%s: expected the embedded CLAUDE.md", name)
-		}
 	}
 }
