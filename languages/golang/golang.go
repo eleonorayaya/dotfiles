@@ -55,9 +55,6 @@ func (a *App) AgentConfig() app.AgentConfig {
 			"go mod tidy:*",
 			"task:*",
 		},
-		AllowedToolPermissions: []string{
-			"Skill(task)",
-		},
 		SandboxAllowRead: []string{
 			"~/go/pkg",
 		},

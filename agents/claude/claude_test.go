@@ -9,7 +9,6 @@ import (
 
 	"github.com/eleonorayaya/shizuku/app"
 	"github.com/eleonorayaya/shizuku/styles"
-	"github.com/eleonorayaya/shizuku/styles/themes"
 	"github.com/eleonorayaya/shizuku/util"
 )
 
@@ -810,28 +809,6 @@ func TestMergePluginConfigsUsesThemeOptionsWithExplicitOverride(t *testing.T) {
 	}
 }
 
-func TestPrismantisThemeOptions(t *testing.T) {
-	theme := styles.Theme{Type: "light", Colors: styles.ThemeColors{Primary: "#e6537a", SurfaceBorder: "#4a3830"}}
-
-	options := Prismantis().ResolveOptions(theme)
-
-	if options["theme"] != "catppuccin-latte" {
-		t.Errorf("expected light base theme, got %v", options["theme"])
-	}
-	if options["headingColor"] != "#e6537a" {
-		t.Errorf("expected heading from primary, got %v", options["headingColor"])
-	}
-	if options["tableRuleColor"] != "#4a3830" {
-		t.Errorf("expected table rule from surface border, got %v", options["tableRuleColor"])
-	}
-	if v, ok := options["codeFlagColor"]; ok {
-		t.Errorf("expected no flag colour without a removed colour, got %v", v)
-	}
-	if _, ok := options["linkColor"]; ok {
-		t.Error("expected empty theme colors to be omitted")
-	}
-}
-
 func TestPillFooterThemeOptions(t *testing.T) {
 	theme := styles.Theme{Colors: styles.ThemeColors{PrimaryVariant: "#c8306a", SurfaceBorder: "#eebccc"}}
 
@@ -888,6 +865,37 @@ func TestMergeSettingsRemovesStatusLine(t *testing.T) {
 	}
 }
 
+func TestMergeSettingsWritesSkillOverrides(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	if err := os.MkdirAll(filepath.Join(home, ".claude"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(home, ".claude", "settings.json"), []byte(`{"skillOverrides":{"mine":"on"}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	opts := testOptions()
+	opts.SkillOverrides = map[string]string{"anthropic-skills:docx": "off"}
+	a := New(opts)
+
+	resultPath, err := a.mergeSettings(t.TempDir(), styles.Theme{}, app.AgentContext{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	data, err := os.ReadFile(resultPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var settings map[string]any
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatal(err)
+	}
+	overrides, _ := settings["skillOverrides"].(map[string]any)
+	if overrides["anthropic-skills:docx"] != "off" || overrides["mine"] != "on" {
+		t.Errorf("expected merged skill overrides, got %v", overrides)
+	}
+}
+
 func TestMergeSettingsWritesDefaultModeUnderPermissions(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
@@ -919,23 +927,6 @@ func TestMergeSettingsWritesDefaultModeUnderPermissions(t *testing.T) {
 	permissions, _ := settings["permissions"].(map[string]any)
 	if permissions["defaultMode"] != "auto" {
 		t.Errorf("expected permissions.defaultMode auto, got %v", permissions["defaultMode"])
-	}
-}
-
-func TestPrismantisDiffRowsMatchClaudeTheme(t *testing.T) {
-	c := themes.Sylveon.WithDefaults().Colors
-	options := Prismantis().ResolveOptions(themes.Sylveon.WithDefaults())
-
-	row := util.MixHex(options["ruleColor"].(string), options["numberColor"].(string), prismantisMix)
-	want, _ := util.HexToRGB(diffBackground(c, c.Added))
-	got, _ := util.HexToRGB(row)
-	for i := range got {
-		if d := got[i] - want[i]; d < -2 || d > 2 {
-			t.Fatalf("added row %s, want close to %s", row, diffBackground(c, c.Added))
-		}
-	}
-	if options["codeFlagColor"] != c.Removed {
-		t.Errorf("expected flags in the removed colour, got %v", options["codeFlagColor"])
 	}
 }
 

@@ -48,7 +48,6 @@ func ClaudeOptions() claude.Options {
 			"utena-claude@utena",
 		},
 		Mods: []app.Mod{
-			claude.Prismantis(),
 			claude.PillFooter(claude.PillFooterOptions{
 				ReportCommand: "tuios agent-statusline claude-code --integration 1 --turn-end",
 			}),
@@ -79,14 +78,6 @@ func ClaudeOptions() claude.Options {
 			"~/.colima",
 		},
 		AllowedBashCommands: []string{
-			"grep:*",
-			"ls:*",
-			"tree:*",
-			"cat:*",
-			"wc:*",
-			"echo:*",
-			"head:*",
-			"tail:*",
 			"brew --prefix:*",
 			"npx nx:*",
 		},
@@ -100,5 +91,20 @@ func ClaudeOptions() claude.Options {
 		},
 		DefaultMode:  "auto",
 		AdvisorModel: "opus",
+		SkillOverrides: map[string]string{
+			"anthropic-skills:artifact-emulator": "off",
+			"anthropic-skills:built-in-browser":  "off",
+			"anthropic-skills:chrome-browser":    "off",
+			"anthropic-skills:computer-use":      "off",
+			"anthropic-skills:deep-research":     "off",
+			"anthropic-skills:docs":              "off",
+			"anthropic-skills:docx":              "off",
+			"anthropic-skills:google-workspace":  "off",
+			"anthropic-skills:import-memory":     "off",
+			"anthropic-skills:morning":           "off",
+			"anthropic-skills:pdf":               "off",
+			"anthropic-skills:pptx":              "off",
+			"anthropic-skills:xlsx":              "off",
+		},
 	}
 }

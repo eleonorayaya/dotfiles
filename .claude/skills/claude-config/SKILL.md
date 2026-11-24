@@ -5,7 +5,7 @@ description: Use when the user wants to add or remove allowed commands, plugins,
 
 # Claude Config Manager
 
-The shizuku `claude` app (`agents/claude/claude.go`) generates `~/.claude/settings.json`, `~/.claude/CLAUDE.md` and parts of `~/.claude.json`. Never edit those files by hand; change the source below, then preview with `/task run diff -p` and apply with `/task run sync`.
+The shizuku `claude` app (`agents/claude/claude.go`) generates `~/.claude/settings.json`, `~/.claude/CLAUDE.md` and parts of `~/.claude.json`. Never edit those files by hand; change the source below, then preview with `task run -- diff -p` and apply with `task run -- sync`.
 
 | Change | Where |
 |---|---|
@@ -13,7 +13,7 @@ The shizuku `claude` app (`agents/claude/claude.go`) generates `~/.claude/settin
 | Per-session plugin or MCP server | `examples/eleonora/data/bundles.go` (`Bundles`, `McpServers`); utena turns bundles on per session |
 | Plugins, allow rules, sandbox paths that belong to a language or program | that app's `AgentConfig()` (e.g. `languages/golang/golang.go`) |
 | Allowed / denied Bash commands, tool permissions | `AllowedBashCommands` (`"cmd sub:*"`, wrapped as `Bash(...)`), `AllowedToolPermissions`, `DeniedBashCommands` in `data/claude.go` |
-| Env vars, default permission mode, advisor model, global config | `Env`, `DefaultMode`, `AdvisorModel`, `GlobalConfig` in `data/claude.go` |
+| Env vars, default permission mode, advisor model, skill on/off, global config | `Env`, `DefaultMode`, `AdvisorModel`, `SkillOverrides`, `GlobalConfig` in `data/claude.go` |
 | Global CLAUDE.md | `examples/eleonora/data/claude-global.md` |
 | Profile differences | `PersonalClaudeOptions` / `CoderClaudeOptions` in `data/claude.go` |
 
@@ -27,4 +27,4 @@ Merges into `settings.json` are additive: `enabledPlugins`, `permissions.allow`/
 
 ## Verify
 
-Run `/task test`, then `/task run diff -p` and check only the intended keys change.
+Run `task test`, then `task run -- diff -p` and check only the intended keys change.

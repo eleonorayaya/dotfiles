@@ -8,13 +8,12 @@ func Bundles() map[string]app.Bundle {
 			"gopls-lsp@claude-plugins-official",
 			"bubbletea-tui@eleonorayaya-claude-code",
 		}},
-		"web":        {Plugins: []string{"typescript-lsp@claude-plugins-official"}},
-		"rust":       {Plugins: []string{"rust-analyzer-lsp@claude-plugins-official"}},
-		"lua":        {Plugins: []string{"lua-lsp@claude-plugins-official"}},
-		"swift":      {Plugins: []string{"swift-lsp@claude-plugins-official"}},
-		"claude-dev": {Plugins: []string{"cc-toolkit@eleonorayaya-claude-code"}},
-		"homelab":    {McpServers: []string{"homeassistant"}},
-		"cad":        {McpServers: []string{"zoo", "bambuddy-local"}},
+		"web":     {Plugins: []string{"typescript-lsp@claude-plugins-official"}},
+		"rust":    {Plugins: []string{"rust-analyzer-lsp@claude-plugins-official"}},
+		"lua":     {Plugins: []string{"lua-lsp@claude-plugins-official"}},
+		"swift":   {Plugins: []string{"swift-lsp@claude-plugins-official"}},
+		"homelab": {McpServers: []string{"homeassistant"}},
+		"cad":     {McpServers: []string{"zoo", "bambuddy-local"}},
 	}
 }
 
