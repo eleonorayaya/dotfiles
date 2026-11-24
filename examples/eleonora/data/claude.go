@@ -1,6 +1,7 @@
 package data
 
 import (
+	_ "embed"
 	"maps"
 	"slices"
 	"strings"
@@ -8,6 +9,9 @@ import (
 	"github.com/eleonorayaya/shizuku/agents/claude"
 	"github.com/eleonorayaya/shizuku/app"
 )
+
+//go:embed claude-global.md
+var claudeMD string
 
 func PersonalClaudeOptions() claude.Options {
 	opts := ClaudeOptions()
@@ -33,6 +37,7 @@ func CoderClaudeOptions() claude.Options {
 
 func ClaudeOptions() claude.Options {
 	return claude.Options{
+		ClaudeMD: claudeMD,
 		Marketplaces: map[string]app.Marketplace{
 			"eleonorayaya-claude-code": {Repo: "eleonorayaya/claude-plugins"},
 			"utena":                    {Repo: "eleonorayaya/utena"},
