@@ -1,7 +1,10 @@
 package pkg
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -81,7 +84,15 @@ func Run(dir string, env []string, name string, args ...string) ([]byte, error) 
 	cmd := exec.Command(name, args...)
 	cmd.Dir = dir
 	cmd.Env = append(os.Environ(), env...)
-	out, err := cmd.CombinedOutput()
+	var buf bytes.Buffer
+	var w io.Writer = &buf
+	if slog.Default().Enabled(context.Background(), slog.LevelDebug) {
+		w = io.MultiWriter(&buf, os.Stderr)
+	}
+	cmd.Stdout = w
+	cmd.Stderr = w
+	err := cmd.Run()
+	out := buf.Bytes()
 	if err != nil {
 		return out, fmt.Errorf("%s %s: %w: %s", name, strings.Join(args, " "), err, strings.TrimSpace(string(out)))
 	}
