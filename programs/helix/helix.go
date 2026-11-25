@@ -3,6 +3,7 @@ package helix
 import (
 	"embed"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -90,7 +91,8 @@ func installSteel() error {
 		{"cargo", "install", "--path", "helix-term", "--features", "steel,git", "--locked"},
 		{forge, "pkg", "install", "--git", forestURL},
 	}
-	for _, step := range steps {
+	for n, step := range steps {
+		slog.Info("building helix with steel", "step", fmt.Sprintf("%d/%d", n+1, len(steps)), "command", strings.Join(step[:2], " "))
 		if err := util.Run(repoPath, step[0], step[1:]...); err != nil {
 			return fmt.Errorf("failed to install helix with steel: %w", err)
 		}
